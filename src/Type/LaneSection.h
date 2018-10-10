@@ -21,14 +21,26 @@ public:
     std::shared_ptr<Curve> pLaneOffset;
 
     std::map<int, Lane>mLanes;
+    std::map<int, std::vector<Pose>> mAllLanePose;
 
+    int most_left_lane_idx = 0;
+    int most_rigjt_lane_idx = 0;
+
+    std::vector<Pose> GetReferPose();
+
+public:
     explicit LaneSection(unsigned int section_id = 0, double _s = 0,
                          std::shared_ptr<Curve> p_refer_line = nullptr,
                          std::shared_ptr<Curve> p_lane_offset = nullptr);
 
     void AddLane(int lane_idx, unsigned int lane_id, bool is_constant_width);
 
-    std::vector<Pose> GetReferPose();
+    std::map<int, std::vector<Pose>> GetAllPose();
+
+private:
+    void AppendPose(double s_);
+    void GenerateAllPose(double ds);
+
 };
 }
 #endif //HDMAP_LANESECTION_H

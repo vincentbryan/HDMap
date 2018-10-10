@@ -25,6 +25,22 @@ void HDMap::EndSection(Pose p)
 
     mCurrSection.pReferLine.reset(new Line(mRoads.back().s, mEndPose, mStartPose));
 
+    for(auto x : vTempLane)
+    {
+        auto idx = std::get<0>(x);
+        auto b = std::get<1>(x);
+        auto id = CalcuLaneId(mCurrSection.iSectionId, idx);
+        mCurrSection.AddLane(idx, id, b);
+    }
+
+    for(auto x : vTempLink)
+    {
+        int a = std::get<0>(x);
+        int b = std::get<1>(x);
+        mPrevSection.mLanes[a].AddPredecessor(b);
+        mCurrSection.mLanes[b].AddSuccessors(a);
+    }
+
     mRoads.back().mSections.emplace_back(mCurrSection);
 
     mPrevSection = mCurrSection;
@@ -37,21 +53,8 @@ void HDMap::StartSection(std::vector<std::pair<int, bool>> new_lane, std::vector
     mCurrSection.s = mPrevSection.s + mPrevSection.pReferLine->Length();
     mCurrSection.mLanes.clear();
 
-    for(auto x : new_lane)
-    {
-        auto idx = std::get<0>(x);
-        auto b = std::get<1>(x);
-        auto id = CalcuLaneId(mCurrSection.iSectionId, idx);
-        mCurrSection.AddLane(idx, id, b);
-    }
-
-    for(auto x : links)
-    {
-        int a = std::get<0>(x);
-        int b = std::get<1>(x);
-        mPrevSection.mLanes[a].AddPredecessor(b);
-        mCurrSection.mLanes[b].AddSuccessors(a);
-    }
+    vTempLane = new_lane;
+    vTempLink = links;
 }
 
 

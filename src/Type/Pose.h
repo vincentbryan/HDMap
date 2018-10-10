@@ -12,20 +12,20 @@ struct Pose
 {
     double x;
     double y;
-    double theta;
+    double yaw;
 
     Pose()
     {
         x = 0;
         y = 0;
-        theta = 0;
+        yaw = 0;
     }
 
     Pose(double _x, double _y, double _theta = 0)
     {
         x = _x;
         y = _y;
-        theta = _theta;
+        yaw = _theta;
     }
 
     double DistanceFrom(const Pose &another)
@@ -52,7 +52,7 @@ struct Pose
         Pose p;
         p.x = x * d;
         p.y = y * d;
-        p.theta = theta;
+        p.yaw = yaw;
         return p;
     }
 
@@ -60,6 +60,31 @@ struct Pose
     {
         return p * d;
     }
+
+    void Rotate(double angle)
+    {
+        yaw += angle;
+    }
+
+    Pose GetRotation(double angle)
+    {
+        return {x, y, yaw+angle};
+    }
+
+    ///angle is relative to x-y axis
+    void Translate(double length, double angle)
+    {
+        x += length * cos(angle / 180.0 * M_PI);
+        y += length * sin(angle / 180.0 * M_PI);
+    }
+
+    Pose GetTranslation(double length, double angle)
+    {
+        return  {x + length * cos(angle / 180.0 * M_PI),
+                 y + length * sin(angle / 180.0 * M_PI),
+                 yaw};
+    }
+
 
 };
 }

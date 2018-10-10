@@ -21,6 +21,9 @@ private:
     LaneSection mPrevSection;
     LaneSection mCurrSection;
 
+    std::vector<std::pair<int, bool>>vTempLane;
+    std::vector<std::pair<int, int>>vTempLink;
+
     struct LaneStatus
     {
         int lane_idx;

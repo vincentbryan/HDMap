@@ -36,7 +36,7 @@ int main(int argc, char **argv)
         pose.theta = theta;
 
         ROS_INFO("Send: %lf\t%lf\t%lf", x, y, theta);
-//        std::cout << x << " " << y << " " << theta << std::endl;
+//        std::cout << x << " " << y << " " << yaw << std::endl;
         pose_pub.publish(pose);
         ros::spinOnce();
         loop_rate.sleep();
