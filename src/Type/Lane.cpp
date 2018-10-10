@@ -6,14 +6,15 @@
 
 using namespace hdmap;
 
-Lane::Lane(int _lane_id, int _level, LANE_TYPE _type, CubicPoly _width) : width(_width)
+double Lane::DEFAULT_WIDTH = 3.0;
+Lane::Lane(int _lane_id, std::shared_ptr<Curve> p_width, LANE_TYPE _type)
 {
     land_id = _lane_id;
-    level = _level;
+    pWidth = p_width;
     type = _type;
 }
 
-void Lane::AddLink(std::pair<int, int> _link)
+Lane::~Lane()
 {
-    links.emplace_back(_link);
+    pWidth = nullptr;
 }

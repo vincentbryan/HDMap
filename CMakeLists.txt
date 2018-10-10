@@ -135,7 +135,6 @@ AUX_SOURCE_DIRECTORY(src/Type TYPES)
 add_executable(${PROJECT_NAME}
 		${TYPES}
 		${SRCS}
-		src/SyncQueue.hpp
 )
 
 add_executable(talker

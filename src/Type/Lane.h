@@ -2,10 +2,10 @@
 // Created by vincent on 18-10-8.
 //
 
-#ifndef HDMAP_LANE_H
-#define HDMAP_LANE_H
+#pragma once
 
 #include <vector>
+#include <memory>
 #include "CubicPoly.h"
 namespace hdmap
 {
@@ -19,19 +19,32 @@ public:
         Special2, Special3, RoadWorks, Tram, Rail, Entry, Exit,
         OffRamp, OnRamp
     };
+    static double DEFAULT_WIDTH;
+    //TODO lane:level
+    //int level;
 
+    std::shared_ptr<Curve> pWidth;
     int land_id;
-    int level;
     LANE_TYPE type;
 
-    std::vector<std::pair<int, int>>links;
-    CubicPoly width;
+    std::vector<unsigned int> predecessors;
+    std::vector<unsigned int> successors;
 
 public:
-    explicit Lane(int _lane_id, int _level, LANE_TYPE _type = LANE_TYPE ::Driving, CubicPoly _width = CubicPoly());
-    void AddLink(std::pair<int, int> _link);
+    explicit Lane(int _lane_id = 0, std::shared_ptr<Curve> p_width = nullptr, LANE_TYPE _type = LANE_TYPE ::Driving);
+    ~Lane();
+
+    void AddPredecessor(unsigned int n)
+    {
+        predecessors.emplace_back(n);
+    }
+
+    void AddSuccessors(unsigned int n)
+    {
+        successors.emplace_back(n);
+    }
 };
+
+
 }
 
-
-#endif //HDMAP_LANE_H
