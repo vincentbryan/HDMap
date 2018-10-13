@@ -8,66 +8,202 @@
 #include <geometry_msgs/Pose2D.h>
 #include <queue>
 #include <mutex>
-#include "SyncQueue.hpp"
 #include "Type/HDMap.h"
 #include "Sender.h"
-//#define DEBUG
+#define DEBUG
 using namespace hdmap;
+using namespace std;
+
+bool CMD_AddRoad(HDMap &map);
+bool CMD_StartSection(HDMap &map);
+bool CMD_EndSection(HDMap &map);
+bool CMD_SendSection(HDMap &map, Sender &sender);
 
 int main( int argc, char** argv )
 {
     ros::init(argc, argv, "hdmap");
     ros::NodeHandle n;
-    ros::Publisher marker_pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 10);
+    ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 1000);
+    Sender sender(pub);
 
 #ifdef DEBUG
+    HDMap map;
+    while(true)
+    {
+        CMD_AddRoad(map);
+
+        while(true)
+        {
+            CMD_StartSection(map);
+            CMD_EndSection(map);
+            CMD_SendSection(map, sender);
+            cout << "Continue to add section?[y/n]\n";
+            cout << "[User]: ";
+            string cmd;
+            cin >> cmd;
+            if(cmd == "n")
+                break;
+        }
+
+        cout << "Continue to add road?[y/n]\n";
+        cout << "[User]: ";
+        string cmd;
+        cin >> cmd;
+        if(cmd == "n")
+            break;
+    }
+
 #else
     HDMap map;
-    Pose p(0, 0, 315);
-
-    map.AddRoad();
-    map.SetStartPose(p);
-
-    //-------------------------------------------------------------
-    std::vector<std::pair<int, bool>> lanes1 = {{-2, true}, {-1, true}, {1, true}};
-    std::vector<std::pair<int, int>> links1;
-    map.StartSection(lanes1, links1);
-
-    p.x = 5;
-    p.y = 5;
-    p.yaw = 315;
-    map.EndSection(p);
-    ros::Rate r(1);
-
-    char c;
-    while (std::cin >> c)
+    while(true)
     {
-        if(c != 'e')
-            Sender::SendSection(map.GetCurrentSection(), marker_pub);
-        else
-            break;
-    }
-    std::cout << "Sec 1" << std::endl;
-    //-------------------------------------------------------------
-    std::vector<std::pair<int, bool>> lanes2 = {{-1, true}, {1, true}};
-    std::vector<std::pair<int, int>> links2;
-    map.StartSection(lanes2, links2);
+        Pose p(0, 0, 315);
+        map.AddRoad();
+        map.SetStartPose(p);
 
-    p.x = 10;
-    p.y = 10;
-    p.yaw = 315;
-    map.EndSection(p);
+        //-------------------------------------------------------------
+        std::vector<std::pair<int, bool>> lanes1 = {{-2, true}, {-1, true}, {1, true}};
+        std::vector<std::pair<int, int>> links1;
+        map.StartSection(lanes1, links1);
 
-    while (std::cin >> c)
-    {
-        if(c != 'e')
-            Sender::SendSection(map.GetCurrentSection(), marker_pub);
-        else
-            break;
+        p.x = 5;
+        p.y = 5;
+        p.yaw = 315;
+        map.EndSection(p);
+        sender.AddSection(map.GetCurrentSection());
+
+        char c;
+        while (std::cin >> c)
+        {
+            if(c != 'e')
+//                SendSection(map.GetCurrentSection(), marker_pub);
+                sender.Send();
+            else
+                break;
+        }
+        std::cout << "Sec 1" << std::endl;
+        //-------------------------------------------------------------
+        std::vector<std::pair<int, bool>> lanes2 = {{-1, true}, {1, true}};
+        std::vector<std::pair<int, int>> links2;
+        map.StartSection(lanes2, links2);
+
+        p.x = 10;
+        p.y = 10;
+        p.yaw = 315;
+        map.EndSection(p);
+        sender.AddSection(map.GetCurrentSection());
+        while (std::cin >> c)
+        {
+            if(c != 'e')
+//                Sender::SendSection(map.GetCurrentSection(), pub);
+                sender.Send();
+            else
+                break;
+        }
+        std::cout << "Sec 2" << std::endl;
+
     }
-    std::cout << "Sec 2" << std::endl;
     return 0;
 #endif
 }
 
+bool CMD_AddRoad(HDMap &map)
+{
+    cout << "To start a road, you need to input a start pose[x, y, yaw]:\n";
+    cout << "[User]: ";
+    Pose p;
+    std::cin >> p.x >> p.y >> p.yaw;
+    map.AddRoad();
+    map.SetStartPose(p);
+    cout << "Summary: Init road successfully\n";
+    return true;
+}
 
+bool CMD_StartSection(HDMap &map)
+{
+    int n;
+    cout << "To start a section, you need to specify the lane index and links\n";
+    cout << "Please input the lane number\n";
+    cout << "[User]: ";
+    cin >> n;
+    vector<pair<int, bool>> lanes;
+    vector<pair<int, int>> links;
+    for(int i = 0; i < n; i++)
+    {
+        int t;
+        cout << "[User] lane " << i << " : ";
+        cin >> t;
+        //TODO
+        pair<int, bool> p(t, true);
+        lanes.emplace_back(p);
+    }
+    cout << "Summary: \n";
+    for(int i = 0; i < n; i++)
+    {
+        cout << "\tlane " << i << " : " << get<0>(lanes[i]) << " " << get<1>(lanes[i]) << endl;
+    }
+
+    cout << "Please input the links\n";
+    cout << "Previous section lane index:\n";
+    auto lane_info = map.GetCurrentSection().GetLanes();
+    if(lane_info.empty())
+    {
+        cout << "empty\n";
+    }
+    else
+    {
+        for(auto x : lane_info)
+        {
+            cout << "\t[" << x.first << "]";
+        }
+        cout << endl;
+    }
+
+    cout << "Input the links number:" << endl;
+    cout << "[User]: ";
+    cin >> n;
+    cout << "Please input " << n << " links\n";
+    for(int i = 0; i < n; i++)
+    {
+        int a, b;
+        cout << "[User]: ";
+        cin >> a >> b;
+        pair<int, int>p(a, b);
+        links.emplace_back(p);
+    }
+    cout << "Summary:\n";
+    cout << "\tTotal " << n << " links\n";
+    for(auto x : links)
+    {
+        cout << "\t[" << x.first << "] --> [" << x.second << "]" << endl;
+    }
+    map.StartSection(lanes, links);
+    return true;
+}
+
+bool CMD_EndSection(HDMap &map)
+{
+    cout << "To end a section, you need to input a end pose[x, y, yaw]:\n";
+    cout << "[User]: ";
+    Pose p;
+    std::cin >> p.x >> p.y >> p.yaw;
+    map.EndSection(p);
+    return true;
+}
+
+bool CMD_SendSection(HDMap &map, Sender &sender)
+{
+    sender.AddSection(map.GetCurrentSection());
+
+    cout << "To send a new section, enter 'r', if failed enter it again\n";
+    char c;
+    cout << "[User]: ";
+    cin >> c;
+    while (c != 'e')
+    {
+        sender.Send();
+        cout << "[User]: ";
+        cin >> c;
+    }
+    return true;
+}

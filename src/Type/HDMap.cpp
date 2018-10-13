@@ -17,6 +17,17 @@ void HDMap::AddRoad()
     mRoads.emplace_back(Road());
 }
 
+void HDMap::StartSection(std::vector<std::pair<int, bool>> new_lane, std::vector<std::pair<int, int>>links)
+{
+    auto section_id_next = CalcuSectionId(mRoads.size(), mRoads.back().mSections.size()+1);
+    mCurrSection.iSectionId = section_id_next;
+    mCurrSection.s = mPrevSection.s + mPrevSection.pReferLine->Length();
+    mCurrSection.mLanes.clear();
+
+    vTempLane = new_lane;
+    vTempLink = links;
+}
+
 void HDMap::EndSection(Pose p)
 {
     //Update Pose
@@ -46,18 +57,6 @@ void HDMap::EndSection(Pose p)
 
     mPrevSection = mCurrSection;
 }
-
-void HDMap::StartSection(std::vector<std::pair<int, bool>> new_lane, std::vector<std::pair<int, int>>links)
-{
-    auto section_id_next = CalcuSectionId(mRoads.size(), mRoads.back().mSections.size()+1);
-    mCurrSection.iSectionId = section_id_next;
-    mCurrSection.s = mPrevSection.s + mPrevSection.pReferLine->Length();
-    mCurrSection.mLanes.clear();
-
-    vTempLane = new_lane;
-    vTempLink = links;
-}
-
 
 unsigned int HDMap::CalcuSectionId(unsigned int road, unsigned int section)
 {

@@ -44,6 +44,11 @@ public:
         mAllLanePose.clear();
     };
 
+    std::map<int, Lane> GetLanes()
+    {
+        return mLanes;
+    };
+
 private:
     void AppendPose(double s_);
     void GenerateAllPose(double ds);
