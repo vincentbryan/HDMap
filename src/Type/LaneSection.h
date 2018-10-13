@@ -24,7 +24,7 @@ public:
     std::map<int, std::vector<Pose>> mAllLanePose;
 
     int most_left_lane_idx = 0;
-    int most_rigjt_lane_idx = 0;
+    int most_right_lane_idx = 0;
 
     std::vector<Pose> GetReferPose();
 
@@ -36,6 +36,13 @@ public:
     void AddLane(int lane_idx, unsigned int lane_id, bool is_constant_width);
 
     std::map<int, std::vector<Pose>> GetAllPose();
+
+    void Clear()
+    {
+        most_left_lane_idx = most_right_lane_idx = 0;
+        mLanes.clear();
+        mAllLanePose.clear();
+    };
 
 private:
     void AppendPose(double s_);

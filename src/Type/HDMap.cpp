@@ -24,6 +24,7 @@ void HDMap::EndSection(Pose p)
     mStartPose = p;
 
     mCurrSection.pReferLine.reset(new Line(mRoads.back().s, mEndPose, mStartPose));
+    mCurrSection.Clear();
 
     for(auto x : vTempLane)
     {

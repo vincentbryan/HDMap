@@ -38,7 +38,6 @@ private:
         }
     };
 
-
     unsigned int CalcuSectionId(unsigned int road, unsigned int section);
     unsigned int CalcuLaneId(unsigned int section, int lane);
 
@@ -57,6 +56,7 @@ public:
     void StartSection(std::vector<std::pair<int, bool>> new_lane, std::vector<std::pair<int, int>>links);
 
     LaneSection GetCurrentSection(){return mCurrSection;}
+
 };
 }
 

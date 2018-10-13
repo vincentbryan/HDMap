@@ -135,6 +135,8 @@ AUX_SOURCE_DIRECTORY(src/Type TYPES)
 add_executable(${PROJECT_NAME}
 		${TYPES}
 		${SRCS}
+		src/Sender.cpp
+		src/Sender.h
 )
 
 add_executable(talker

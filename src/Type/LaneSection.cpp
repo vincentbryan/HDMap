@@ -28,7 +28,7 @@ LaneSection::LaneSection(unsigned int section_id, double _s,
 
 void LaneSection::AddLane(int lane_idx, unsigned int lane_id, bool is_constant_width)
 {
-    if(lane_idx > 0) most_rigjt_lane_idx = std::max(most_rigjt_lane_idx, lane_idx);
+    if(lane_idx > 0) most_right_lane_idx = std::max(most_right_lane_idx, lane_idx);
     if(lane_idx < 0) most_left_lane_idx = std::min(most_left_lane_idx, lane_idx);
 
     std::shared_ptr<Curve> width(new Line(s, Pose(0, Lane::DEFAULT_WIDTH),
@@ -39,7 +39,9 @@ void LaneSection::AddLane(int lane_idx, unsigned int lane_id, bool is_constant_w
 
 std::vector<Pose> LaneSection::GetReferPose()
 {
-       return mAllLanePose[0];
+    if(mAllLanePose.empty())
+        GenerateAllPose(0.1);
+    return mAllLanePose[0];
 }
 
 void LaneSection::GenerateAllPose(double ds)
@@ -70,7 +72,7 @@ void LaneSection::AppendPose(double s_)
     mAllLanePose[0].emplace_back(refer_pose);
     double width = 0;
     int idx = 0;
-    for(idx = 1; idx <= most_rigjt_lane_idx; idx++)
+    for(idx = 1; idx <= most_right_lane_idx; idx++)
     {
         Lane t = mLanes[idx];
         Pose t1 = mLanes[idx].pWidth->GetPose(s_);

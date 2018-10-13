@@ -4,11 +4,13 @@
 #include <ros/ros.h>
 #include <thread>
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/Pose2D.h>
 #include <queue>
 #include <mutex>
 #include "SyncQueue.hpp"
 #include "Type/HDMap.h"
+#include "Sender.h"
 
 using namespace hdmap;
 
@@ -16,33 +18,75 @@ int main( int argc, char** argv )
 {
     ros::init(argc, argv, "hdmap");
     ros::NodeHandle n;
+    ros::Publisher marker_pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 10);
 
     HDMap map;
-    Pose p(0, 0, 270);
+    Pose p(0, 0, 315);
 
     map.AddRoad();
     map.SetStartPose(p);
 
-    std::vector<std::pair<int, bool>> new_lanes = {{-2, true}, {-1, true}, {1, true}};
-    std::vector<std::pair<int, int>> links;
-    map.StartSection(new_lanes, links);
+    //-------------------------------------------------------------
+    std::vector<std::pair<int, bool>> lanes1 = {{-2, true}, {-1, true}, {1, true}};
+    std::vector<std::pair<int, int>> links1;
+    map.StartSection(lanes1, links1);
 
-    p.x = 10;
-    p.y = 0;
-    p.yaw = 270;
+    p.x = 5;
+    p.y = 5;
+    p.yaw = 315;
     map.EndSection(p);
+    ros::Rate r(1);
 
-    auto m = map.GetCurrentSection().GetAllPose();
-    for(auto x : m)
+
+    char c;
+    while (std::cin >> c)
     {
-        std::cout << "[" << x.first << "]: ";
-        for(auto y : x.second)
-        {
-            std::cout << "(" << y.x << " " << y.y << " " << y.yaw << "), ";
-        }
+        if(c != 'e')
+            Sender::SendSection(map.GetCurrentSection(), marker_pub);
+        else
+            break;
+    }
+
+
+    std::cout << "Sec 1" << std::endl;
+    auto m = map.GetCurrentSection().GetAllPose();
+    for(auto o : m)
+    {
+        std::cout << "[" << o.first << "]: ";
+        for(auto z : o.second)
+            std::cout << "(" << z.x << " " << z.y << " " << z.yaw << ") ";
         std::cout << std::endl;
     }
-    std::cout << std::endl;
 
+    //-------------------------------------------------------------
+    std::vector<std::pair<int, bool>> lanes2 = {{-1, true}, {1, true}};
+    std::vector<std::pair<int, int>> links2;
+    map.StartSection(lanes2, links2);
+
+    p.x = 10;
+    p.y = 10;
+    p.yaw = 315;
+    map.EndSection(p);
+
+    std::cout << std::endl;
+    auto m1 = map.GetCurrentSection().GetAllPose();
+    for(auto o : m1)
+    {
+        std::cout << "[" << o.first << "]: ";
+        for(auto z : o.second)
+            std::cout << "(" << z.x << " " << z.y << " " << z.yaw << ") ";
+        std::cout << std::endl;
+    }
+    Sender::SendSection(map.GetCurrentSection(), marker_pub);
+    std::cout << "Sec 2" << std::endl;
+    while (std::cin >> c)
+    {
+        if(c != 'e')
+            Sender::SendSection(map.GetCurrentSection(), marker_pub);
+        else
+            break;
+    }
     return 0;
 }
+
+
