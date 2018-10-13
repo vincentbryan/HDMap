@@ -11,7 +11,7 @@
 #include "SyncQueue.hpp"
 #include "Type/HDMap.h"
 #include "Sender.h"
-
+//#define DEBUG
 using namespace hdmap;
 
 int main( int argc, char** argv )
@@ -20,6 +20,8 @@ int main( int argc, char** argv )
     ros::NodeHandle n;
     ros::Publisher marker_pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 10);
 
+#ifdef DEBUG
+#else
     HDMap map;
     Pose p(0, 0, 315);
 
@@ -37,7 +39,6 @@ int main( int argc, char** argv )
     map.EndSection(p);
     ros::Rate r(1);
 
-
     char c;
     while (std::cin >> c)
     {
@@ -46,18 +47,7 @@ int main( int argc, char** argv )
         else
             break;
     }
-
-
     std::cout << "Sec 1" << std::endl;
-    auto m = map.GetCurrentSection().GetAllPose();
-    for(auto o : m)
-    {
-        std::cout << "[" << o.first << "]: ";
-        for(auto z : o.second)
-            std::cout << "(" << z.x << " " << z.y << " " << z.yaw << ") ";
-        std::cout << std::endl;
-    }
-
     //-------------------------------------------------------------
     std::vector<std::pair<int, bool>> lanes2 = {{-1, true}, {1, true}};
     std::vector<std::pair<int, int>> links2;
@@ -68,17 +58,6 @@ int main( int argc, char** argv )
     p.yaw = 315;
     map.EndSection(p);
 
-    std::cout << std::endl;
-    auto m1 = map.GetCurrentSection().GetAllPose();
-    for(auto o : m1)
-    {
-        std::cout << "[" << o.first << "]: ";
-        for(auto z : o.second)
-            std::cout << "(" << z.x << " " << z.y << " " << z.yaw << ") ";
-        std::cout << std::endl;
-    }
-    Sender::SendSection(map.GetCurrentSection(), marker_pub);
-    std::cout << "Sec 2" << std::endl;
     while (std::cin >> c)
     {
         if(c != 'e')
@@ -86,7 +65,9 @@ int main( int argc, char** argv )
         else
             break;
     }
+    std::cout << "Sec 2" << std::endl;
     return 0;
+#endif
 }
 
 

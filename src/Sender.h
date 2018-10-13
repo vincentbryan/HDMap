@@ -13,7 +13,9 @@ namespace hdmap
 class Sender
 {
 public:
+    static unsigned int id;
     static visualization_msgs::Marker GetLineStrip(std::vector<Pose> poses, unsigned long color_);
+    static visualization_msgs::Marker GetText(const std::string &content, Pose p);
     static void SendSection(LaneSection section, ros::Publisher pub);
 };
 }

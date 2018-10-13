@@ -5,9 +5,11 @@
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
 #include "Sender.h"
+#include<iostream>
 
 using namespace hdmap;
 
+unsigned int  Sender::id = 0;
 visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, unsigned long color_)
 {
     static int id = 0;
@@ -44,8 +46,40 @@ void Sender::SendSection(LaneSection section, ros::Publisher pub)
     {
         visualization_msgs::Marker line_strip = Sender::GetLineStrip(x.second, 0xFF00FFFF);
         array.markers.push_back(line_strip);
+
+        visualization_msgs::Marker m = GetText(std::to_string(x.first), x.second[x.second.size()/2]);
+        array.markers.push_back(m);
     }
+
     visualization_msgs::Marker refer_line = Sender::GetLineStrip(section.GetReferPose(), 0xFFFFFF);
     array.markers.push_back(refer_line);
+
     pub.publish(array);
+}
+
+visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p)
+{
+    visualization_msgs::Marker marker;
+    marker.header.frame_id="/hdmap";
+    marker.header.stamp = ros::Time::now();
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.orientation.w = 1.0;
+
+    marker.id = id++;
+    marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+
+    marker.scale.z = 0.5;
+    marker.color.b = 1;
+    marker.color.g = 1;
+    marker.color.r = 1;
+    marker.color.a = 1;
+
+    geometry_msgs::Pose pose;
+    pose.position.x = p.x;
+    pose.position.y = p.y;
+    pose.position.z = 0;
+    marker.text= content;
+    marker.pose=pose;
+
+    return marker;
 }
