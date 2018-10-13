@@ -10,7 +10,7 @@
 #include <mutex>
 #include "Type/HDMap.h"
 #include "Sender.h"
-#define DEBUG
+//#define DEBUG
 using namespace hdmap;
 using namespace std;
 
@@ -57,51 +57,56 @@ int main( int argc, char** argv )
     HDMap map;
     while(true)
     {
-        Pose p(0, 0, 315);
+        //-------------------------------------------------------------
+        Pose p(0, 0, 270);
         map.AddRoad();
         map.SetStartPose(p);
 
-        //-------------------------------------------------------------
         std::vector<std::pair<int, bool>> lanes1 = {{-2, true}, {-1, true}, {1, true}};
         std::vector<std::pair<int, int>> links1;
         map.StartSection(lanes1, links1);
 
         p.x = 5;
-        p.y = 5;
-        p.yaw = 315;
+        p.y = 0;
+        p.yaw = 270;
         map.EndSection(p);
         sender.AddSection(map.GetCurrentSection());
+        sender.Send();
+        std::cout << "Road 1" << std::endl;
+
+        //-------------------------------------------------------------
+        p = {7, 7, 0};
+        map.AddRoad();
+        map.SetStartPose(p);
+
+        std::vector<std::pair<int, bool>> lanes2 = {{-1, true}, {1, true}};
+        std::vector<std::pair<int, int>> links2;
+        map.StartSection(lanes2, links2);
+
+        p.x = 7;
+        p.y = 10;
+        p.yaw = 0;
+        map.EndSection(p);
+        sender.AddSection(map.GetCurrentSection());
+        sender.Send();
+        std::cout << "Road 2" << std::endl;
+
+        //-------------------------------------------------------------
+        map.AddJunction();
+        map.AddConnection(0, -2, 1, -1);
+        map.AddConnection(0, -1, 1, -1);
+        map.AddConnection(0, 1, 1, 1);
+        sender.AddJunction(map.GetCurrentJunction());
 
         char c;
         while (std::cin >> c)
         {
             if(c != 'e')
-//                SendSection(map.GetCurrentSection(), marker_pub);
                 sender.Send();
             else
                 break;
         }
-        std::cout << "Sec 1" << std::endl;
-        //-------------------------------------------------------------
-        std::vector<std::pair<int, bool>> lanes2 = {{-1, true}, {1, true}};
-        std::vector<std::pair<int, int>> links2;
-        map.StartSection(lanes2, links2);
-
-        p.x = 10;
-        p.y = 10;
-        p.yaw = 315;
-        map.EndSection(p);
-        sender.AddSection(map.GetCurrentSection());
-        while (std::cin >> c)
-        {
-            if(c != 'e')
-//                Sender::SendSection(map.GetCurrentSection(), pub);
-                sender.Send();
-            else
-                break;
-        }
-        std::cout << "Sec 2" << std::endl;
-
+        std::cout << "Junction 1" << std::endl;
     }
     return 0;
 #endif

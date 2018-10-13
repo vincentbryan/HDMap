@@ -5,7 +5,6 @@
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
 #include "Sender.h"
-#include<iostream>
 
 using namespace hdmap;
 
@@ -24,11 +23,6 @@ visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double 
     line_strip.type = visualization_msgs::Marker::LINE_STRIP;
 
     line_strip.scale.x = 0.05;
-
-//    line_strip.color.r = ((color_ & 0xFF000000) >> 24) / 255.0;
-//    line_strip.color.g = ((color_ & 0x00FF0000) >> 16) / 255.0;
-//    line_strip.color.b = ((color_ & 0x0000FF00) >>  8) / 255.0;
-//    line_strip.color.a = ((color_ & 0x000000FF)) / 255.0;
 
     auto func = [](double x)
     {
@@ -94,12 +88,25 @@ void Sender::AddSection(LaneSection section)
     {
         visualization_msgs::Marker line_strip;
         if(x.first == 0)
-            line_strip = Sender::GetLineStrip(x.second, 0.3 + 0.2 * (sid % 10), 0.3 + 0.3 * (sid % 10), 0.2 * (sid % 10), 1.0);
+            line_strip = GetLineStrip(x.second, 0.5 + 0.2 * (sid % 10), 0.3 + 0.3 * (sid % 10), 0.2 * (sid % 10), 1.0);
         else
-            line_strip = Sender::GetLineStrip(x.second, 0.3 + 0.2 * (sid % 10), 0.3, 0.2 * (sid % 10), 1.0);
+            line_strip = GetLineStrip(x.second, 0.5 + 0.2 * (sid % 10), 0.3, 0.2 * (sid % 10), 1.0);
         array.markers.push_back(line_strip);
 
         visualization_msgs::Marker m = GetText(std::to_string(x.first), x.second[x.second.size()/2]);
         array.markers.push_back(m);
+    }
+}
+
+void Sender::AddJunction(Junction junciton)
+{
+    auto jid = junciton.iJunctionId;
+    for(auto & x : junciton.GetAllPose())
+    {
+        visualization_msgs::Marker line_strip = GetLineStrip(x,
+                                                             0.5 + 0.2 * (jid % 10),
+                                                             0.7 + 0.3 * (jid % 10),
+                                                             0.2 * (jid % 10), 1.0);;
+        array.markers.push_back(line_strip);
     }
 }

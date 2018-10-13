@@ -49,6 +49,18 @@ public:
         return mLanes;
     };
 
+    Lane GetLaneByIndex(int idx)
+    {
+        return mLanes[idx];
+    }
+
+    std::vector<Pose> GetLanePoseByIndex(int idx)
+    {
+        if(mAllLanePose.empty())
+            GetAllPose();
+        return mAllLanePose[idx];
+    }
+
 private:
     void AppendPose(double s_);
     void GenerateAllPose(double ds);

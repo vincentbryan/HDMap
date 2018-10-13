@@ -19,7 +19,8 @@ void HDMap::AddRoad()
 
 void HDMap::StartSection(std::vector<std::pair<int, bool>> new_lane, std::vector<std::pair<int, int>>links)
 {
-    auto section_id_next = CalcuSectionId(mRoads.size(), mRoads.back().mSections.size()+1);
+    assert(mRoads.size() >= 1);
+    auto section_id_next = CalcuSectionId(mRoads.size()-1, mRoads.back().mSections.size());
     mCurrSection.iSectionId = section_id_next;
     mCurrSection.s = mPrevSection.s + mPrevSection.pReferLine->Length();
     mCurrSection.mLanes.clear();
@@ -66,4 +67,23 @@ unsigned int HDMap::CalcuSectionId(unsigned int road, unsigned int section)
 unsigned int HDMap::CalcuLaneId(unsigned int section, int lane)
 {
     return section*10 + 5 + lane;
+}
+
+void HDMap::AddJunction()
+{
+    mJunctions.emplace_back(Junction());
+}
+
+void HDMap::AddConnection(unsigned int from_road, int from_lane_idx,
+                          unsigned int to_road, int to_lane_idx)
+{
+    auto from_section = mRoads[from_road].mSections.back();
+    auto to_section = mRoads[to_road].mSections.front();
+
+    mJunctions.back().AddConnection(
+         from_section.GetLaneByIndex(from_lane_idx),
+         from_section.GetLanePoseByIndex(from_lane_idx).back(),
+         to_section.GetLaneByIndex(to_lane_idx),
+         to_section.GetLanePoseByIndex(to_lane_idx).front()
+    );
 }

@@ -7,6 +7,7 @@
 
 #include <geometry_msgs/Pose2D.h>
 #include "Road.h"
+#include "Junction.h"
 
 namespace hdmap
 {
@@ -14,6 +15,7 @@ class HDMap
 {
 private:
     std::vector<Road> mRoads;
+    std::vector<Junction> mJunctions;
 
     Pose mStartPose;
     Pose mEndPose;
@@ -56,6 +58,11 @@ public:
     void StartSection(std::vector<std::pair<int, bool>> new_lane, std::vector<std::pair<int, int>>links);
 
     LaneSection GetCurrentSection(){return mCurrSection;}
+    Junction GetCurrentJunction(){return mJunctions.back();};
+
+    void AddJunction();
+    void AddConnection(unsigned int from_road, int from_lane_idx,
+                       unsigned int to_road, int to_lane_idx);
 
 };
 }

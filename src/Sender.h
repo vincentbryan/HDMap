@@ -9,6 +9,7 @@
 #include <mutex>
 #include "Type/Pose.h"
 #include "Type/LaneSection.h"
+#include "Type/Junction.h"
 
 namespace hdmap
 {
@@ -18,7 +19,7 @@ private:
     ros::Publisher pub;
     visualization_msgs::MarkerArray array;
     const std::string frame_id;
-    std::mutex m;
+
 public:
     explicit Sender(ros::Publisher pub_);
     static unsigned int id;
@@ -26,6 +27,7 @@ public:
     visualization_msgs::Marker GetText(const std::string &content, Pose p);
     void Send();
     void AddSection(LaneSection section);
+    void AddJunction(Junction junciton);
 };
 }
 #endif //HDMAP_SENDER_H
