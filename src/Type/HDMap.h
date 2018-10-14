@@ -6,6 +6,8 @@
 #define HDMAP_HDMAP_H
 
 #include <geometry_msgs/Pose2D.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 #include "Road.h"
 #include "Junction.h"
 
@@ -25,20 +27,6 @@ private:
 
     std::vector<std::pair<int, bool>>vTempLane;
     std::vector<std::pair<int, int>>vTempLink;
-
-    struct LaneStatus
-    {
-        int lane_idx;
-        unsigned int lane_id;
-        bool is_constant_width;
-
-        LaneStatus(int idx, unsigned int id, bool b)
-        {
-            lane_idx = idx;
-            lane_id = id;
-            is_constant_width = b;
-        }
-    };
 
     unsigned int CalcuSectionId(unsigned int road, unsigned int section);
     unsigned int CalcuLaneId(unsigned int section, int lane);
@@ -60,10 +48,15 @@ public:
     LaneSection GetCurrentSection(){return mCurrSection;}
     Junction GetCurrentJunction(){return mJunctions.back();};
 
+    std::vector<LaneSection> GetAllSection();
+    std::vector<Junction>GetAllJunction();
+
     void AddJunction();
     void AddConnection(unsigned int from_road, int from_lane_idx,
                        unsigned int to_road, int to_lane_idx);
 
+    void Load(const std::string &file_name);
+//    void Save(const std::string &file_name);
 };
 }
 

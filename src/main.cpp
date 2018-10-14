@@ -10,7 +10,8 @@
 #include <mutex>
 #include "Type/HDMap.h"
 #include "Sender.h"
-//#define DEBUG
+#define XML
+
 using namespace hdmap;
 using namespace std;
 
@@ -26,7 +27,7 @@ int main( int argc, char** argv )
     ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 1000);
     Sender sender(pub);
 
-#ifdef DEBUG
+#ifdef CMD
     HDMap map;
     while(true)
     {
@@ -52,8 +53,9 @@ int main( int argc, char** argv )
         if(cmd == "n")
             break;
     }
+#endif
 
-#else
+#ifdef TEST
     HDMap map;
     while(true)
     {
@@ -108,6 +110,21 @@ int main( int argc, char** argv )
         }
         std::cout << "Junction 1" << std::endl;
     }
+    return 0;
+#endif
+
+#ifdef XML
+    HDMap map;
+    map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test.xml");
+    sender.AddMap(map);
+
+    char c;
+    while(cin >> c)
+    {
+        if(c == 'e')break;
+        sender.Send();
+    }
+
     return 0;
 #endif
 }

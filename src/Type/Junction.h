@@ -16,7 +16,7 @@ namespace hdmap
 {
 class Junction
 {
-private:
+public:
     struct Connection
     {
         unsigned int from_lane_id;

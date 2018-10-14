@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
 		roscpp
+		roscpp
 )
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -142,6 +143,7 @@ add_executable(${PROJECT_NAME}
 add_executable(talker
 		talker.cpp)
 
+add_executable(XMLTest XMLTest.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

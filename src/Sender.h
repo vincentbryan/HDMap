@@ -10,6 +10,7 @@
 #include "Type/Pose.h"
 #include "Type/LaneSection.h"
 #include "Type/Junction.h"
+#include "Type/HDMap.h"
 
 namespace hdmap
 {
@@ -28,6 +29,7 @@ public:
     void Send();
     void AddSection(LaneSection section);
     void AddJunction(Junction junciton);
+    void AddMap(HDMap &map);
 };
 }
 #endif //HDMAP_SENDER_H

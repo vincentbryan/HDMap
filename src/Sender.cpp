@@ -110,3 +110,16 @@ void Sender::AddJunction(Junction junciton)
         array.markers.push_back(line_strip);
     }
 }
+void Sender::AddMap(HDMap &map)
+{
+    for(auto & sec : map.GetAllSection())
+    {
+        AddSection(sec);
+    }
+
+    for(auto & jun : map.GetAllJunction())
+    {
+        AddJunction(jun);
+    }
+
+}
