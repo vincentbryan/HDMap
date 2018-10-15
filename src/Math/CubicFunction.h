@@ -14,7 +14,7 @@ private:
     double range;
 
 public:
-    CubicFunction(double dx1, double _range, double dx2);
+    explicit CubicFunction(double dx1 = 1.0, double _range = 1.0, double dx2 = 1.0);
     double Value(double x);
 };
 }

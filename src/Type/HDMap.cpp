@@ -19,12 +19,12 @@ void HDMap::AddRoad()
     mRoads.emplace_back(Road());
 }
 
-void HDMap::StartSection(std::vector<std::pair<int, bool>> new_lane, std::vector<std::pair<int, int>>links)
+void HDMap::StartSection(std::vector<std::tuple<int, double, double>> new_lane, std::vector<std::pair<int, int>>links)
 {
     assert(mRoads.size() >= 1);
     auto section_id_next = CalcuSectionId(mRoads.size()-1, mRoads.back().mSections.size());
     mCurrSection.iSectionId = section_id_next;
-    mCurrSection.s = mPrevSection.s + mPrevSection.pReferLine->Length();
+    mCurrSection.s = mPrevSection.s + mPrevSection.mReferLine.Length();
     mCurrSection.mLanes.clear();
 
     vTempLane = new_lane;
@@ -37,21 +37,22 @@ void HDMap::EndSection(Pose p)
     mEndPose = mStartPose;
     mStartPose = p;
 
-    mCurrSection.pReferLine.reset(new Line(mRoads.back().s, mEndPose, mStartPose));
+    mCurrSection.mReferLine = Bezier(mEndPose, mStartPose);
     mCurrSection.Clear();
 
     for(auto x : vTempLane)
     {
         auto idx = std::get<0>(x);
-        auto b = std::get<1>(x);
+        auto start_width = std::get<1>(x);
+        auto end_width = std::get<2>(x);
         auto id = CalcuLaneId(mCurrSection.iSectionId, idx);
-        mCurrSection.AddLane(idx, id, b);
+        mCurrSection.AddLane(idx, id, start_width, end_width);
     }
 
     for(auto x : vTempLink)
     {
-        int a = std::get<0>(x);
-        int b = std::get<1>(x);
+        auto a = std::get<0>(x);
+        auto b = std::get<1>(x);
         mPrevSection.mLanes[a].AddPredecessor(b);
         mCurrSection.mLanes[b].AddSuccessors(a);
     }
@@ -107,6 +108,8 @@ std::vector<Junction> HDMap::GetAllJunction()
 {
     return mJunctions;
 }
+
+/*
 void HDMap::Load(const std::string &file_name)
 {
     try
@@ -152,9 +155,9 @@ void HDMap::Load(const std::string &file_name)
                                                   section_child.second.get<double>("end_pose.yaw")};
 
                                 if(section_child.first == "refer_line")
-                                    oSection.pReferLine.reset(new Line(s, start_pose, end_pose));
+                                    oSection.mReferLine.reset(new Line(s, start_pose, end_pose));
                                 if(section_child.first == "offset")
-                                    oSection.pLaneOffset.reset(new Line(s, start_pose, end_pose));
+                                    oSection.mLaneOffset.reset(new Line(s, start_pose, end_pose));
                             }
                         }
                         //region AddLane
@@ -172,7 +175,7 @@ void HDMap::Load(const std::string &file_name)
                             Pose end_pose = { section_child.second.get<double>("offset.end_pose.x"),
                                               section_child.second.get<double>("offset.end_pose.y"),
                                               section_child.second.get<double>("offset.end_pose.yaw")};
-                            lane.pWidth.reset(new Line(0, start_pose, end_pose));
+                            lane.width.reset(new Line(0, start_pose, end_pose));
 
                             //Add link
                             for(auto link : section_child.second.get_child(""))
@@ -223,7 +226,7 @@ void HDMap::Load(const std::string &file_name)
                                       conn.second.get<double>("offset.end_pose.y"),
                                       conn.second.get<double>("offset.end_pose.yaw")};
 
-                    connection.curve.reset(new Line(0, start_pose, end_pose));
+                    connection.refer_line.reset(new Line(0, start_pose, end_pose));
                     oJunction.mConnection.emplace_back(connection);
                 }
             }
@@ -236,3 +239,4 @@ void HDMap::Load(const std::string &file_name)
         std::cout << "Error: " << e.what() << std::endl;
     }
 }
+ */

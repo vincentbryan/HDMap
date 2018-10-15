@@ -8,31 +8,32 @@
 using namespace hdmap;
 
 LaneSection::LaneSection(unsigned int section_id, double _s,
-                         std::shared_ptr<Curve> p_refer_line,
-                         std::shared_ptr<Curve> p_lane_offset)
+                         Bezier refer_line,
+                         CubicFunction lane_offset)
 {
     iSectionId = section_id;
     s = _s;
+    mReferLine = refer_line;
+    mLaneOffset = lane_offset;
 
-    if(p_refer_line == nullptr)
-        pReferLine.reset(new Line(0, Pose(), Pose()));
-    else
-        pReferLine = p_lane_offset;
-
-    if(p_lane_offset == nullptr)
-        pLaneOffset.reset(new Line(0, Pose(), Pose(pReferLine->Length(), 0)));
-    else
-        pLaneOffset = p_lane_offset;
+//    if(p_refer_line == nullptr)
+//        mReferLine.reset(new Line(0, Pose(), Pose()));
+//    else
+//        mReferLine = p_lane_offset;
+//
+//    if(p_lane_offset == nullptr)
+//        mLaneOffset.reset(new Line(0, Pose(), Pose(mReferLine->Length(), 0)));
+//    else
+//        mLaneOffset = p_lane_offset;
 
 }
 
-void LaneSection::AddLane(int lane_idx, unsigned int lane_id, bool is_constant_width)
+void LaneSection::AddLane(int lane_idx, unsigned int lane_id, int _start_width, int _end_width)
 {
     if(lane_idx > 0) most_right_lane_idx = std::max(most_right_lane_idx, lane_idx);
     if(lane_idx < 0) most_left_lane_idx = std::min(most_left_lane_idx, lane_idx);
 
-    std::shared_ptr<Curve> width(new Line(s, Pose(0, Lane::DEFAULT_WIDTH),
-                           Pose(pReferLine->Length(), Lane::DEFAULT_WIDTH)));
+    CubicFunction width(_start_width, mReferLine.Length(), _end_width);
     Lane lane(lane_id, width);
     mLanes.insert(std::pair<int, Lane>(lane_idx, lane));
 }
@@ -52,7 +53,7 @@ void LaneSection::GenerateAllPose(double ds)
     }
 
     double s_ = 0;
-    double len = pReferLine->Length();
+    double len = mReferLine.Length();
 
     while (true)
     {
@@ -68,34 +69,47 @@ void LaneSection::GenerateAllPose(double ds)
 
 void LaneSection::AppendPose(double s_)
 {
-    Pose refer_pose = pReferLine->GetPose(s_);
+    Pose refer_pose = mReferLine.GetPose(s_);
     mAllLanePose[0].emplace_back(refer_pose);
     double width = 0;
     int idx = 0;
     for(idx = 1; idx <= most_right_lane_idx; idx++)
     {
-        //TODO Pose ==> Value
-        Pose t1 = mLanes[idx].pWidth->GetPose(s_);
 
         Angle angle = refer_pose.GetAngle();
         angle.Rotate(-90.0);
-        Pose t2 = refer_pose.GetTranslation(width+t1.y/2, angle);///rotate -90 degree
 
-        mAllLanePose[idx].emplace_back(t2);
-        width += t1.y;
+        double w = mLanes[idx].width.Value(s_);
+        double m = 0;
+        if(w < Lane::DEFAULT_WIDTH)
+            m = width + w - Lane::DEFAULT_WIDTH/2;
+        else
+            m = width + w/2;
+
+        Pose t = refer_pose.GetTranslation(m, angle);
+        mAllLanePose[idx].emplace_back(t);
+
+        width += w;
     }
 
     width = 0;
     for(idx = -1; idx >= most_left_lane_idx; idx--)
     {
-        Pose t1 =  mLanes[idx].pWidth->GetPose(s_);
 
         Angle angle = refer_pose.GetAngle();
         angle.Rotate(90.0);
-        Pose t2 = refer_pose.GetTranslation(width+t1.y/2, angle);
 
-        mAllLanePose[idx].emplace_back(t2);
-        width += t1.y;
+        double w = mLanes[idx].width.Value(s_);
+        double m = 0;
+        if(w < Lane::DEFAULT_WIDTH)
+            m = width + w - Lane::DEFAULT_WIDTH/2;
+        else
+            m = width + w/2;
+
+        Pose t = refer_pose.GetTranslation(m, angle);
+
+        mAllLanePose[idx].emplace_back(t);
+        width += w;
     }
 }
 

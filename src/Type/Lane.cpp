@@ -7,14 +7,11 @@
 using namespace hdmap;
 
 double Lane::DEFAULT_WIDTH = 2.0;
-Lane::Lane(int _lane_id, std::shared_ptr<Curve> p_width, LANE_TYPE _type)
+Lane::Lane(int _lane_id, CubicFunction _width, LANE_TYPE _type)
 {
     land_id = _lane_id;
-    pWidth = p_width;
+    width = _width;
     type = _type;
 }
 
-Lane::~Lane()
-{
-    pWidth = nullptr;
-}
+Lane::~Lane() {}

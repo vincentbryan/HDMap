@@ -12,7 +12,7 @@
 #include "Sender.h"
 #include "Math/Bezier.h"
 #include "Math/CubicFunction.h"
-#define BEZIER
+#define TEST
 
 using namespace hdmap;
 using namespace std;
@@ -66,28 +66,40 @@ int main( int argc, char** argv )
         map.AddRoad();
         map.SetStartPose(p);
 
-        std::vector<std::pair<int, bool>> lanes1 = {{-2, true}, {-1, true}, {1, true}};
+        std::tuple<int, double, double> t0 (-3, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+        std::tuple<int, double, double> t1 (-2, Lane::DEFAULT_WIDTH, 0);
+        std::tuple<int, double, double> t2 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+        std::tuple<int, double, double> t3 ( 1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+        std::vector<std::tuple<int, double, double>> lanes1;
+        lanes1.emplace_back(t0);
+        lanes1.emplace_back(t1);
+        lanes1.emplace_back(t2);
+        lanes1.emplace_back(t3);
+
         std::vector<std::pair<int, int>> links1;
         map.StartSection(lanes1, links1);
 
-        p.x = 5;
-        p.y = 0;
-        p.direction = Angle(0);
+        p = {10, 0, 0};
         map.EndSection(p);
         sender.AddSection(map.GetCurrentSection());
         sender.Send();
         std::cout << "Road 1" << std::endl;
 
         //-------------------------------------------------------------
-        p = {7, 7, 0};
+        p = {14, 7, 90};
         map.AddRoad();
         map.SetStartPose(p);
 
-        std::vector<std::pair<int, bool>> lanes2 = {{-1, true}, {1, true}};
+        std::vector<std::tuple<int, double, double>> lanes2;
+        std::tuple<int, double, double> t4 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+        std::tuple<int, double, double> t5 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+        lanes2.emplace_back(t4);
+        lanes2.emplace_back(t5);
+
         std::vector<std::pair<int, int>> links2;
         map.StartSection(lanes2, links2);
 
-        p = {10, 7, 0};
+        p = {14, 17, 90};
         map.EndSection(p);
         sender.AddSection(map.GetCurrentSection());
         sender.Send();
@@ -178,7 +190,7 @@ bool CMD_StartSection(HDMap &map)
     cout << "Please input the lane number\n";
     cout << "[User]: ";
     cin >> n;
-    vector<pair<int, bool>> lanes;
+    vector<tuple<int, double, double>> lanes;
     vector<pair<int, int>> links;
     for(int i = 0; i < n; i++)
     {
@@ -186,7 +198,7 @@ bool CMD_StartSection(HDMap &map)
         cout << "[User] lane " << i << " : ";
         cin >> t;
         //TODO
-        pair<int, bool> p(t, true);
+        tuple<int, double, double > p(t, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
         lanes.emplace_back(p);
     }
     cout << "Summary: \n";

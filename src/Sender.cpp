@@ -22,7 +22,7 @@ visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double 
     line_strip.action = visualization_msgs::Marker::ADD;
     line_strip.type = visualization_msgs::Marker::LINE_STRIP;
 
-    line_strip.scale.x = 0.05;
+    line_strip.scale.x = 0.08;
 
     auto func = [](double x)
     {
@@ -95,7 +95,7 @@ void Sender::AddSection(LaneSection section)
     {
         visualization_msgs::Marker line_strip;
         if(x.first == 0)
-            line_strip = GetLineStrip(x.second, 0.5 + 0.2 * (sid % 10), 0.3 + 0.3 * (sid % 10), 0.2 * (sid % 10), 1.0);
+            line_strip = GetLineStrip(x.second, 0.7, 0.7, 0.7, 0.5);
         else
             line_strip = GetLineStrip(x.second, 0.5 + 0.2 * (sid % 10), 0.3, 0.2 * (sid % 10), 1.0);
         array.markers.push_back(line_strip);

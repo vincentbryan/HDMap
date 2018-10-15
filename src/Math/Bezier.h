@@ -20,7 +20,7 @@ protected:
     Pose _GetPose(double t);
 
 public:
-    Bezier(Pose _start_pose, Pose _end_pose, double _ctrl_len1 = 2.0, double _ctrl_len2 = 2.0);
+    Bezier(Pose _start_pose = {0, 0, 0}, Pose _end_pose = {1, 0, 0}, double _ctrl_len1 = 2.0, double _ctrl_len2 = 2.0);
     double Length();
     Pose GetPose(double s);
     std::vector<Pose> GetAllPose(double ds);

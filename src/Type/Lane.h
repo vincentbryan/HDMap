@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 #include "../Math/Curve.h"
+#include "../Math/CubicFunction.h"
 namespace hdmap
 {
 class Lane
@@ -23,15 +24,15 @@ public:
     //TODO lane:level
     //int level;
 
-    std::shared_ptr<Curve> pWidth;
-    int land_id;
+    CubicFunction width;
+    unsigned land_id;
     LANE_TYPE type;
 
     std::vector<unsigned int> predecessors;
     std::vector<unsigned int> successors;
 
 public:
-    explicit Lane(int _lane_id = 0, std::shared_ptr<Curve> p_width = nullptr, LANE_TYPE _type = LANE_TYPE ::Driving);
+    explicit Lane(int _lane_id = 0, CubicFunction _width = CubicFunction(), LANE_TYPE _type = LANE_TYPE ::Driving);
     ~Lane();
 
     void AddPredecessor(unsigned int n)

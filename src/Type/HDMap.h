@@ -25,7 +25,7 @@ private:
     LaneSection mPrevSection;
     LaneSection mCurrSection;
 
-    std::vector<std::pair<int, bool>>vTempLane;
+    std::vector<std::tuple<int, double, double>>vTempLane;
     std::vector<std::pair<int, int>>vTempLink;
 
     unsigned int CalcuSectionId(unsigned int road, unsigned int section);
@@ -43,19 +43,19 @@ public:
     void AddRoad();
 
     void EndSection(Pose p);
-    void StartSection(std::vector<std::pair<int, bool>> new_lane, std::vector<std::pair<int, int>>links);
+    void StartSection(std::vector<std::tuple<int, double, double>> new_lane, std::vector<std::pair<int, int>>links);
 
     LaneSection GetCurrentSection(){return mCurrSection;}
     Junction GetCurrentJunction(){return mJunctions.back();};
 
     std::vector<LaneSection> GetAllSection();
-    std::vector<Junction>GetAllJunction();
+    std::vector<Junction> GetAllJunction();
 
     void AddJunction();
     void AddConnection(unsigned int from_road, int from_lane_idx,
                        unsigned int to_road, int to_lane_idx);
 
-    void Load(const std::string &file_name);
+//    void Load(const std::string &file_name);
 //    void Save(const std::string &file_name);
 };
 }

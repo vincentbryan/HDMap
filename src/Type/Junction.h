@@ -11,6 +11,7 @@
 #include <memory>
 #include "../Math/Curve.h"
 #include "Lane.h"
+#include "../Math/Bezier.h"
 
 namespace hdmap
 {
@@ -21,7 +22,14 @@ public:
     {
         unsigned int from_lane_id;
         unsigned int to_lane_id;
-        std::shared_ptr<Curve> curve;
+        Bezier refer_line;
+
+        Connection(unsigned int id1, unsigned int id2, Bezier b)
+        {
+            from_lane_id = id1;
+            to_lane_id = id2;
+            refer_line = b;
+        }
     };
 public:
     static unsigned int JUNCTION_ID;

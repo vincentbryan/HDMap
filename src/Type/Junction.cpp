@@ -16,13 +16,9 @@ Junction::Junction()
 
 void Junction::AddConnection(Lane from_lane, Pose start_pose, Lane to_lane, Pose end_pose)
 {
-    Connection conn;
-    conn.from_lane_id = from_lane.land_id;
-    conn.to_lane_id = to_lane.land_id;
-
-    //TODO
-    conn.curve.reset(new Line(0, start_pose, end_pose));
-    mConnection.emplace_back(conn);
+    mConnection.emplace_back(
+        Connection(from_lane.land_id, to_lane.land_id, Bezier(start_pose, end_pose))
+    );
 }
 
 std::vector<std::vector<Pose>> Junction::GetAllPose()
@@ -31,9 +27,8 @@ std::vector<std::vector<Pose>> Junction::GetAllPose()
     {
         for(auto x : mConnection)
         {
-            mPose.emplace_back(x.curve->GeneratePose(0.1));
+            mPose.emplace_back(x.refer_line.GetAllPose(0.1));
         }
     }
-
     return mPose;
 }

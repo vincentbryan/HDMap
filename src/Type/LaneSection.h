@@ -9,6 +9,7 @@
 #include <memory>
 #include "Lane.h"
 #include "../Math/Line.h"
+#include "../Math/Bezier.h"
 namespace hdmap
 {
 class LaneSection
@@ -17,8 +18,8 @@ public:
     double s;
     unsigned int iSectionId = 0;
 
-    std::shared_ptr<Curve> pReferLine;
-    std::shared_ptr<Curve> pLaneOffset;
+    Bezier mReferLine;
+    CubicFunction mLaneOffset;
 
     std::map<int, Lane>mLanes;
     std::map<int, std::vector<Pose>> mAllLanePose;
@@ -30,10 +31,10 @@ public:
 
 public:
     explicit LaneSection(unsigned int section_id = 0, double _s = 0,
-                         std::shared_ptr<Curve> p_refer_line = nullptr,
-                         std::shared_ptr<Curve> p_lane_offset = nullptr);
+                         Bezier refer_line = Bezier(),
+                         CubicFunction lane_offset = CubicFunction());
 
-    void AddLane(int lane_idx, unsigned int lane_id, bool is_constant_width);
+    void AddLane(int lane_idx, unsigned int lane_id, int _start_width, int _end_width);
 
     std::map<int, std::vector<Pose>> GetAllPose();
 
