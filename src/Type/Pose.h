@@ -6,6 +6,8 @@
 #define HDMAP_POSE_H
 
 #include <cmath>
+#include "Vector2d.h"
+#include "Angle.h"
 namespace hdmap
 {
 struct Pose
@@ -28,63 +30,70 @@ struct Pose
         yaw = _theta;
     }
 
+    Pose(Vector2d v, Angle angle)
+    {
+        x = v.x;
+        y = v.y;
+        yaw = angle.ToYaw();
+    }
+
     double DistanceFrom(const Pose &another)
     {
         return sqrt((x - another.x) * (x - another.x) + (y - another.y) * (y - another.y));
     }
 
-    void Normalize()
+
+    void Rotate(double a)
     {
-        double d = sqrt(x*x + y*y);
-        x /= d;
-        y /= d;
+        yaw += a;
     }
 
-    Pose GetNormalization()
+    Pose GetRotation(double n)
     {
-        Pose p = *this;
-        p.Normalize();
-        return p;
-    }
-
-    Pose operator * (double d)
-    {
-        Pose p;
-        p.x = x * d;
-        p.y = y * d;
-        p.yaw = yaw;
-        return p;
-    }
-
-    friend Pose operator * (double d, Pose& p)
-    {
-        return p * d;
-    }
-
-    void Rotate(double angle)
-    {
-        yaw += angle;
-    }
-
-    Pose GetRotation(double angle)
-    {
-        return {x, y, yaw+angle};
+        return {x, y, yaw+n};
     }
 
     ///angle is relative to x-y axis
-    void Translate(double length, double angle)
+    void Translate(double length, Angle angle)
     {
-        x += length * cos(angle / 180.0 * M_PI);
-        y += length * sin(angle / 180.0 * M_PI);
+        Vector2d v = angle.ToVector();
+        x += length * v.x;
+        y += length * v.y;
     }
 
-    Pose GetTranslation(double length, double angle)
+    Pose GetTranslation(double length, Angle angle)
     {
-        return  {x + length * cos(angle / 180.0 * M_PI),
-                 y + length * sin(angle / 180.0 * M_PI),
-                 yaw};
+        Vector2d v = angle.ToVector();
+        return  {x + length * v.x, y + length * v.y, yaw};
     }
 
+    Vector2d GetPosition()
+    {
+        return {x, y};
+    }
+
+    Angle GetAngle()
+    {
+        Angle a;
+        a.FromYaw(yaw);
+        return a;
+    }
+
+    void SetPosition(Vector2d v)
+    {
+        x = v.x;
+        y = v.y;
+    }
+
+    void SetYaw(Angle angle)
+    {
+        yaw = angle.ToYaw();
+    }
+
+    void SetYaw(double _yaw)
+    {
+        yaw = _yaw;
+    }
 
 };
 }

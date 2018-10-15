@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include "Curve.h"
+#include "../Math/Curve.h"
 #include "Lane.h"
 
 namespace hdmap

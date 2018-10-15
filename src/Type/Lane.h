@@ -6,7 +6,7 @@
 
 #include <vector>
 #include <memory>
-#include "CubicPoly.h"
+#include "../Math/Curve.h"
 namespace hdmap
 {
 class Lane

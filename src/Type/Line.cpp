@@ -10,9 +10,8 @@ using namespace hdmap;
 Line::Line(double _start, Pose _start_pose, Pose _end_pose)
 : start_pose(_start_pose),
   end_pose(_end_pose),
-  direction(_end_pose.x - _start_pose.x, _end_pose.y - _start_pose.y, _start_pose.yaw)
+  direction({_end_pose.x - _start_pose.x, _end_pose.y - _start_pose.y})
 {
-    direction.Normalize();
     start = _start;
 }
 
@@ -23,8 +22,7 @@ double Line::Length()
 
 Pose Line::GetPose(double ds)
 {
-    Pose p = ds * direction;
-    return {p.x + start_pose.x, p.y + start_pose.y, start_pose.yaw};
+    return start_pose.GetTranslation(ds, direction);
 }
 
 std::vector<Pose> Line::GeneratePose(double ds)

@@ -81,6 +81,13 @@ void Sender::Send()
     pub.publish(array);
 }
 
+void Sender::SendPoses(std::vector<Pose> poses)
+{
+    auto line_strip = GetLineStrip(poses, 0.5, 0.5, 0.5, 1.0);
+    array.markers.emplace_back(line_strip);
+    pub.publish(array);
+}
+
 void Sender::AddSection(LaneSection section)
 {
     auto sid = section.iSectionId;

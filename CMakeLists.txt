@@ -133,8 +133,10 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 AUX_SOURCE_DIRECTORY(src SRCS)
 AUX_SOURCE_DIRECTORY(src/Type TYPES)
+AUX_SOURCE_DIRECTORY(src/Math MATH)
 add_executable(${PROJECT_NAME}
 		${TYPES}
+		${MATH}
 		${SRCS}
 		src/Sender.cpp
 		src/Sender.h

@@ -10,6 +10,7 @@
 #include <mutex>
 #include "Type/HDMap.h"
 #include "Sender.h"
+#include "Math/Bezier.h"
 #define XML
 
 using namespace hdmap;
@@ -110,7 +111,6 @@ int main( int argc, char** argv )
         }
         std::cout << "Junction 1" << std::endl;
     }
-    return 0;
 #endif
 
 #ifdef XML
@@ -124,9 +124,26 @@ int main( int argc, char** argv )
         if(c == 'e')break;
         sender.Send();
     }
-
-    return 0;
 #endif
+
+#ifdef BEZIER
+    Pose start(0, 0, 270);
+    Pose end(5, 5, 270);
+
+    Bezier b(start, end);
+    cout << b.Length() << endl;
+    for(auto p : b.GetAllPose(0.05))
+    {
+        cout << p.x << " " << p.y << " " << p.yaw << endl;
+    }
+    char c;
+    while(cin >> c)
+    {
+        if(c != 'e')
+            sender.SendPoses(b.GetAllPose(0.05));
+    }
+#endif
+    return 0;
 }
 
 bool CMD_AddRoad(HDMap &map)

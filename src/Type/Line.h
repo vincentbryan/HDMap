@@ -5,7 +5,7 @@
 #ifndef HDMAP_LINE_H
 #define HDMAP_LINE_H
 
-#include "Curve.h"
+#include "../Math/Curve.h"
 #include "Pose.h"
 
 namespace hdmap
@@ -17,7 +17,7 @@ public:
     double length;
     Pose start_pose;
     Pose end_pose;
-    Pose direction;
+    Angle direction;
 
     Line(double _start, Pose _start_pose, Pose _end_pose);
 
@@ -26,7 +26,5 @@ public:
     Pose GetPose(double ds) override;
 };
 }
-
-
 
 #endif //HDMAP_LINE_H

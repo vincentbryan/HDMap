@@ -27,8 +27,9 @@ public:
     visualization_msgs::Marker GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a);
     visualization_msgs::Marker GetText(const std::string &content, Pose p);
     void Send();
+    void SendPoses(std::vector<Pose> poses);
     void AddSection(LaneSection section);
-    void AddJunction(Junction junciton);
+    void AddJunction(Junction junction);
     void AddMap(HDMap &map);
 };
 }

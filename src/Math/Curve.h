@@ -6,7 +6,7 @@
 #define HDMAP_CURVE_H
 
 #include <vector>
-#include "Pose.h"
+#include "../Type/Pose.h"
 namespace hdmap
 {
 class Curve
