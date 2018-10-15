@@ -11,7 +11,7 @@ namespace hdmap
 {
 class Bezier
 {
-private:
+protected:
     Pose start_pose;
     Pose end_pose;
     Vector2d p0, p1, p2, p3;
@@ -20,7 +20,7 @@ private:
     Pose _GetPose(double t);
 
 public:
-    Bezier(Pose _start_pose, Pose _end_pose);
+    Bezier(Pose _start_pose, Pose _end_pose, double _ctrl_len1 = 2.0, double _ctrl_len2 = 2.0);
     double Length();
     Pose GetPose(double s);
     std::vector<Pose> GetAllPose(double ds);

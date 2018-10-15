@@ -11,7 +11,8 @@
 #include "Type/HDMap.h"
 #include "Sender.h"
 #include "Math/Bezier.h"
-#define XML
+#include "Math/CubicFunction.h"
+#define BEZIER
 
 using namespace hdmap;
 using namespace std;
@@ -61,7 +62,7 @@ int main( int argc, char** argv )
     while(true)
     {
         //-------------------------------------------------------------
-        Pose p(0, 0, 270);
+        Pose p(0, 0, 0);
         map.AddRoad();
         map.SetStartPose(p);
 
@@ -71,7 +72,7 @@ int main( int argc, char** argv )
 
         p.x = 5;
         p.y = 0;
-        p.yaw = 270;
+        p.direction = Angle(0);
         map.EndSection(p);
         sender.AddSection(map.GetCurrentSection());
         sender.Send();
@@ -86,9 +87,7 @@ int main( int argc, char** argv )
         std::vector<std::pair<int, int>> links2;
         map.StartSection(lanes2, links2);
 
-        p.x = 7;
-        p.y = 10;
-        p.yaw = 0;
+        p = {10, 7, 0};
         map.EndSection(p);
         sender.AddSection(map.GetCurrentSection());
         sender.Send();
@@ -127,21 +126,35 @@ int main( int argc, char** argv )
 #endif
 
 #ifdef BEZIER
-    Pose start(0, 0, 270);
-    Pose end(5, 5, 270);
-
-    Bezier b(start, end);
-    cout << b.Length() << endl;
-    for(auto p : b.GetAllPose(0.05))
+    CubicFunction func(3, 5, 3);
+    vector<Pose> res;
+    for(double s = 0; s < 5.0; s += 0.1)
     {
-        cout << p.x << " " << p.y << " " << p.yaw << endl;
+        Pose(s, func.Value(s), 0);
+        res.emplace_back(Pose(s, func.Value(s), 0));
     }
     char c;
     while(cin >> c)
     {
         if(c != 'e')
-            sender.SendPoses(b.GetAllPose(0.05));
+            sender.SendPoses(res);
     }
+
+//    Pose start(0, 0, 270);
+//    Pose end(5, 5, 270);
+//
+//    Bezier b(start, end);
+//    cout << b.Length() << endl;
+//    for(auto p : b.GetAllPose(0.05))
+//    {
+//        cout << p.x << " " << p.y << " " << p.yaw << endl;
+//    }
+//    char c;
+//    while(cin >> c)
+//    {
+//        if(c != 'e')
+//            sender.SendPoses(b.GetAllPose(0.05));
+//    }
 #endif
     return 0;
 }
@@ -151,7 +164,7 @@ bool CMD_AddRoad(HDMap &map)
     cout << "To start a road, you need to input a start pose[x, y, yaw]:\n";
     cout << "[User]: ";
     Pose p;
-    std::cin >> p.x >> p.y >> p.yaw;
+    std::cin >> p.x >> p.y >> p.direction;
     map.AddRoad();
     map.SetStartPose(p);
     cout << "Summary: Init road successfully\n";
@@ -225,7 +238,7 @@ bool CMD_EndSection(HDMap &map)
     cout << "To end a section, you need to input a end pose[x, y, yaw]:\n";
     cout << "[User]: ";
     Pose p;
-    std::cin >> p.x >> p.y >> p.yaw;
+    std::cin >> p.x >> p.y >> p.direction;
     map.EndSection(p);
     return true;
 }

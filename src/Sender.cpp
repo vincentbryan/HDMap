@@ -128,5 +128,5 @@ void Sender::AddMap(HDMap &map)
     {
         AddJunction(jun);
     }
-
 }
+

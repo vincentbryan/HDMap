@@ -5,8 +5,8 @@
 #ifndef HDMAP_LINE_H
 #define HDMAP_LINE_H
 
-#include "../Math/Curve.h"
-#include "Pose.h"
+#include "Curve.h"
+#include "../Type/Pose.h"
 
 namespace hdmap
 {

@@ -31,6 +31,11 @@ public:
     void AddSection(LaneSection section);
     void AddJunction(Junction junction);
     void AddMap(HDMap &map);
+    void Clear()
+    {
+        array.markers.clear();
+    }
+
 };
 }
 #endif //HDMAP_SENDER_H

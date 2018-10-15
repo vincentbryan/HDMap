@@ -7,14 +7,14 @@
 
 using namespace hdmap;
 
-Bezier::Bezier(Pose _start_pose, Pose _end_pose)
+Bezier::Bezier(Pose _start_pose, Pose _end_pose, double _ctrl_len1, double _ctrl_len2)
 {
     start_pose = _start_pose;
     end_pose = _end_pose;
     p0 = start_pose.GetPosition();
     p3 = end_pose.GetPosition();
-    p1 = p0 + 2 * start_pose.GetAngle().ToVector();
-    p2 = p3 - 2 * end_pose.GetAngle().ToVector();
+    p1 = p0 + _ctrl_len1 * start_pose.GetAngle().ToVector();
+    p2 = p3 - _ctrl_len2 * end_pose.GetAngle().ToVector();
     length = 0;
 
     double t = 0;

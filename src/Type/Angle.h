@@ -6,13 +6,22 @@
 #define HDMAP_ANGLE_H
 
 #include <cmath>
+#include <istream>
+#include <iostream>
 #include "Vector2d.h"
+
 namespace hdmap
 {
 class Angle
 {
 private:
     double m;
+    double Warp(double d)
+    {
+        while (d < 0) d += 360.0;
+        while (d >= 360.0) d -= 360.0;
+        return d;
+    }
 
 public:
     explicit Angle(double _m = 0) : m(_m){};
@@ -20,15 +29,15 @@ public:
     {
         m = atan(v.y / v.x) / M_PI * 180.0;
     }
+
     double ToYaw()
     {
-        //TODO to validate
-        return fmod(m-90, 360);
+        return Warp(m-90);
     }
 
     void FromYaw(double y)
     {
-        m = fmod(y+90, 360);
+        m = Warp(y + 90);
     }
 
     Vector2d ToVector()
@@ -54,6 +63,16 @@ public:
     void Rotate(double degree)
     {
         m += degree;
+    }
+
+    friend std::istream & operator >> (std::istream & is, Angle & angle)
+    {
+        is >> angle.m;
+    };
+
+    friend std::ostream & operator << (std::ostream & os, const Angle & angle)
+    {
+        os << angle.m;
     }
 };
 }

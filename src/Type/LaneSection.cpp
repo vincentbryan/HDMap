@@ -3,7 +3,7 @@
 //
 
 #include "LaneSection.h"
-#include "Line.h"
+#include "../Math/Line.h"
 
 using namespace hdmap;
 
@@ -77,8 +77,7 @@ void LaneSection::AppendPose(double s_)
         //TODO Pose ==> Value
         Pose t1 = mLanes[idx].pWidth->GetPose(s_);
 
-        Angle angle;
-        angle.FromYaw(refer_pose.yaw);
+        Angle angle = refer_pose.GetAngle();
         angle.Rotate(-90.0);
         Pose t2 = refer_pose.GetTranslation(width+t1.y/2, angle);///rotate -90 degree
 
@@ -91,8 +90,7 @@ void LaneSection::AppendPose(double s_)
     {
         Pose t1 =  mLanes[idx].pWidth->GetPose(s_);
 
-        Angle angle;
-        angle.FromYaw(refer_pose.yaw);
+        Angle angle = refer_pose.GetAngle();
         angle.Rotate(90.0);
         Pose t2 = refer_pose.GetTranslation(width+t1.y/2, angle);
 

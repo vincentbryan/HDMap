@@ -14,27 +14,27 @@ struct Pose
 {
     double x;
     double y;
-    double yaw;
+    Angle direction;
 
     Pose()
     {
         x = 0;
         y = 0;
-        yaw = 0;
+        direction = Angle(0);
     }
 
     Pose(double _x, double _y, double _theta = 0)
     {
         x = _x;
         y = _y;
-        yaw = _theta;
+        direction = Angle(_theta);
     }
 
     Pose(Vector2d v, Angle angle)
     {
         x = v.x;
         y = v.y;
-        yaw = angle.ToYaw();
+        direction = angle;
     }
 
     double DistanceFrom(const Pose &another)
@@ -45,12 +45,14 @@ struct Pose
 
     void Rotate(double a)
     {
-        yaw += a;
+        direction.Rotate(a);
     }
 
     Pose GetRotation(double n)
     {
-        return {x, y, yaw+n};
+        Pose p(x, y, direction.GetAngle());
+        p.Rotate(n);
+        return p;
     }
 
     ///angle is relative to x-y axis
@@ -64,7 +66,7 @@ struct Pose
     Pose GetTranslation(double length, Angle angle)
     {
         Vector2d v = angle.ToVector();
-        return  {x + length * v.x, y + length * v.y, yaw};
+        return  {x + length * v.x, y + length * v.y, direction.GetAngle()};
     }
 
     Vector2d GetPosition()
@@ -74,9 +76,7 @@ struct Pose
 
     Angle GetAngle()
     {
-        Angle a;
-        a.FromYaw(yaw);
-        return a;
+        return direction;
     }
 
     void SetPosition(Vector2d v)
@@ -85,14 +85,9 @@ struct Pose
         y = v.y;
     }
 
-    void SetYaw(Angle angle)
+    void SetAngleFromYaw(double _yaw)
     {
-        yaw = angle.ToYaw();
-    }
-
-    void SetYaw(double _yaw)
-    {
-        yaw = _yaw;
+        direction.FromYaw(_yaw);
     }
 
 };
