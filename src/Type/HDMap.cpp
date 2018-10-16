@@ -100,10 +100,8 @@ void HDMap::AddConnection(unsigned int from_road, int from_lane_idx,
     auto to_section = mRoads[to_road].mSections.front();
 
     mJunctions.back().AddConnection(
-         from_section.GetLaneByIndex(from_lane_idx),
-         from_section.GetLanePoseByIndex(from_lane_idx).back(),
-         to_section.GetLaneByIndex(to_lane_idx),
-         to_section.GetLanePoseByIndex(to_lane_idx).front(),
+         from_road, from_lane_idx, from_section.GetLanePoseByIndex(from_lane_idx).back(),
+         to_road, to_lane_idx, to_section.GetLanePoseByIndex(to_lane_idx).front(),
          _ctrl_len1, _ctrl_len2
     );
 }
@@ -125,6 +123,7 @@ std::vector<Junction> HDMap::GetAllJunction()
 {
     return mJunctions;
 }
+
 
 void HDMap::Load(const std::string &file_name)
 {
@@ -232,23 +231,46 @@ void HDMap::Load(const std::string &file_name)
             Junction oJunction;
             oJunction.iJunctionId = junction.second.get<int>("<xmlattr>.id");
 
-            for(auto conn : junction.second.get_child(""))
+            for(auto link : junction.second.get_child(""))
             {
-                if(conn.first == "connection")
+                if(link.first == "road-link")
                 {
-                    auto from_id = conn.second.get<int>("<xmlattr>.from_lane_id");
-                    auto to_id = conn.second.get<int>("<xmlattr>.to_lane_id");
+                    auto from_road_id = link.second.get<int>("<xmlattr>.from_road_id");
+                    auto to_road_id = link.second.get<int>("<xmlattr>.to_road_id");
 
-                    Pose start_pose = { conn.second.get<double>("refer_line.start_pose.x"),
-                                        conn.second.get<double>("refer_line.start_pose.y"),
-                                        conn.second.get<double>("refer_line.start_pose.direction")};
-                    Pose end_pose = { conn.second.get<double>("refer_line.end_pose.x"),
-                                      conn.second.get<double>("refer_line.end_pose.y"),
-                                      conn.second.get<double>("refer_line.end_pose.direction")};
-                    auto len1 = conn.second.get<double>("refer_line.ctrl_len1");
-                    auto len2 = conn.second.get<double>("refer_line.ctrl_len2");
-                    Junction::Connection c(from_id, to_id, Bezier(start_pose, end_pose, len1, len2));
+                    RoadLink road_link(from_road_id, to_road_id);
+
+                    for(auto lane_link : link.second.get_child(""))
+                    {
+                        if(lane_link.first == "lane-link")
+                        {
+                            auto from_lane_idx = lane_link.second.get<int>("<xmlattr>.from_lane_idx");
+                            auto to_lane_idx = lane_link.second.get<int>("<xmlattr>.to_lane_idx");
+                            Pose start_pose = { lane_link.second.get<double>("refer_line.start_pose.x"),
+                                                lane_link.second.get<double>("refer_line.start_pose.y"),
+                                                lane_link.second.get<double>("refer_line.start_pose.direction")};
+                            Pose end_pose = { lane_link.second.get<double>("refer_line.end_pose.x"),
+                                              lane_link.second.get<double>("refer_line.end_pose.y"),
+                                              lane_link.second.get<double>("refer_line.end_pose.direction")};
+                            auto len1 = lane_link.second.get<double>("refer_line.ctrl_len1");
+                            auto len2 = lane_link.second.get<double>("refer_line.ctrl_len2");
+                            road_link.AddLaneLink(from_lane_idx, to_lane_idx, Bezier(start_pose, end_pose, len1, len2));
+                        }
+                    }
+//                    oJunction.mRoadLinks.insert(std::pair<std::pair<unsigned int, unsigned int>, RoadLink>(std::pair(from_road_id, to_road_id), road_link));
+                    oJunction.mRoadLinks[std::pair<unsigned int, unsigned int>(from_road_id, to_road_id)] = road_link;
+                    /*
+                    Pose start_pose = { link.second.get<double>("refer_line.start_pose.x"),
+                                        link.second.get<double>("refer_line.start_pose.y"),
+                                        link.second.get<double>("refer_line.start_pose.direction")};
+                    Pose end_pose = { link.second.get<double>("refer_line.end_pose.x"),
+                                      link.second.get<double>("refer_line.end_pose.y"),
+                                      link.second.get<double>("refer_line.end_pose.direction")};
+                    auto len1 = link.second.get<double>("refer_line.ctrl_len1");
+                    auto len2 = link.second.get<double>("refer_line.ctrl_len2");
+                    Junction::LaneLink c(from_id, to_id, Bezier(start_pose, end_pose, len1, len2));
                     oJunction.mConnection.emplace_back(c);
+                     */
                 }
             }
             mJunctions.emplace_back(oJunction);
@@ -299,9 +321,15 @@ void HDMap::Summary()
     {
         std::cout << "- - - - - - - - - - - - - - - - - - - -\n";
         std::cout << "junc[" << j.iJunctionId << "]" << std::endl;
-        for(auto c : j.mConnection)
+        for(auto c : j.mRoadLinks)
         {
-            std::cout << "\tconn: [" << c.from_lane_id << "] --> [" << c.to_lane_id << "]\n";
+            std::cout << "\troad[" << std::get<0>(c.first) << "] --> road[" << std::get<1>(c.first) << "]\n";
+
+            for(auto k : c.second.vLaneLinks)
+            {
+                std::cout << "\t\t[" << k.iFromIndex << "] --> [" << k.iToIndex << "]\n";
+            }
+            std::cout << std::endl;
         }
     }
 }

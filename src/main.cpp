@@ -12,7 +12,7 @@
 #include "Sender.h"
 #include "Math/Bezier.h"
 #include "Math/CubicFunction.h"
-#define TEST
+#define XML
 
 using namespace hdmap;
 using namespace std;
@@ -144,6 +144,7 @@ int main( int argc, char** argv )
 #ifdef XML
     HDMap map;
     map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test.xml");
+    map.Summary();
     sender.AddMap(map);
 
     char c;

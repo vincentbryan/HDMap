@@ -1,8 +1,8 @@
 <hdmap>
     <roads>
-        <road id="1" length="0.0">
+        <road id="0" length="20.0">
 
-        	<lanesection id="1" s="0.0" left_idx="-2" right_idx="1">
+        	<lanesection id="0" s="0.0" left_idx="-2" right_idx="1">
 
         		<refer_line type="bezier" s="0">
         			<start_pose>
@@ -11,7 +11,7 @@
         				<direction>0</direction>
         			</start_pose>
         			<end_pose>
-        				<x>8</x>
+        				<x>10</x>
         				<y>0</y>
         				<direction>0</direction>
         			</end_pose>
@@ -22,7 +22,7 @@
         		<offset type="cubic_function">
                     <x0>0</x0>
                     <y0>0</y0>
-                    <x1>8</x1>
+                    <x1>10</x1>
                     <y1>0</y1>
         		</offset>
 
@@ -30,45 +30,103 @@
                     <offset type="cubic_function" s="0">
                         <x0>0</x0>
                         <y0>2</y0>
-                        <x1>8</x1>
-                        <y1>0</y1>
+                        <x1>10</x1>
+                        <y1>2</y1>
                     </offset>
-                    <successors>14</successors>
+                    <successors>13</successors>
                 </lane>
 
     			<lane idx="-1" id="4" type="Driving">
         			<offset type="cubic_function" s="0">
                         <x0>0</x0>
                         <y0>2</y0>
-                        <x1>8</x1>
+                        <x1>10</x1>
                         <y1>2</y1>
         			</offset>
         			<successors>14</successors>
     			</lane>
 
-    			<lane idx="1" id="6" type="Driving">
-        			<offset type="cubic_function" s="0">
+                <lane idx="1" id="6" type="Driving">
+                    <offset type="cubic_function" s="0">
                         <x0>0</x0>
                         <y0>2</y0>
-                        <x1>8</x1>
+                        <x1>10</x1>
                         <y1>2</y1>
-        			</offset>
-        			<successors>16</successors>
-    			</lane>
-        	</lanesection>
-        </road>
+                    </offset>
+                    <successors>16</successors>
+                </lane>
 
-        <road id="2" s="0.0">
-            <lanesection id="2" s="5.0" left_idx="-1" right_idx="1">
+        	</lanesection>
+
+
+            <lanesection id="1" s="10.0" left_idx="-2" right_idx="1">
                 <refer_line type="bezier" s="0">
                     <start_pose>
-                        <x>12</x>
-                        <y>5</y>
+                        <x>10</x>
+                        <y>0</y>
+                        <direction>0</direction>
+                    </start_pose>
+                    <end_pose>
+                        <x>20</x>
+                        <y>0</y>
+                        <direction>0</direction>
+                    </end_pose>
+                    <ctrl_len1>2</ctrl_len1>
+                    <ctrl_len2>2</ctrl_len2>
+                </refer_line>
+
+                <offset type="cubic_function">
+                    <x0>0</x0>
+                    <y0>0</y0>
+                    <x1>10</x1>
+                    <y1>0</y1>
+                </offset>
+                
+                <lane idx="-2" id="13" type="Driving">
+                    <offset type="cubic_function" s="0">
+                        <x0>0</x0>
+                        <y0>2</y0>
+                        <x1>10</x1>
+                        <y1>0</y1>
+                    </offset>
+                    <predecessor>3</predecessor>
+                </lane>
+
+                <lane idx="-1" id="14" type="Driving">
+                    <offset type="cubic_function" s="0">
+                        <x0>0</x0>
+                        <y0>2</y0>
+                        <x1>10</x1>
+                        <y1>2</y1>
+                    </offset>
+                    <predecessor>4</predecessor>
+                </lane>
+
+
+                <lane idx="1" id="16" type="Driving">
+                    <offset type="cubic_function" s="0">
+                        <x0>0</x0>
+                        <y0>2</y0>
+                        <x1>10</x1>
+                        <y1>2</y1>
+                    </offset>
+                    <predecessor>6</predecessor>
+                </lane>
+            </lanesection>
+
+        </road>
+
+        <road id="1" length="10.0">
+            <lanesection id="2" s="0.0" left_idx="-1" right_idx="1">
+                <refer_line type="bezier" s="0">
+                    <start_pose>
+                        <x>24</x>
+                        <y>7</y>
                         <direction>90</direction>
                     </start_pose>
                     <end_pose>
-                        <x>12</x>
-                        <y>10</y>
+                        <x>24</x>
+                        <y>17</y>
                         <direction>90</direction>
                     </end_pose>
                     <ctrl_len1>2</ctrl_len1>
@@ -78,7 +136,7 @@
                 <offset type="cubic_function" s="0">
                     <x0>0</x0>
                     <y0>0</y0>
-                    <x1>5</x1>
+                    <x1>10</x1>
                     <y1>0</y1>
                 </offset>
 
@@ -86,7 +144,7 @@
                     <offset type="cubic_function" s="0">
                         <x0>0</x0>
                         <y0>2</y0>
-                        <x1>5</x1>
+                        <x1>10</x1>
                         <y1>2</y1>
                     </offset>
                     <predecessor>4</predecessor>
@@ -96,7 +154,7 @@
                     <offset type="cubic_function" s="0">
                         <x0>0</x0>
                         <y0>2</y0>
-                        <x1>5</x1>
+                        <x1>10</x1>
                         <y1>2</y1>
                     </offset>
                     <predecessor>6</predecessor>
@@ -107,39 +165,61 @@
 
     <junctions>
         <junction id="0">
-            <connection from_lane_id="4" to_lane_id="14">
-                <refer_line type="bezier" s="0">
-                    <start_pose>
-                        <x>8</x>
-                        <y>1</y>
-                        <direction>0</direction>
-                    </start_pose>
-                    <end_pose>
-                        <x>11</x>
-                        <y>5</y>
-                        <direction>90</direction>
-                    </end_pose>
-                    <ctrl_len1>2</ctrl_len1>
-                    <ctrl_len2>2</ctrl_len2>
-                </refer_line>
-            </connection>
 
-            <connection from_lane_id="6" to_lane_id="16">
-                <refer_line type="bezier" s="0">
-                    <start_pose>
-                        <x>8</x>
-                        <y>-1</y>
-                        <direction>0</direction>
-                    </start_pose>
-                    <end_pose>
-                        <x>13</x>
-                        <y>5</y>
-                        <direction>90</direction>
-                    </end_pose>
-                    <ctrl_len1>4</ctrl_len1>
-                    <ctrl_len2>2</ctrl_len2>
-                </refer_line>
-            </connection>
+            <road-link from_road_id="0" to_road_id="1">
+
+                <lane-link from_lane_idx="-2" to_lane_idx="-1">
+                    <refer_line type="bezier" s="0">
+                        <start_pose>
+                            <x>20</x>
+                            <y>1</y>
+                            <direction>0</direction>
+                        </start_pose>
+                        <end_pose>
+                            <x>23</x>
+                            <y>7</y>
+                            <direction>90</direction>
+                        </end_pose>
+                        <ctrl_len1>2</ctrl_len1>
+                        <ctrl_len2>2</ctrl_len2>
+                    </refer_line>
+                </lane-link>
+
+                <lane-link from_lane_idx="-1" to_lane_idx="-1">
+                    <refer_line type="bezier" s="0">
+                        <start_pose>
+                            <x>20</x>
+                            <y>1</y>
+                            <direction>0</direction>
+                        </start_pose>
+                        <end_pose>
+                            <x>23</x>
+                            <y>7</y>
+                            <direction>90</direction>
+                        </end_pose>
+                        <ctrl_len1>2</ctrl_len1>
+                        <ctrl_len2>2</ctrl_len2>
+                    </refer_line>
+                </lane-link>
+
+                <lane-link from_lane_idx="1" to_lane_idx="1">
+                    <refer_line type="bezier" s="0">
+                        <start_pose>
+                            <x>20</x>
+                            <y>-1</y>
+                            <direction>0</direction>
+                        </start_pose>
+                        <end_pose>
+                            <x>25</x>
+                            <y>7</y>
+                            <direction>90</direction>
+                        </end_pose>
+                        <ctrl_len1>4</ctrl_len1>
+                        <ctrl_len2>2</ctrl_len2>
+                    </refer_line>
+                </lane-link>
+            </road-link>
+
         </junction> 
     </junctions>
 </hdmap>

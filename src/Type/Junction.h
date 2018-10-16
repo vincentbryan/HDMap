@@ -12,35 +12,24 @@
 #include "../Math/Curve.h"
 #include "Lane.h"
 #include "../Math/Bezier.h"
+#include "RoadLink.h"
 
 namespace hdmap
 {
 class Junction
 {
 public:
-    struct Connection
-    {
-        unsigned int from_lane_id;
-        unsigned int to_lane_id;
-        Bezier refer_line;
-
-        Connection(unsigned int id1, unsigned int id2, Bezier b)
-        {
-            from_lane_id = id1;
-            to_lane_id = id2;
-            refer_line = b;
-        }
-    };
-public:
     static unsigned int JUNCTION_ID;
     unsigned int iJunctionId;
 
-    std::vector<Connection> mConnection;
-    std::vector<std::vector<Pose>> mPose;
+    std::map<std::pair<unsigned int, unsigned int>, RoadLink> mRoadLinks;
+    std::vector<std::vector<Pose>> vPoses;
 
     explicit Junction();
 
-    void AddConnection(Lane from_lane, Pose start_pose, Lane to_lane, Pose end_pose, double _ctrl_len1, double _ctrl_len2);
+    void AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pose _from_lane_pose,
+                       unsigned int _to_road_id, int _to_lane_idx, Pose _to_lane_pose,
+                       double _ctrl_len1, double _ctrl_len2);
     std::vector<std::vector<Pose>> GetAllPose();
 };
 }
