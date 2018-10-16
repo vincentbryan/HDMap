@@ -10,6 +10,6 @@ unsigned int Road::ROAD_ID = 0;
 
 Road::Road()
 {
-    ROAD_ID++;
-    mRoadId = ROAD_ID;
+    mRoadId = ROAD_ID++;
+    length = 0;
 }

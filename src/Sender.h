@@ -20,17 +20,21 @@ private:
     ros::Publisher pub;
     visualization_msgs::MarkerArray array;
     const std::string frame_id;
+    std::vector<Pose> Translate(std::vector<Pose> poses, double length, double theta);
 
 public:
-    explicit Sender(ros::Publisher pub_);
     static unsigned int id;
+    explicit Sender(ros::Publisher pub_);
+
     visualization_msgs::Marker GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a);
     visualization_msgs::Marker GetText(const std::string &content, Pose p);
+
     void Send();
     void SendPoses(std::vector<Pose> poses);
     void AddSection(LaneSection section);
     void AddJunction(Junction junction);
     void AddMap(HDMap &map);
+
     void Clear()
     {
         array.markers.clear();

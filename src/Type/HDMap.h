@@ -19,8 +19,8 @@ private:
     std::vector<Road> mRoads;
     std::vector<Junction> mJunctions;
 
-    Pose mStartPose;
-    Pose mEndPose;
+    Pose mCurrPose;
+    Pose mPrevPose;
 
     LaneSection mPrevSection;
     LaneSection mCurrSection;
@@ -34,14 +34,14 @@ private:
 public:
     HDMap();
 
-    void SetStartPose(const Pose &pose) {mStartPose = pose;};
-    Pose GetStartPose(){return mStartPose; };
+    void SetStartPose(const Pose &pose) {mCurrPose = pose;};
+    Pose GetStartPose(){return mCurrPose; };
 
-    void SetEndPose(const Pose &pose){mEndPose = pose; };
-    Pose GetEndPose(){return mEndPose; };
+    void SetEndPose(const Pose &pose){mPrevPose = pose; };
+    Pose GetEndPose(){return mPrevPose; };
 
-    void AddRoad();
-
+    void StartRoad();
+    void EndRoad();
     void EndSection(Pose p);
     void StartSection(std::vector<std::tuple<int, double, double>> new_lane, std::vector<std::pair<int, int>>links);
 
@@ -53,10 +53,14 @@ public:
 
     void AddJunction();
     void AddConnection(unsigned int from_road, int from_lane_idx,
-                       unsigned int to_road, int to_lane_idx);
+                       unsigned int to_road, int to_lane_idx,
+                       double _ctrl_len1 = Bezier::DEFAULT_LENGTH,
+                       double _ctrl_len2 = Bezier::DEFAULT_LENGTH);
 
-//    void Load(const std::string &file_name);
+    void Load(const std::string &file_name);
 //    void Save(const std::string &file_name);
+
+    void Summary();
 };
 }
 

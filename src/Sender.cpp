@@ -93,30 +93,42 @@ void Sender::AddSection(LaneSection section)
     auto sid = section.iSectionId;
     for(auto x : section.GetAllPose())
     {
-        visualization_msgs::Marker line_strip;
-        if(x.first == 0)
-            line_strip = GetLineStrip(x.second, 0.7, 0.7, 0.7, 0.5);
-        else
-            line_strip = GetLineStrip(x.second, 0.5 + 0.2 * (sid % 10), 0.3, 0.2 * (sid % 10), 1.0);
-        array.markers.push_back(line_strip);
 
+        if(x.first == 0)
+        {
+            visualization_msgs::Marker line_strip = GetLineStrip(x.second, 199.0/255, 166.0/255, 33.0/255, 1.0);
+            array.markers.push_back(line_strip);
+        }
+        else if(x.first > 0)
+        {
+            visualization_msgs::Marker line1 = GetLineStrip(x.second, 95.0/255, 217.0/255, 205.0/255, 1.0);
+            array.markers.push_back(line1);
+            auto poses = Translate(x.second, Lane::DEFAULT_WIDTH/2, -90.0);
+            visualization_msgs::Marker line2 = GetLineStrip(poses, 0.7, 0.7, 0.7, 0.3);
+            array.markers.push_back(line2);
+        }
+        else
+        {
+            visualization_msgs::Marker line1 = GetLineStrip(x.second, 95.0/255, 217.0/255, 205.0/255, 1.0);
+            array.markers.push_back(line1);
+            auto poses = Translate(x.second, Lane::DEFAULT_WIDTH/2, 90.0);
+            visualization_msgs::Marker line2 = GetLineStrip(poses, 0.7, 0.7, 0.7, 0.5);
+            array.markers.push_back(line2);
+        }
         visualization_msgs::Marker m = GetText(std::to_string(x.first), x.second[x.second.size()/2]);
         array.markers.push_back(m);
     }
 }
 
-void Sender::AddJunction(Junction junciton)
+void Sender::AddJunction(Junction junction)
 {
-    auto jid = junciton.iJunctionId;
-    for(auto & x : junciton.GetAllPose())
+    for(auto & x : junction.GetAllPose())
     {
-        visualization_msgs::Marker line_strip = GetLineStrip(x,
-                                                             0.5 + 0.2 * (jid % 10),
-                                                             0.7 + 0.3 * (jid % 10),
-                                                             0.2 * (jid % 10), 1.0);;
+        visualization_msgs::Marker line_strip = GetLineStrip(x, 234.0/255, 247.0/255, 134.0/255, 1.0);
         array.markers.push_back(line_strip);
     }
 }
+
 void Sender::AddMap(HDMap &map)
 {
     for(auto & sec : map.GetAllSection())
@@ -130,3 +142,15 @@ void Sender::AddMap(HDMap &map)
     }
 }
 
+std::vector<Pose> Sender::Translate(std::vector<Pose> poses, double length, double theta)
+{
+    std::vector<Pose> res;
+    for(auto p : poses)
+    {
+        Angle a = p.GetAngle();
+        a.Rotate(theta);
+        p.Translate(length, a);
+        res.emplace_back(p);
+    }
+    return res;
+}

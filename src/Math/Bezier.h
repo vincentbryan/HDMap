@@ -16,14 +16,16 @@ protected:
     Pose end_pose;
     Vector2d p0, p1, p2, p3;
     double length;
-
+    bool is_line;
     Pose _GetPose(double t);
 
 public:
-    Bezier(Pose _start_pose = {0, 0, 0}, Pose _end_pose = {1, 0, 0}, double _ctrl_len1 = 2.0, double _ctrl_len2 = 2.0);
+    explicit Bezier(Pose _start_pose = {0, 0, 0}, Pose _end_pose = {0, 0, 0}, double _ctrl_len1 = 2.0, double _ctrl_len2 = 2.0);
     double Length();
     Pose GetPose(double s);
     std::vector<Pose> GetAllPose(double ds);
+
+    static double DEFAULT_LENGTH;
 };
 
 }

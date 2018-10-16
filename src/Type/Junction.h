@@ -40,7 +40,7 @@ public:
 
     explicit Junction();
 
-    void AddConnection(Lane from_lane, Pose start_pose, Lane to_lane, Pose end_pose);
+    void AddConnection(Lane from_lane, Pose start_pose, Lane to_lane, Pose end_pose, double _ctrl_len1, double _ctrl_len2);
     std::vector<std::vector<Pose>> GetAllPose();
 };
 }

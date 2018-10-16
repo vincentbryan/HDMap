@@ -21,7 +21,7 @@ int main()
 
         for(auto road : tree.get_child("hdmap.roads"))
         {
-            cout << road.second.get<int>("<xmlattr>.id") << " " << road.second.get<double>("<xmlattr>.s") << endl;
+            cout << road.second.get<int>("<xmlattr>.id") << " " << road.second.get<double>("<xmlattr>.length") << endl;
             for(auto section : road.second.get_child(""))
             {
                 if(section.first == "lanesection")

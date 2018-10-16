@@ -14,7 +14,7 @@ class Road
 public:
     static unsigned int ROAD_ID;
     unsigned int mRoadId;
-    double s;
+    double length;
 
     std::vector<LaneSection> mSections;
 

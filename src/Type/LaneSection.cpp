@@ -15,20 +15,9 @@ LaneSection::LaneSection(unsigned int section_id, double _s,
     s = _s;
     mReferLine = refer_line;
     mLaneOffset = lane_offset;
-
-//    if(p_refer_line == nullptr)
-//        mReferLine.reset(new Line(0, Pose(), Pose()));
-//    else
-//        mReferLine = p_lane_offset;
-//
-//    if(p_lane_offset == nullptr)
-//        mLaneOffset.reset(new Line(0, Pose(), Pose(mReferLine->Length(), 0)));
-//    else
-//        mLaneOffset = p_lane_offset;
-
 }
 
-void LaneSection::AddLane(int lane_idx, unsigned int lane_id, int _start_width, int _end_width)
+void LaneSection::AddLane(int lane_idx, unsigned int lane_id, double _start_width, double _end_width)
 {
     if(lane_idx > 0) most_right_lane_idx = std::max(most_right_lane_idx, lane_idx);
     if(lane_idx < 0) most_left_lane_idx = std::min(most_left_lane_idx, lane_idx);

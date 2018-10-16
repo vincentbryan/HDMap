@@ -3,25 +3,39 @@
 //
 
 #include <boost/property_tree/ptree.hpp>
+#include <geos_c.h>
 #include "HDMap.h"
 
 using namespace hdmap;
 namespace pt = boost::property_tree;
 
-HDMap::HDMap() : mStartPose(Pose()),
-                 mEndPose(Pose()),
+HDMap::HDMap() : mCurrPose(Pose()),
+                 mPrevPose(Pose()),
                  mPrevSection(LaneSection()),
                  mCurrSection(LaneSection())
 {}
 
-void HDMap::AddRoad()
+void HDMap::StartRoad()
 {
     mRoads.emplace_back(Road());
+    mPrevSection.s = 0;
+    mPrevSection.mReferLine = Bezier({0,0,0}, {0,0,0}, 0, 0);
+    mPrevSection.mLanes.clear();
+    mCurrSection = mPrevSection;
+}
+
+void HDMap::EndRoad()
+{
+    if(!mRoads.empty())
+    {
+        mRoads.back().length = mCurrSection.s + mCurrSection.mReferLine.Length();
+    }
 }
 
 void HDMap::StartSection(std::vector<std::tuple<int, double, double>> new_lane, std::vector<std::pair<int, int>>links)
 {
-    assert(mRoads.size() >= 1);
+    assert(!mRoads.empty());
+
     auto section_id_next = CalcuSectionId(mRoads.size()-1, mRoads.back().mSections.size());
     mCurrSection.iSectionId = section_id_next;
     mCurrSection.s = mPrevSection.s + mPrevSection.mReferLine.Length();
@@ -34,10 +48,11 @@ void HDMap::StartSection(std::vector<std::tuple<int, double, double>> new_lane, 
 void HDMap::EndSection(Pose p)
 {
     //Update Pose
-    mEndPose = mStartPose;
-    mStartPose = p;
+    mPrevPose = mCurrPose;
+    mCurrPose = p;
 
-    mCurrSection.mReferLine = Bezier(mEndPose, mStartPose);
+    mCurrSection.mReferLine = Bezier(mPrevPose, mCurrPose);
+    mCurrSection.s = mPrevSection.s + mPrevSection.mReferLine.Length();
     mCurrSection.Clear();
 
     for(auto x : vTempLane)
@@ -53,8 +68,8 @@ void HDMap::EndSection(Pose p)
     {
         auto a = std::get<0>(x);
         auto b = std::get<1>(x);
-        mPrevSection.mLanes[a].AddPredecessor(b);
-        mCurrSection.mLanes[b].AddSuccessors(a);
+        mRoads.back().mSections.back().mLanes[a].AddSuccessors(b);
+        mCurrSection.mLanes[b].AddPredecessor(a);
     }
 
     mRoads.back().mSections.emplace_back(mCurrSection);
@@ -78,7 +93,8 @@ void HDMap::AddJunction()
 }
 
 void HDMap::AddConnection(unsigned int from_road, int from_lane_idx,
-                          unsigned int to_road, int to_lane_idx)
+                          unsigned int to_road, int to_lane_idx,
+                          double _ctrl_len1, double _ctrl_len2)
 {
     auto from_section = mRoads[from_road].mSections.back();
     auto to_section = mRoads[to_road].mSections.front();
@@ -87,7 +103,8 @@ void HDMap::AddConnection(unsigned int from_road, int from_lane_idx,
          from_section.GetLaneByIndex(from_lane_idx),
          from_section.GetLanePoseByIndex(from_lane_idx).back(),
          to_section.GetLaneByIndex(to_lane_idx),
-         to_section.GetLanePoseByIndex(to_lane_idx).front()
+         to_section.GetLanePoseByIndex(to_lane_idx).front(),
+         _ctrl_len1, _ctrl_len2
     );
 }
 
@@ -109,7 +126,6 @@ std::vector<Junction> HDMap::GetAllJunction()
     return mJunctions;
 }
 
-/*
 void HDMap::Load(const std::string &file_name)
 {
     try
@@ -122,7 +138,7 @@ void HDMap::Load(const std::string &file_name)
         {
             Road oRoad;
             oRoad.mRoadId = road.second.get<int>("<xmlattr>.id");
-            oRoad.s = road.second.get<double>("<xmlattr>.s");
+            oRoad.length = road.second.get<double>("<xmlattr>.length");
 
             for(auto section : road.second.get_child(""))
             {
@@ -140,42 +156,47 @@ void HDMap::Load(const std::string &file_name)
                             oSection.most_left_lane_idx = section_child.second.get<int>("left_idx");
                             oSection.most_right_lane_idx = section_child.second.get<int>("right_idx");
                         }
-                        if(section_child.first == "refer_line" || section_child.first == "offset")
+
+                        if(section_child.first == "refer_line")
                         {
                             auto type = section_child.second.get<std::string>("<xmlattr>.type");
                             auto s = section_child.second.get<double>("<xmlattr>.s");
-                            //TODO
-                            if(type == "Line")
-                            {
-                                Pose start_pose = { section_child.second.get<double>("start_pose.x"),
-                                                    section_child.second.get<double>("start_pose.y"),
-                                                    section_child.second.get<double>("start_pose.yaw")};
-                                Pose end_pose = { section_child.second.get<double>("end_pose.x"),
-                                                  section_child.second.get<double>("end_pose.y"),
-                                                  section_child.second.get<double>("end_pose.yaw")};
 
-                                if(section_child.first == "refer_line")
-                                    oSection.mReferLine.reset(new Line(s, start_pose, end_pose));
-                                if(section_child.first == "offset")
-                                    oSection.mLaneOffset.reset(new Line(s, start_pose, end_pose));
-                            }
+                            Pose start_pose = { section_child.second.get<double>("start_pose.x"),
+                                                section_child.second.get<double>("start_pose.y"),
+                                                section_child.second.get<double>("start_pose.direction")};
+                            Pose end_pose = { section_child.second.get<double>("end_pose.x"),
+                                              section_child.second.get<double>("end_pose.y"),
+                                              section_child.second.get<double>("end_pose.direction")};
+                            auto len1 = section_child.second.get<double>("ctrl_len1");
+                            auto len2 = section_child.second.get<double>("ctrl_len2");
+
+                            oSection.mReferLine = Bezier(start_pose, end_pose, len1, len2);
+
                         }
-                        //region AddLane
+
+                        if(section_child.first == "offset")
+                        {
+                            auto y0 = section_child.second.get<double>("y0");
+                            auto range = section_child.second.get<double>("x1");
+                            auto y1 = section_child.second.get<double>("y1");
+
+                            oSection.mLaneOffset = CubicFunction(y0, range, y1);
+                        }
+
                         if(section_child.first == "lane")
                         {
                             auto lane_idx = section_child.second.get<int>("<xmlattr>.idx");
                             Lane lane;
                             lane.land_id = section_child.second.get<int>("<xmlattr>.id");
+
                             //TODO
 //                        lane.type = section_child.second.get<std::string>("<xmlattr>.type");
 
-                            Pose start_pose = { section_child.second.get<double>("offset.start_pose.x"),
-                                                section_child.second.get<double>("offset.start_pose.y"),
-                                                section_child.second.get<double>("offset.start_pose.yaw")};
-                            Pose end_pose = { section_child.second.get<double>("offset.end_pose.x"),
-                                              section_child.second.get<double>("offset.end_pose.y"),
-                                              section_child.second.get<double>("offset.end_pose.yaw")};
-                            lane.width.reset(new Line(0, start_pose, end_pose));
+                            auto y0 = section_child.second.get<double>("offset.y0");
+                            auto x1 = section_child.second.get<double>("offset.x1");
+                            auto y1 = section_child.second.get<double>("offset.y1");
+                            lane.width = CubicFunction(y0, x1, y1);
 
                             //Add link
                             for(auto link : section_child.second.get_child(""))
@@ -215,28 +236,72 @@ void HDMap::Load(const std::string &file_name)
             {
                 if(conn.first == "connection")
                 {
-                    Junction::Connection connection;
-                    connection.from_lane_id = conn.second.get<int>("<xmlattr>.from_lane_id");
-                    connection.to_lane_id = conn.second.get<int>("<xmlattr>.to_lane_id");
+                    auto from_id = conn.second.get<int>("<xmlattr>.from_lane_id");
+                    auto to_id = conn.second.get<int>("<xmlattr>.to_lane_id");
 
-                    Pose start_pose = { conn.second.get<double>("offset.start_pose.x"),
-                                        conn.second.get<double>("offset.start_pose.y"),
-                                        conn.second.get<double>("offset.start_pose.yaw")};
-                    Pose end_pose = { conn.second.get<double>("offset.end_pose.x"),
-                                      conn.second.get<double>("offset.end_pose.y"),
-                                      conn.second.get<double>("offset.end_pose.yaw")};
-
-                    connection.refer_line.reset(new Line(0, start_pose, end_pose));
-                    oJunction.mConnection.emplace_back(connection);
+                    Pose start_pose = { conn.second.get<double>("refer_line.start_pose.x"),
+                                        conn.second.get<double>("refer_line.start_pose.y"),
+                                        conn.second.get<double>("refer_line.start_pose.direction")};
+                    Pose end_pose = { conn.second.get<double>("refer_line.end_pose.x"),
+                                      conn.second.get<double>("refer_line.end_pose.y"),
+                                      conn.second.get<double>("refer_line.end_pose.direction")};
+                    auto len1 = conn.second.get<double>("refer_line.ctrl_len1");
+                    auto len2 = conn.second.get<double>("refer_line.ctrl_len2");
+                    Junction::Connection c(from_id, to_id, Bezier(start_pose, end_pose, len1, len2));
+                    oJunction.mConnection.emplace_back(c);
                 }
             }
             mJunctions.emplace_back(oJunction);
         }
-
     }
     catch (std::exception &e)
     {
         std::cout << "Error: " << e.what() << std::endl;
     }
 }
- */
+
+void HDMap::Summary()
+{
+    std::cout << "Summary: = = = = = = = = = = = = = = =\n";
+    std::cout << "Road: " << mRoads.size() << std::endl;
+    std::cout << "Junc: " << mJunctions.size() << std::endl;
+    for(auto r : mRoads)
+    {
+        std::cout << "- - - - - - - - - - - - - - - - - - - -\n";
+        std::cout << "road[" << r.mRoadId << "] length:" << r.length << std::endl;
+
+        for(auto section : r.mSections)
+        {
+            std::cout << "\tsec[" << section.iSectionId << "] s:" << section.s << std::endl;
+
+            for(auto lane : section.mLanes)
+            {
+                std::cout << "\t\tlane[" << lane.second.land_id << "] idx:" << lane.first << std::endl;
+
+                std::cout << "\t\t\tprev: ";
+                for(auto link : lane.second.predecessors)
+                {
+                    std::cout << "[" << link << "] ";
+                }
+                std::cout << std::endl;
+
+                std::cout << "\t\t\tnext: ";
+                for(auto link : lane.second.successors)
+                {
+                    std::cout << "[" << link << "] ";
+                }
+                std::cout << std::endl;
+            }
+        }
+    }
+
+    for(auto j : mJunctions)
+    {
+        std::cout << "- - - - - - - - - - - - - - - - - - - -\n";
+        std::cout << "junc[" << j.iJunctionId << "]" << std::endl;
+        for(auto c : j.mConnection)
+        {
+            std::cout << "\tconn: [" << c.from_lane_id << "] --> [" << c.to_lane_id << "]\n";
+        }
+    }
+}

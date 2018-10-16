@@ -50,7 +50,7 @@ public:
         m = atan(v.y / v.x) / M_PI * 180.0;
     }
 
-    double GetAngle()
+    double GetAngle() const
     {
         return m;
     }
@@ -60,6 +60,7 @@ public:
         m = angle;
     }
 
+    ///Counterclockwise
     void Rotate(double degree)
     {
         m += degree;
@@ -73,6 +74,16 @@ public:
     friend std::ostream & operator << (std::ostream & os, const Angle & angle)
     {
         os << angle.m;
+    }
+
+    bool operator == (const Angle & a)
+    {
+        return m == a.GetAngle();
+    }
+
+    bool operator != (const Angle & a)
+    {
+        return m != a.GetAngle();
     }
 };
 }

@@ -34,7 +34,7 @@ public:
                          Bezier refer_line = Bezier(),
                          CubicFunction lane_offset = CubicFunction());
 
-    void AddLane(int lane_idx, unsigned int lane_id, int _start_width, int _end_width);
+    void AddLane(int lane_idx, unsigned int lane_id, double _start_width, double _end_width);
 
     std::map<int, std::vector<Pose>> GetAllPose();
 

@@ -28,21 +28,21 @@ public:
     unsigned land_id;
     LANE_TYPE type;
 
-    std::vector<unsigned int> predecessors;
-    std::vector<unsigned int> successors;
+    std::vector<int> predecessors;
+    std::vector<int> successors;
 
 public:
     explicit Lane(int _lane_id = 0, CubicFunction _width = CubicFunction(), LANE_TYPE _type = LANE_TYPE ::Driving);
     ~Lane();
 
-    void AddPredecessor(unsigned int n)
+    void AddPredecessor(int idx)
     {
-        predecessors.emplace_back(n);
+        predecessors.emplace_back(idx);
     }
 
-    void AddSuccessors(unsigned int n)
+    void AddSuccessors(int idx)
     {
-        successors.emplace_back(n);
+        successors.emplace_back(idx);
     }
 };
 

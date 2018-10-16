@@ -7,6 +7,8 @@
 
 using namespace hdmap;
 
+double Bezier::DEFAULT_LENGTH = 2.0;
+
 Bezier::Bezier(Pose _start_pose, Pose _end_pose, double _ctrl_len1, double _ctrl_len2)
 {
     start_pose = _start_pose;
@@ -15,21 +17,38 @@ Bezier::Bezier(Pose _start_pose, Pose _end_pose, double _ctrl_len1, double _ctrl
     p3 = end_pose.GetPosition();
     p1 = p0 + _ctrl_len1 * start_pose.GetAngle().ToVector();
     p2 = p3 - _ctrl_len2 * end_pose.GetAngle().ToVector();
-    length = 0;
 
-    double t = 0;
-    double step = 0.01;
-    t += step;
-    Pose prev_pose = _GetPose(0);
-    Pose curr_pose;
-    while (t <= 1.0)
+    length = 0;
+    is_line = false;
+
+    if(_start_pose.GetAngle() == _end_pose.GetAngle())
     {
-        curr_pose = _GetPose(t);
-        length += curr_pose.DistanceFrom(prev_pose);
-        prev_pose = curr_pose;
-        t += step;
+        Angle a(_end_pose.GetPosition() - _start_pose.GetPosition());
+        if(a == _start_pose.GetAngle())
+        {
+            is_line = true;
+        }
     }
 
+    if(is_line)
+    {
+        length = _start_pose.DistanceFrom(_end_pose);
+    }
+    else
+    {
+        double t = 0;
+        double step = 0.01;
+        t += step;
+        Pose prev_pose = _GetPose(0);
+        Pose curr_pose;
+        while (t <= 1.0)
+        {
+            curr_pose = _GetPose(t);
+            length += curr_pose.DistanceFrom(prev_pose);
+            prev_pose = curr_pose;
+            t += step;
+        }
+    }
 }
 
 Pose Bezier::_GetPose(double t)
@@ -55,7 +74,11 @@ double Bezier::Length()
 
 Pose Bezier::GetPose(double s)
 {
-    return _GetPose(s / length);
+    assert(length > 0);
+    if(is_line)
+        return start_pose.GetTranslation(s, start_pose.GetAngle());
+    else
+        return _GetPose(s / length);
 }
 
 std::vector<Pose> Bezier::GetAllPose(double ds)
