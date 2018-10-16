@@ -24,10 +24,8 @@ public:
     double Length();
     Pose GetPose(double s);
     std::vector<Pose> GetAllPose(double ds);
-
     static double DEFAULT_LENGTH;
 };
-
 }
 
 #endif //HDMAP_BEZIER_H

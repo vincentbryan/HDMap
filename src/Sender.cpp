@@ -99,20 +99,12 @@ void Sender::AddSection(LaneSection section)
             visualization_msgs::Marker line_strip = GetLineStrip(x.second, 199.0/255, 166.0/255, 33.0/255, 1.0);
             array.markers.push_back(line_strip);
         }
-        else if(x.first > 0)
+        else
         {
             visualization_msgs::Marker line1 = GetLineStrip(x.second, 95.0/255, 217.0/255, 205.0/255, 1.0);
             array.markers.push_back(line1);
             auto poses = Translate(x.second, Lane::DEFAULT_WIDTH/2, -90.0);
             visualization_msgs::Marker line2 = GetLineStrip(poses, 0.7, 0.7, 0.7, 0.3);
-            array.markers.push_back(line2);
-        }
-        else
-        {
-            visualization_msgs::Marker line1 = GetLineStrip(x.second, 95.0/255, 217.0/255, 205.0/255, 1.0);
-            array.markers.push_back(line1);
-            auto poses = Translate(x.second, Lane::DEFAULT_WIDTH/2, 90.0);
-            visualization_msgs::Marker line2 = GetLineStrip(poses, 0.7, 0.7, 0.7, 0.5);
             array.markers.push_back(line2);
         }
         visualization_msgs::Marker m = GetText(std::to_string(x.first), x.second[x.second.size()/2]);
@@ -153,4 +145,11 @@ std::vector<Pose> Sender::Translate(std::vector<Pose> poses, double length, doub
         res.emplace_back(p);
     }
     return res;
+}
+
+void Sender::AddRoadId(Pose p, int id)
+{
+    std::string text = "Road[" + std::to_string(id) + "]";
+    visualization_msgs::Marker m = GetText(text, p);
+    array.markers.emplace_back(m);
 }

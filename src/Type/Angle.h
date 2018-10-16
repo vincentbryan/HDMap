@@ -27,7 +27,8 @@ public:
     explicit Angle(double _m = 0) : m(_m){};
     explicit Angle(const Vector2d & v)
     {
-        m = atan(v.y / v.x) / M_PI * 180.0;
+        m = atan2(v.y, v.x) / M_PI * 180.0;
+        m = Warp(m);
     }
 
     double ToYaw()

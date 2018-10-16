@@ -3,6 +3,7 @@
 //
 
 #include "LaneSection.h"
+#include <algorithm>
 #include "../Math/Line.h"
 
 using namespace hdmap;
@@ -52,6 +53,18 @@ void LaneSection::GenerateAllPose(double ds)
         {
             AppendPose(len);
             break;
+        }
+    }
+
+    for(auto & x : mAllLanePose)
+    {
+        if(x.first < 0)
+        {
+            std::reverse(x.second.begin(), x.second.end());
+            for(auto & y : x.second)
+            {
+                y.Rotate(180.0);
+            }
         }
     }
 }

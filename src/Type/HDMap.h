@@ -34,11 +34,17 @@ private:
 public:
     HDMap();
 
-    void SetStartPose(const Pose &pose) {mCurrPose = pose;};
-    Pose GetStartPose(){return mCurrPose; };
+    void SetCurrPose(const Pose &pose) {mCurrPose = pose;};
+    Pose GetCurrPose(){return mCurrPose; };
 
     void SetEndPose(const Pose &pose){mPrevPose = pose; };
     Pose GetEndPose(){return mPrevPose; };
+
+    unsigned int GetCurrentRoadId()
+    {
+        assert(!mRoads.empty());
+        return mRoads.back().mRoadId;
+    }
 
     void StartRoad();
     void EndRoad();

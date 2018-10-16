@@ -96,12 +96,21 @@ void HDMap::AddConnection(unsigned int from_road, int from_lane_idx,
                           unsigned int to_road, int to_lane_idx,
                           double _ctrl_len1, double _ctrl_len2)
 {
-    auto from_section = mRoads[from_road].mSections.back();
-    auto to_section = mRoads[to_road].mSections.front();
+    Pose start_pose, end_pose;
+
+    if(from_lane_idx >= 0)
+        start_pose = mRoads[from_road].mSections.back().GetLanePoseByIndex(from_lane_idx).back();
+    else
+        start_pose = mRoads[from_road].mSections.front().GetLanePoseByIndex(from_lane_idx).back();
+
+    if(to_lane_idx >= 0)
+        end_pose = mRoads[to_road].mSections.front().GetLanePoseByIndex(to_lane_idx).front();
+    else
+        end_pose = mRoads[to_road].mSections.back().GetLanePoseByIndex(to_lane_idx).front();
 
     mJunctions.back().AddConnection(
-         from_road, from_lane_idx, from_section.GetLanePoseByIndex(from_lane_idx).back(),
-         to_road, to_lane_idx, to_section.GetLanePoseByIndex(to_lane_idx).front(),
+         from_road, from_lane_idx, start_pose,
+         to_road, to_lane_idx, end_pose,
          _ctrl_len1, _ctrl_len2
     );
 }
@@ -123,7 +132,6 @@ std::vector<Junction> HDMap::GetAllJunction()
 {
     return mJunctions;
 }
-
 
 void HDMap::Load(const std::string &file_name)
 {

@@ -34,7 +34,7 @@ public:
     void AddSection(LaneSection section);
     void AddJunction(Junction junction);
     void AddMap(HDMap &map);
-
+    void AddRoadId(Pose p, int id);
     void Clear()
     {
         array.markers.clear();
