@@ -27,7 +27,7 @@ int main( int argc, char** argv )
     ros::init(argc, argv, "hdmap");
     ros::NodeHandle n;
     ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 1000);
-    Sender sender(pub);
+    shared_ptr<Sender> p_sender(new Sender(pub));
 
 #ifdef CMD
     HDMap map;
@@ -59,11 +59,10 @@ int main( int argc, char** argv )
 
 #ifdef TEST
     HDMap map;
+    map.SetSender(p_sender);
 
     //Road[0]-------------------------------------------------------------
-    map.StartRoad();
-    map.SetCurrPose({0, 0, 0});
-    sender.AddRoadId(map.GetCurrPose(), map.GetCurrentRoadId());
+    map.StartRoad({0, 0, 0});
 
     //region sec-0
     std::tuple<int, double, double> t1 (-2, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
@@ -77,7 +76,6 @@ int main( int argc, char** argv )
 
     map.StartSection(lanes1, links1);
     map.EndSection({10, 0, 0});
-    sender.AddSection(map.GetCurrentSection());
     //endregion
 
     //region sec-1
@@ -92,15 +90,12 @@ int main( int argc, char** argv )
 
     map.StartSection(lanes2, links2);
     map.EndSection({20, 0, 0});
-    sender.AddSection(map.GetCurrentSection());
     //endregion
 
     map.EndRoad();
 
     //Road[1]-------------------------------------------------------------
-    map.StartRoad();
-    map.SetCurrPose({25, 1, 0});
-    sender.AddRoadId(map.GetCurrPose(), map.GetCurrentRoadId());
+    map.StartRoad({25, 1, 0});
 
     //region sec-10
     std::vector<std::tuple<int, double, double>> lanes3;
@@ -113,15 +108,12 @@ int main( int argc, char** argv )
     map.StartSection(lanes3, links3);
 
     map.EndSection({45, 1, 0});
-    sender.AddSection(map.GetCurrentSection());
     //endregion
     map.EndRoad();
 
     //Road[2]-------------------------------------------------------------
 
-    map.StartRoad();
-    map.SetCurrPose({50, -3, 270});
-    sender.AddRoadId(map.GetCurrPose(), map.GetCurrentRoadId());
+    map.StartRoad({50, -3, 270});
 
     std::vector<std::tuple<int, double, double>> lanes4;
     std::tuple<int, double, double> t9 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
@@ -133,14 +125,11 @@ int main( int argc, char** argv )
     map.StartSection(lanes4, links4);
 
     map.EndSection({50, -16, 270});
-    sender.AddSection(map.GetCurrentSection());
     map.EndRoad();
 
     //Road[3]-------------------------------------------------------------
 
-    map.StartRoad();
-    map.SetCurrPose({45, -20, 180});
-    sender.AddRoadId(map.GetCurrPose(), map.GetCurrentRoadId());
+    map.StartRoad({45, -20, 180});
 
     std::vector<std::tuple<int, double, double>> lanes5;
     std::tuple<int, double, double> t11 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
@@ -152,14 +141,11 @@ int main( int argc, char** argv )
     map.StartSection(lanes5, links5);
 
     map.EndSection({25, -20, 180});
-    sender.AddSection(map.GetCurrentSection());
     map.EndRoad();
 
     //Road[4]-------------------------------------------------------------
 
-    map.StartRoad();
-    map.SetCurrPose({22, -16, 90});
-    sender.AddRoadId(map.GetCurrPose(), map.GetCurrentRoadId());
+    map.StartRoad({22, -16, 90});
 
     std::vector<std::tuple<int, double, double>> lanes6;
     std::tuple<int, double, double> t13 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
@@ -171,12 +157,11 @@ int main( int argc, char** argv )
     map.StartSection(lanes5, links6);
 
     map.EndSection({22, -3, 90});
-    sender.AddSection(map.GetCurrentSection());
     map.EndRoad();
 
     //-------------------------------------------------------------
 
-    map.AddJunction();
+    map.StartJunction();
     map.AddConnection(0, 1, 1, 1);
     map.AddConnection(0, 1, 4, -1, 1.0, 0.5);
 
@@ -187,36 +172,34 @@ int main( int argc, char** argv )
     map.AddConnection(4, 1, 1, 1);
     map.AddConnection(4, 1, 0, -1);
     map.AddConnection(4, 1, 0, -2);
-    sender.AddJunction(map.GetCurrentJunction());
+    map.EndJunction();
 
-    map.AddJunction();
+    map.StartJunction();
     map.AddConnection(1, 1, 2, 1);
     map.AddConnection(2, -1, 1, -1, 3.0, 3.0);
-    sender.AddJunction(map.GetCurrentJunction());
+    map.EndJunction();
 
-    map.AddJunction();
+    map.StartJunction();
     map.AddConnection(2, 1, 3, 1);
     map.AddConnection(3, -1, 2, -1,3.0, 3.0);
-    sender.AddJunction(map.GetCurrentJunction());
+    map.EndJunction();
 
-    map.AddJunction();
+    map.StartJunction();
     map.AddConnection(3, 1, 4, 1);
     map.AddConnection(4, -1, 3, -1, 3.0, 3.0);
-    sender.AddJunction(map.GetCurrentJunction());
+    map.EndJunction();
 
     //-------------------------------------------------------------
 
     map.SetStartPoint({1, 0});
     map.SetEndPoint({50, -10.0});
-    sender.AddStartPoint(map.GetStartPoint());
-    sender.AddEndPoint(map.GetEndPoint());
     map.GlobalPlanning();
 //    map.Summary();
     char c;
     while (std::cin >> c)
     {
         if(c != 'e')
-            sender.Send();
+            map.Send();
         else
             break;
     }
@@ -277,8 +260,7 @@ bool CMD_AddRoad(HDMap &map)
     cout << "[User]: ";
     Pose p;
     std::cin >> p.x >> p.y >> p.direction;
-    map.StartRoad();
-    map.SetCurrPose(p);
+    map.StartRoad(p);
     cout << "Summary: Init road successfully\n";
     return true;
 }

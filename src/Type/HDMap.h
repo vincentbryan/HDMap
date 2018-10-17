@@ -2,17 +2,21 @@
 // Created by vincent on 18-10-9.
 //
 
-#ifndef HDMAP_HDMAP_H
-#define HDMAP_HDMAP_H
+#pragma once
 
+#include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Pose2D.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <memory>
 #include "Road.h"
 #include "Junction.h"
+#include "../Sender.h"
 
 namespace hdmap
 {
+//需要前向声明
+class Sender;
 class HDMap
 {
 private:
@@ -28,71 +32,56 @@ private:
     std::vector<std::tuple<int, double, double>>vTempLane;
     std::vector<std::pair<int, int>>vTempLink;
 
+    Vector2d mStartPoint;
+    Vector2d mEndPoint;
+
     unsigned int CalcuSectionId(unsigned int road, unsigned int section);
     unsigned int CalcuLaneId(unsigned int section, int lane);
 
-    Vector2d mStartPoint;
-    Vector2d mEndPoint;
+    std::shared_ptr<Sender> pSender;
 
 public:
     HDMap();
 
-    void SetCurrPose(const Pose &pose) {mCurrPose = pose;};
-    Pose GetCurrPose(){return mCurrPose; };
+    //region Setter And Getter
+    void SetSender(std::shared_ptr<Sender> _sender);
 
-    void SetEndPose(const Pose &pose){mPrevPose = pose; };
-    Pose GetEndPose(){return mPrevPose; };
+    void SetCurrPose(const Pose &pose);
+    Pose GetCurrPose() const;
 
-    unsigned int GetCurrentRoadId()
-    {
-        assert(!mRoads.empty());
-        return mRoads.back().iRoadId;
-    }
+    void SetPrevPose(const Pose &pose);
+    Pose GetPrevPose() const;
 
-    void StartRoad();
+    LaneSection GetCurrentSection() const;
+    Junction GetCurrentJunction() const;
+    std::vector<LaneSection> GetAllSection();
+    std::vector<Junction> GetAllJunction();
+
+    void SetStartPoint(const Vector2d & v);
+    Vector2d GetStartPoint() const;
+    void SetEndPoint(const Vector2d & v);
+    Vector2d GetEndPoint() const;
+
+    //endregion
+
+    void StartRoad(Pose _start_pose);
     void EndRoad();
     void EndSection(Pose p);
     void StartSection(std::vector<std::tuple<int, double, double>> new_lane, std::vector<std::pair<int, int>>links);
 
-    LaneSection GetCurrentSection(){return mCurrSection;}
-    Junction GetCurrentJunction(){return mJunctions.back();};
-
-    std::vector<LaneSection> GetAllSection();
-    std::vector<Junction> GetAllJunction();
-
-    void AddJunction();
+    void StartJunction();
     void AddConnection(unsigned int from_road_id, int from_lane_idx,
                        unsigned int to_road_id, int to_lane_idx,
                        double _ctrl_len1 = Bezier::DEFAULT_LENGTH,
                        double _ctrl_len2 = Bezier::DEFAULT_LENGTH);
-
+    void EndJunction();
     void Load(const std::string &file_name);
 //    void Save(const std::string &file_name);
 
     void Summary();
-
-    void SetStartPoint(const Vector2d & v)
-    {
-        mStartPoint = v;
-    }
-
-    Vector2d GetStartPoint() const
-    {
-        return mStartPoint;
-    }
-
-    void SetEndPoint(const Vector2d & v)
-    {
-        mEndPoint = v;
-    }
-
-    Vector2d GetEndPoint() const
-    {
-        return mEndPoint;
-    }
-
     void GlobalPlanning();
+
+    void Send();
 };
 }
 
-#endif //HDMAP_HDMAP_H

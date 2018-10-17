@@ -157,18 +157,18 @@ void Sender::AddJunction(Junction junction)
     }
 }
 
-void Sender::AddMap(HDMap &map)
-{
-    for(auto & sec : map.GetAllSection())
-    {
-        AddSection(sec);
-    }
-
-    for(auto & jun : map.GetAllJunction())
-    {
-        AddJunction(jun);
-    }
-}
+//void Sender::AddMap(HDMap &map)
+//{
+//    for(auto & sec : map.GetAllSection())
+//    {
+//        AddSection(sec);
+//    }
+//
+//    for(auto & jun : map.GetAllJunction())
+//    {
+//        AddJunction(jun);
+//    }
+//}
 
 std::vector<Pose> Sender::Translate(std::vector<Pose> poses, double length, double theta)
 {

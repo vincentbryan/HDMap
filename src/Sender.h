@@ -2,10 +2,11 @@
 // Created by vincent on 18-10-12.
 //
 
-#ifndef HDMAP_SENDER_H
-#define HDMAP_SENDER_H
+#pragma once
 
+#include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <mutex>
 #include "Type/Pose.h"
 #include "Type/LaneSection.h"
@@ -14,7 +15,6 @@
 
 namespace hdmap
 {
-//TODO 将Sender放到HDMap内部
 class Sender
 {
 private:
@@ -35,7 +35,7 @@ public:
     void SendPoses(std::vector<Pose> poses);
     void AddSection(LaneSection section);
     void AddJunction(Junction junction);
-    void AddMap(HDMap &map);
+//    void AddMap(HDMap &map);
     void AddRoadId(Pose p, int id);
     void AddStartPoint(const Vector2d & v);
     void AddEndPoint(const Vector2d & v);
@@ -45,4 +45,3 @@ public:
     }
 };
 }
-#endif //HDMAP_SENDER_H

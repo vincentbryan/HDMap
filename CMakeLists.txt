@@ -9,7 +9,6 @@ set(CMAKE_CXX_STANDARD 11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
 		roscpp
-		roscpp
 )
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -135,11 +134,12 @@ AUX_SOURCE_DIRECTORY(src SRCS)
 AUX_SOURCE_DIRECTORY(src/Type TYPES)
 AUX_SOURCE_DIRECTORY(src/Math MATH)
 add_executable(${PROJECT_NAME}
+		src/Sender.cpp
+		src/Sender.h
 		${TYPES}
 		${MATH}
 		${SRCS}
-		src/Sender.cpp
-		src/Sender.h
+
 )
 
 add_executable(talker

@@ -3,7 +3,6 @@
 //
 
 #include <boost/property_tree/ptree.hpp>
-#include <geos_c.h>
 #include "HDMap.h"
 
 using namespace hdmap;
@@ -15,13 +14,94 @@ HDMap::HDMap() : mCurrPose(Pose()),
                  mCurrSection(LaneSection())
 {}
 
-void HDMap::StartRoad()
+//region Setter And Getter
+void HDMap::SetSender(std::shared_ptr<Sender> _sender)
+{
+    pSender = _sender;
+}
+
+void HDMap::SetCurrPose(const Pose &pose)
+{
+    mCurrPose = pose;
+}
+
+Pose HDMap::GetCurrPose() const
+{
+    return mCurrPose;
+}
+
+void HDMap::SetPrevPose(const Pose &pose)
+{
+    mPrevPose = pose;
+}
+
+Pose HDMap::GetPrevPose() const
+{
+    return mPrevPose;
+}
+
+LaneSection HDMap::GetCurrentSection() const
+{
+    return mCurrSection;
+}
+
+Junction HDMap::GetCurrentJunction() const
+{
+    return mJunctions.back();
+}
+
+std::vector<LaneSection> HDMap::GetAllSection()
+{
+    std::vector<LaneSection> res;
+    for(auto road : mRoads)
+    {
+        for(auto sec : road.mSections)
+        {
+            res.emplace_back(sec);
+        }
+    }
+    return res;
+}
+
+std::vector<Junction> HDMap::GetAllJunction()
+{
+    return mJunctions;
+}
+
+void HDMap::SetStartPoint(const Vector2d &v)
+{
+    mStartPoint = v;
+    pSender->AddStartPoint(mStartPoint);
+}
+
+Vector2d HDMap::GetStartPoint() const
+{
+    return mStartPoint;
+}
+
+void HDMap::SetEndPoint(const Vector2d &v)
+{
+    mEndPoint = v;
+    pSender->AddEndPoint(mEndPoint);
+}
+
+Vector2d HDMap::GetEndPoint() const
+{
+    return mEndPoint;
+}
+//endregion
+
+void HDMap::StartRoad(Pose _start_pose)
 {
     mRoads.emplace_back(Road());
     mPrevSection.s = 0;
     mPrevSection.mReferLine = Bezier({0,0,0}, {0,0,0}, 0, 0);
     mPrevSection.mLanes.clear();
     mCurrSection = mPrevSection;
+
+    mCurrPose = _start_pose;
+
+    pSender->AddRoadId(mCurrPose, mRoads.back().iRoadId);
 }
 
 void HDMap::EndRoad()
@@ -75,6 +155,8 @@ void HDMap::EndSection(Pose p)
     mRoads.back().mSections.emplace_back(mCurrSection);
 
     mPrevSection = mCurrSection;
+
+    pSender->AddSection(mCurrSection);
 }
 
 unsigned int HDMap::CalcuSectionId(unsigned int road, unsigned int section)
@@ -87,7 +169,7 @@ unsigned int HDMap::CalcuLaneId(unsigned int section, int lane)
     return section*10 + 5 + lane;
 }
 
-void HDMap::AddJunction()
+void HDMap::StartJunction()
 {
     mJunctions.emplace_back(Junction());
 }
@@ -117,22 +199,9 @@ void HDMap::AddConnection(unsigned int from_road, int from_lane_idx,
     mRoads[to_road].AddPrevRoadId(from_road);
 }
 
-std::vector<LaneSection> HDMap::GetAllSection()
+void HDMap::EndJunction()
 {
-    std::vector<LaneSection> res;
-    for(auto road : mRoads)
-    {
-        for(auto sec : road.mSections)
-        {
-            res.emplace_back(sec);
-        }
-    }
-    return res;
-}
-
-std::vector<Junction> HDMap::GetAllJunction()
-{
-    return mJunctions;
+    pSender->AddJunction(mJunctions.back());
 }
 
 void HDMap::Load(const std::string &file_name)
@@ -412,4 +481,9 @@ void HDMap::GlobalPlanning()
     }
 
     //TODO Evaluate
+}
+
+void HDMap::Send()
+{
+    pSender->Send();
 }
