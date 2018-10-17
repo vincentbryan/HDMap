@@ -14,6 +14,7 @@
 
 namespace hdmap
 {
+//TODO 将Sender放到HDMap内部
 class Sender
 {
 private:
@@ -28,6 +29,7 @@ public:
 
     visualization_msgs::Marker GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a);
     visualization_msgs::Marker GetText(const std::string &content, Pose p);
+    visualization_msgs::Marker GetArrow(const Vector2d & v, double r, double g, double b, double a);
 
     void Send();
     void SendPoses(std::vector<Pose> poses);
@@ -35,6 +37,8 @@ public:
     void AddJunction(Junction junction);
     void AddMap(HDMap &map);
     void AddRoadId(Pose p, int id);
+    void AddStartPoint(const Vector2d & v);
+    void AddEndPoint(const Vector2d & v);
     void Clear()
     {
         array.markers.clear();

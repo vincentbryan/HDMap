@@ -31,6 +31,9 @@ private:
     unsigned int CalcuSectionId(unsigned int road, unsigned int section);
     unsigned int CalcuLaneId(unsigned int section, int lane);
 
+    Vector2d mStartPoint;
+    Vector2d mEndPoint;
+
 public:
     HDMap();
 
@@ -67,6 +70,27 @@ public:
 //    void Save(const std::string &file_name);
 
     void Summary();
+
+    void SetStartPoint(const Vector2d & v)
+    {
+        mStartPoint = v;
+    }
+
+    Vector2d GetStartPoint() const
+    {
+        return mStartPoint;
+    }
+
+    void SetEndPoint(const Vector2d & v)
+    {
+        mEndPoint = v;
+    }
+
+    Vector2d GetEndPoint() const
+    {
+        return mEndPoint;
+    }
+
 };
 }
 

@@ -58,7 +58,6 @@ int main( int argc, char** argv )
 #endif
 
 #ifdef TEST
-
     HDMap map;
 
     //Road[0]-------------------------------------------------------------
@@ -205,12 +204,14 @@ int main( int argc, char** argv )
     map.AddConnection(4, -1, 3, -1, 3.0, 3.0);
     sender.AddJunction(map.GetCurrentJunction());
 
-
-
     //-------------------------------------------------------------
 
-    map.Summary();
+    map.SetStartPoint({1, 0});
+    map.SetEndPoint({10.0, 0});
+    sender.AddStartPoint(map.GetStartPoint());
+    sender.AddEndPoint(map.GetEndPoint());
 
+    map.Summary();
     char c;
     while (std::cin >> c)
     {
@@ -219,7 +220,6 @@ int main( int argc, char** argv )
         else
             break;
     }
-
 #endif
 
 #ifdef XML
@@ -267,6 +267,7 @@ int main( int argc, char** argv )
 //            sender.SendPoses(b.GetAllPose(0.05));
 //    }
 #endif
+
     return 0;
 }
 

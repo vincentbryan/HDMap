@@ -76,6 +76,42 @@ visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p)
     return marker;
 }
 
+visualization_msgs::Marker Sender::GetArrow(const Vector2d & v, double r, double g, double b, double a)
+{
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = frame_id;
+    marker.header.stamp = ros::Time::now();
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.orientation.w = 1.0;
+
+    marker.id = id++;
+    marker.type = visualization_msgs::Marker::ARROW;
+
+    marker.scale.z = 1.0;
+    marker.scale.x = 1.0;
+    marker.scale.y = 1.0;
+
+    marker.color.r = r;
+    marker.color.g = g;
+    marker.color.b = b;
+    marker.color.a = a;
+
+    geometry_msgs::Point start;
+    geometry_msgs::Point end ;
+    start.x = v.x;
+    start.y = v.y;
+    start.z = 1.25;
+
+    end.x = v.x;
+    end.y = v.y;
+    end.z = 0.25;
+
+    marker.points.emplace_back(start);
+    marker.points.emplace_back(end);
+
+    return marker;
+}
+
 void Sender::Send()
 {
     pub.publish(array);
@@ -151,5 +187,16 @@ void Sender::AddRoadId(Pose p, int id)
 {
     std::string text = "Road[" + std::to_string(id) + "]";
     visualization_msgs::Marker m = GetText(text, p);
+    array.markers.emplace_back(m);
+}
+
+void Sender::AddStartPoint(const Vector2d &v){
+    visualization_msgs::Marker m = GetArrow(v, 1.0, 1.0, 1.0, 1.0);
+    array.markers.emplace_back(m);
+}
+
+void Sender::AddEndPoint(const Vector2d &v)
+{
+    visualization_msgs::Marker m = GetArrow(v, 0, 255.0/255, 128.0/255, 1.0);
     array.markers.emplace_back(m);
 }
