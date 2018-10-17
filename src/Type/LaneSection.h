@@ -62,6 +62,8 @@ public:
         return mAllLanePose[idx];
     }
 
+    double Distance(const Vector2d & v);
+
 private:
     void AppendPose(double s_);
     void GenerateAllPose(double ds);

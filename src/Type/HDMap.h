@@ -46,7 +46,7 @@ public:
     unsigned int GetCurrentRoadId()
     {
         assert(!mRoads.empty());
-        return mRoads.back().mRoadId;
+        return mRoads.back().iRoadId;
     }
 
     void StartRoad();
@@ -61,8 +61,8 @@ public:
     std::vector<Junction> GetAllJunction();
 
     void AddJunction();
-    void AddConnection(unsigned int from_road, int from_lane_idx,
-                       unsigned int to_road, int to_lane_idx,
+    void AddConnection(unsigned int from_road_id, int from_lane_idx,
+                       unsigned int to_road_id, int to_lane_idx,
                        double _ctrl_len1 = Bezier::DEFAULT_LENGTH,
                        double _ctrl_len2 = Bezier::DEFAULT_LENGTH);
 
@@ -91,6 +91,7 @@ public:
         return mEndPoint;
     }
 
+    void GlobalPlanning();
 };
 }
 

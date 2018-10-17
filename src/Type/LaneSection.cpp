@@ -122,3 +122,28 @@ std::map<int, std::vector<Pose>> LaneSection::GetAllPose()
     return mAllLanePose;
 }
 
+
+double LaneSection::Distance(const Vector2d &v)
+{
+    Vector2d start = mReferLine.GetPose(0).GetPosition();
+    Vector2d end = mReferLine.GetPose(mReferLine.Length()).GetPosition();
+
+    Vector2d start_to_end = end - start;
+    Vector2d start_to_v = v - start;
+
+    double r = start_to_end.cross(start_to_v) / (start_to_end.norm() * start_to_end.norm());
+
+    if(r <= 0)
+    {
+        return start_to_v.norm();
+    }
+    else if(r >= 1)
+    {
+        return (v - end).norm();
+    }
+    else
+    {
+        r *= start_to_end.norm();
+        return sqrt(start_to_v.norm() * start_to_v.norm() - r*r);
+    }
+}

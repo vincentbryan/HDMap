@@ -207,11 +207,11 @@ int main( int argc, char** argv )
     //-------------------------------------------------------------
 
     map.SetStartPoint({1, 0});
-    map.SetEndPoint({10.0, 0});
+    map.SetEndPoint({50, -10.0});
     sender.AddStartPoint(map.GetStartPoint());
     sender.AddEndPoint(map.GetEndPoint());
-
-    map.Summary();
+    map.GlobalPlanning();
+//    map.Summary();
     char c;
     while (std::cin >> c)
     {

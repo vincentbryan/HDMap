@@ -23,12 +23,12 @@ public:
         y = sin(angle);
     }
 
-    Vector2d operator + (const Vector2d & v)
+    Vector2d operator + (const Vector2d & v) const
     {
         return {x+v.x, y+v.y};
     }
 
-    Vector2d operator - (const Vector2d & v)
+    Vector2d operator - (const Vector2d & v) const
     {
         return {x-v.x, y-v.y};
     }
@@ -57,6 +57,16 @@ public:
         x = v.x;
         y = v.y;
         return *this;
+    }
+
+    double cross(const Vector2d & v)
+    {
+        return x * v.x + y * v.y;
+    }
+
+    double norm()
+    {
+        return std::sqrt(x*x + y*y);
     }
 };
 }

@@ -43,7 +43,6 @@ public:
     {
         array.markers.clear();
     }
-
 };
 }
 #endif //HDMAP_SENDER_H

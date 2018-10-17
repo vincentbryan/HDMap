@@ -28,7 +28,7 @@ void HDMap::EndRoad()
 {
     if(!mRoads.empty())
     {
-        mRoads.back().length = mCurrSection.s + mCurrSection.mReferLine.Length();
+        mRoads.back().dLength = mCurrSection.s + mCurrSection.mReferLine.Length();
     }
 }
 
@@ -113,6 +113,8 @@ void HDMap::AddConnection(unsigned int from_road, int from_lane_idx,
          to_road, to_lane_idx, end_pose,
          _ctrl_len1, _ctrl_len2
     );
+    mRoads[from_road].AddNextRoadId(to_road);
+    mRoads[to_road].AddPrevRoadId(from_road);
 }
 
 std::vector<LaneSection> HDMap::GetAllSection()
@@ -144,8 +146,8 @@ void HDMap::Load(const std::string &file_name)
         for(auto road : tree.get_child("hdmap.roads"))
         {
             Road oRoad;
-            oRoad.mRoadId = road.second.get<int>("<xmlattr>.id");
-            oRoad.length = road.second.get<double>("<xmlattr>.length");
+            oRoad.iRoadId = road.second.get<int>("<xmlattr>.id");
+            oRoad.dLength = road.second.get<double>("<xmlattr>.dLength");
 
             for(auto section : road.second.get_child(""))
             {
@@ -230,7 +232,7 @@ void HDMap::Load(const std::string &file_name)
             mRoads.emplace_back(oRoad);
         }
         mPrevSection = mCurrSection = mRoads.back().mSections.back();
-        Road::ROAD_ID = mRoads.back().mRoadId + 1;
+        Road::ROAD_ID = mRoads.back().iRoadId + 1;
         //endregion
 
         //region AddJunctions
@@ -298,7 +300,7 @@ void HDMap::Summary()
     for(auto r : mRoads)
     {
         std::cout << "- - - - - - - - - - - - - - - - - - - -\n";
-        std::cout << "road[" << r.mRoadId << "] length:" << r.length << std::endl;
+        std::cout << "road[" << r.iRoadId << "] dLength:" << r.dLength << std::endl;
 
         for(auto section : r.mSections)
         {
@@ -340,4 +342,74 @@ void HDMap::Summary()
             std::cout << std::endl;
         }
     }
+}
+
+void HDMap::GlobalPlanning()
+{
+    double min_dist = 100000;
+    unsigned int start_road_id = 0;
+    unsigned int end_road_id = 0;
+    for(auto & x : mRoads)
+    {
+        if (x.Distance(mStartPoint).second < min_dist)
+        {
+            min_dist = x.Distance(mStartPoint).second;
+            start_road_id = x.iRoadId;
+        }
+    }
+    min_dist = 100000;
+    for(auto & x : mRoads)
+    {
+        if(x.Distance(mEndPoint).second < min_dist)
+        {
+            min_dist = x.Distance(mEndPoint).second;
+            end_road_id = x.iRoadId;
+        }
+    }
+    std::cout << "start id: " << start_road_id << " end id: " << end_road_id << std::endl;
+
+    std::vector<std::vector<unsigned int>>routings;
+    std::vector<unsigned int>routing;
+    std::map<unsigned int, bool> is_visited;
+    for(auto x : mRoads)
+    {
+        is_visited.insert(std::pair<unsigned int, bool>(x.iRoadId, false));
+    }
+
+    auto search = std::function<void(unsigned int, std::vector<unsigned int>)>();
+
+    search = [&](unsigned int curr_road_id, std::vector<unsigned int> v)
+    {
+        if(mRoads[curr_road_id].iRoadId == end_road_id)
+        {
+            routings.emplace_back(v);
+        }
+        else
+        {
+            for(auto x : mRoads[curr_road_id].GetNextRoads())
+            {
+                if(!is_visited[x])
+                {
+                    is_visited[x] = true;
+                    v.emplace_back(x);
+                    search(x, v);
+                    v.pop_back();
+                    is_visited[x] = false;
+                }
+            }
+        }
+    };
+
+    routing.emplace_back(start_road_id);
+    is_visited[start_road_id] = true;
+    search(start_road_id, routing);
+
+    for(auto &x : routings)
+    {
+        for(auto & y : x)
+            std::cout << y << " ";
+        std::cout << std::endl;
+    }
+
+    //TODO Evaluate
 }
