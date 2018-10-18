@@ -1,6 +1,6 @@
 <hdmap>
     <roads>
-        <road id="0" dLength="20.0">
+        <road id="0" length="20.0">
 
         	<lanesection id="0" s="0.0" left_idx="-2" right_idx="1">
 
@@ -116,7 +116,7 @@
 
         </road>
 
-        <road id="1" dLength="10.0">
+        <road id="1" length="10.0">
             <lanesection id="2" s="0.0" left_idx="-1" right_idx="1">
                 <refer_line type="bezier" s="0">
                     <start_pose>

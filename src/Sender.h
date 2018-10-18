@@ -15,12 +15,13 @@
 
 namespace hdmap
 {
+class HDMap;
 class Sender
 {
 private:
     ros::Publisher pub;
     visualization_msgs::MarkerArray array;
-    const std::string frame_id;
+    const std::string frame_id = "/hdmap";
     std::vector<Pose> Translate(std::vector<Pose> poses, double length, double theta);
 
 public:
@@ -39,9 +40,6 @@ public:
     void AddRoadId(Pose p, int id);
     void AddStartPoint(const Vector2d & v);
     void AddEndPoint(const Vector2d & v);
-    void Clear()
-    {
-        array.markers.clear();
-    }
+    void Clear();
 };
 }

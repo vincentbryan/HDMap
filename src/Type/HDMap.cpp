@@ -91,7 +91,7 @@ Vector2d HDMap::GetEndPoint() const
 }
 //endregion
 
-void HDMap::StartRoad(Pose _start_pose)
+void HDMap::StartRoad(const Pose & _start_pose)
 {
     mRoads.emplace_back(Road());
     mPrevSection.s = 0;
@@ -125,7 +125,7 @@ void HDMap::StartSection(std::vector<std::tuple<int, double, double>> new_lane, 
     vTempLink = links;
 }
 
-void HDMap::EndSection(Pose p)
+void HDMap::EndSection(const Pose & p)
 {
     //Update Pose
     mPrevPose = mCurrPose;
@@ -216,7 +216,7 @@ void HDMap::Load(const std::string &file_name)
         {
             Road oRoad;
             oRoad.iRoadId = road.second.get<int>("<xmlattr>.id");
-            oRoad.dLength = road.second.get<double>("<xmlattr>.dLength");
+            oRoad.dLength = road.second.get<double>("<xmlattr>.length");
 
             for(auto section : road.second.get_child(""))
             {
@@ -354,11 +354,139 @@ void HDMap::Load(const std::string &file_name)
             }
             mJunctions.emplace_back(oJunction);
         }
+
+        for(auto & road : mRoads)
+        {
+            for(auto & sec : road.mSections)
+            {
+                pSender->AddSection(sec);
+            }
+        }
+
+        for(auto & junc : mJunctions)
+        {
+            pSender->AddJunction(junc);
+        }
     }
     catch (std::exception &e)
     {
         std::cout << "Error: " << e.what() << std::endl;
     }
+}
+
+void HDMap::Save(const std::string &file_name)
+{
+    try
+    {
+        pt::ptree tree;
+
+        pt::ptree p_road;
+        for(auto & x : mRoads)
+        {
+
+            p_road.add("<xmlattr>.id", x.iRoadId);
+            p_road.add("<xmlattr>.length", x.dLength);
+
+            pt::ptree p_sec;
+            for(auto & sec : x.mSections)
+            {
+                p_sec.add("<xmlattr>.id", sec.iSectionId);
+                p_sec.add("<xmlattr>.s", sec.s);
+
+                p_sec.add("<xmlattr>.left_idx", sec.most_left_lane_idx);
+                p_sec.add("<xmlattr>.right_idx",sec.most_right_lane_idx);
+
+                p_sec.add("refer_line.<xmlattr>.type", "bezier");
+                p_sec.add("refer_line.<xmlattr>.s", sec.s);
+                p_sec.add("refer_line.start_pose.x", sec.mReferLine.start_pose.x);
+                p_sec.add("refer_line.start_pose.y", sec.mReferLine.start_pose.y);
+                p_sec.add("refer_line.start_pose.direction", sec.mReferLine.start_pose.direction);
+                p_sec.add("refer_line.end_pose.x", sec.mReferLine.end_pose.x);
+                p_sec.add("refer_line.end_pose.y", sec.mReferLine.end_pose.y);
+                p_sec.add("refer_line.end_pose.direction", sec.mReferLine.end_pose.direction);
+                p_sec.add("refer_line.ctrl_len1", sec.mReferLine.ctrl_len1);
+                p_sec.add("refer_line.ctrl_len2", sec.mReferLine.ctrl_len2);
+
+                p_sec.add("offset.<xmlattr>.type", "cubic_function");
+                p_sec.add("offset.x0", sec.mLaneOffset.x0);
+                p_sec.add("offset.y0", sec.mLaneOffset.y0);
+                p_sec.add("offset.x1", sec.mLaneOffset.x1);
+                p_sec.add("offset.y1", sec.mLaneOffset.y1);
+
+                pt::ptree p_lane;
+                for(auto & k : sec.mLanes)
+                {
+                    p_lane.add("<xmlattr>.idx", k.first);
+                    p_lane.add("<xmlattr>.id", k.second.land_id);
+                    p_lane.add("<xmlattr>.type", "Driving");
+                    p_lane.add("offset.<xmlattr>.type", "cubic_function");
+                    p_lane.add("offset.<xmlattr>.s", 0);
+                    p_lane.add("offset.x0", k.second.width.x0);
+                    p_lane.add("offset.y0", k.second.width.y0);
+                    p_lane.add("offset.x1", k.second.width.x1);
+                    p_lane.add("offset.y1", k.second.width.y1);
+
+                    p_sec.add_child("lane", p_lane);
+                    p_lane.clear();
+                }
+                p_road.add_child("lanesection", p_sec);
+                p_sec.clear();
+            }
+            tree.add_child("hdmap.roads.road", p_road);
+            p_road.clear();
+        }
+
+        pt::ptree p_junc;
+        for(auto & junc : mJunctions)
+        {
+
+            p_junc.add("<xmlattr>.id",junc.iJunctionId);
+
+            pt::ptree p_road_link;
+            for(auto & road_link : junc.mRoadLinks)
+            {
+
+                p_road_link.add("<xmlattr>.from_road_id", road_link.first.first);
+                p_road_link.add("<xmlattr>.to_road_id", road_link.first.second);
+
+                pt::ptree p_lane_link;
+                for(auto & lane_link : road_link.second.vLaneLinks)
+                {
+
+                    p_lane_link.add("<xmlattr>.from_lane_idx", lane_link.iFromIndex);
+                    p_lane_link.add("<xmlattr>.to_lane_idx", lane_link.iToIndex);
+
+                    p_lane_link.add("refer_line.<xmlattr>.type", "bezier");
+                    p_lane_link.add("refer_line.<xmlattr>.s", 0);
+                    p_lane_link.add("refer_line.start_pose.x", lane_link.mReferLine.start_pose.x);
+                    p_lane_link.add("refer_line.start_pose.y", lane_link.mReferLine.start_pose.y);
+                    p_lane_link.add("refer_line.start_pose.direction", lane_link.mReferLine.start_pose.direction);
+                    p_lane_link.add("refer_line.end_pose.x", lane_link.mReferLine.end_pose.x);
+                    p_lane_link.add("refer_line.end_pose.y", lane_link.mReferLine.end_pose.y);
+                    p_lane_link.add("refer_line.end_pose.direction", lane_link.mReferLine.end_pose.direction);
+                    p_lane_link.add("refer_line.ctrl_len1", lane_link.mReferLine.ctrl_len1);
+                    p_lane_link.add("refer_line.ctrl_len2", lane_link.mReferLine.ctrl_len2);
+
+                    p_road_link.add_child("lane-link", p_lane_link);
+                    p_lane_link.clear();
+                }
+
+                p_junc.add_child("road-link", p_road_link);
+                p_road_link.clear();
+
+            }
+
+            tree.add_child("hdmap.junctions.junction", p_junc);
+            p_junc.clear();
+
+        }
+        pt::write_xml(file_name, tree);
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
+
 }
 
 void HDMap::Summary()
@@ -369,7 +497,7 @@ void HDMap::Summary()
     for(auto r : mRoads)
     {
         std::cout << "- - - - - - - - - - - - - - - - - - - -\n";
-        std::cout << "road[" << r.iRoadId << "] dLength:" << r.dLength << std::endl;
+        std::cout << "road[" << r.iRoadId << "] length:" << r.dLength << std::endl;
 
         for(auto section : r.mSections)
         {

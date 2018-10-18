@@ -14,6 +14,9 @@ private:
     double range;
 
 public:
+    double x0, y0, x1, y1;
+
+public:
     explicit CubicFunction(double y0 = 1.0, double _range = 1.0, double y1 = 1.0);
     double Value(double x);
 };

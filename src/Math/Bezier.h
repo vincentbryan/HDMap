@@ -11,12 +11,14 @@ namespace hdmap
 {
 class Bezier
 {
-protected:
+public:
     Pose start_pose;
     Pose end_pose;
     Vector2d p0, p1, p2, p3;
     double length;
     bool is_line;
+    double ctrl_len1;
+    double ctrl_len2;
     Pose _GetPose(double t);
 
 public:

@@ -17,7 +17,8 @@ Bezier::Bezier(Pose _start_pose, Pose _end_pose, double _ctrl_len1, double _ctrl
     p3 = end_pose.GetPosition();
     p1 = p0 + _ctrl_len1 * start_pose.GetAngle().ToVector();
     p2 = p3 - _ctrl_len2 * end_pose.GetAngle().ToVector();
-
+    ctrl_len1 = _ctrl_len1;
+    ctrl_len2 = _ctrl_len2;
     length = 0;
     is_line = false;
 

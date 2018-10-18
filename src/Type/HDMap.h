@@ -64,9 +64,9 @@ public:
 
     //endregion
 
-    void StartRoad(Pose _start_pose);
+    void StartRoad(const Pose & _start_pose);
     void EndRoad();
-    void EndSection(Pose p);
+    void EndSection(const Pose & p);
     void StartSection(std::vector<std::tuple<int, double, double>> new_lane, std::vector<std::pair<int, int>>links);
 
     void StartJunction();
@@ -76,11 +76,10 @@ public:
                        double _ctrl_len2 = Bezier::DEFAULT_LENGTH);
     void EndJunction();
     void Load(const std::string &file_name);
-//    void Save(const std::string &file_name);
+    void Save(const std::string &file_name);
 
     void Summary();
     void GlobalPlanning();
-
     void Send();
 };
 }

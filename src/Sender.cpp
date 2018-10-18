@@ -16,7 +16,7 @@ Sender::Sender(ros::Publisher pub_) : frame_id("/hdmap"), pub(pub_)
 visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a)
 {
     visualization_msgs::Marker line_strip;
-    line_strip.header.frame_id = frame_id;
+    line_strip.header.frame_id = "/hdmap";
     line_strip.header.stamp = ros::Time::now();
     line_strip.id = id++;
     line_strip.action = visualization_msgs::Marker::ADD;
@@ -52,7 +52,7 @@ visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double 
 visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p)
 {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = frame_id;
+    marker.header.frame_id = "/hdmap";
     marker.header.stamp = ros::Time::now();
     marker.action = visualization_msgs::Marker::ADD;
     marker.pose.orientation.w = 1.0;
@@ -79,7 +79,7 @@ visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p)
 visualization_msgs::Marker Sender::GetArrow(const Vector2d & v, double r, double g, double b, double a)
 {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = frame_id;
+    marker.header.frame_id = "/hdmap";
     marker.header.stamp = ros::Time::now();
     marker.action = visualization_msgs::Marker::ADD;
     marker.pose.orientation.w = 1.0;
@@ -119,15 +119,14 @@ void Sender::Send()
 
 void Sender::SendPoses(std::vector<Pose> poses)
 {
-    auto line_strip = GetLineStrip(poses, 0.5, 0.5, 0.5, 1.0);
+    auto line_strip = GetLineStrip(std::move(poses), 0.5, 0.5, 0.5, 1.0);
     array.markers.emplace_back(line_strip);
     pub.publish(array);
 }
 
 void Sender::AddSection(LaneSection section)
 {
-    auto sid = section.iSectionId;
-    for(auto x : section.GetAllPose())
+    for(auto & x : section.GetAllPose())
     {
 
         if(x.first == 0)
@@ -153,7 +152,7 @@ void Sender::AddJunction(Junction junction)
     for(auto & x : junction.GetAllPose())
     {
         visualization_msgs::Marker line_strip = GetLineStrip(x, 234.0/255, 247.0/255, 134.0/255, 1.0);
-        array.markers.push_back(line_strip);
+        array.markers.emplace_back(line_strip);
     }
 }
 
@@ -173,7 +172,7 @@ void Sender::AddJunction(Junction junction)
 std::vector<Pose> Sender::Translate(std::vector<Pose> poses, double length, double theta)
 {
     std::vector<Pose> res;
-    for(auto p : poses)
+    for(auto & p : poses)
     {
         Angle a = p.GetAngle();
         a.Rotate(theta);
@@ -190,7 +189,8 @@ void Sender::AddRoadId(Pose p, int id)
     array.markers.emplace_back(m);
 }
 
-void Sender::AddStartPoint(const Vector2d &v){
+void Sender::AddStartPoint(const Vector2d &v)
+{
     visualization_msgs::Marker m = GetArrow(v, 1.0, 1.0, 1.0, 1.0);
     array.markers.emplace_back(m);
 }
@@ -199,4 +199,9 @@ void Sender::AddEndPoint(const Vector2d &v)
 {
     visualization_msgs::Marker m = GetArrow(v, 0, 255.0/255, 128.0/255, 1.0);
     array.markers.emplace_back(m);
+}
+
+void Sender::Clear()
+{
+    array.markers.clear();
 }

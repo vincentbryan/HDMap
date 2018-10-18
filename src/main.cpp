@@ -12,7 +12,8 @@
 #include "Sender.h"
 #include "Math/Bezier.h"
 #include "Math/CubicFunction.h"
-#define TEST
+//#define TEST
+#define XML
 
 using namespace hdmap;
 using namespace std;
@@ -194,6 +195,7 @@ int main( int argc, char** argv )
     map.SetStartPoint({1, 0});
     map.SetEndPoint({50, -10.0});
     map.GlobalPlanning();
+    map.Save("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test_out.xml");
 //    map.Summary();
     char c;
     while (std::cin >> c)
@@ -207,15 +209,15 @@ int main( int argc, char** argv )
 
 #ifdef XML
     HDMap map;
-    map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test.xml");
+    map.SetSender(p_sender);
+    map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test_out.xml");
     map.Summary();
-    sender.AddMap(map);
 
     char c;
     while(cin >> c)
     {
         if(c == 'e')break;
-        sender.Send();
+        map.Send();
     }
 #endif
 

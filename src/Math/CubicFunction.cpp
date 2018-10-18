@@ -17,6 +17,11 @@ CubicFunction::CubicFunction(double y0, double _range, double y1)
     d = y0;
 
     range = _range;
+
+    this->x0 = 0;
+    this->y0 = y0;
+    this->x1 = _range;
+    this->y1 = y1;
 }
 
 double CubicFunction::Value(double x)
