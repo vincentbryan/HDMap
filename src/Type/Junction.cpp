@@ -3,6 +3,7 @@
 //
 
 #include "Junction.h"
+#include <algorithm>
 #include "../Math/Line.h"
 
 using namespace hdmap;
@@ -49,3 +50,24 @@ std::vector<std::vector<Pose>> Junction::GetAllPose()
     }
     return vPoses;
 }
+
+bool Junction::Check(std::pair<unsigned int, unsigned int> links)
+{
+    if(mRoadLinks.find(links) != mRoadLinks.end())
+        return true;
+    else
+        return false;
+}
+std::pair<int, int> Junction::GetLink(std::pair<unsigned int, unsigned int> RoadPair)
+{
+    auto it = mRoadLinks.find(RoadPair);
+    return  it->first;
+}
+std::vector<Pose> Junction::GetPose(unsigned int from_road_id,
+                                    int from_lane_idx,
+                                    unsigned int to_road_id,
+                                    int to_lane_idx)
+{
+    return mRoadLinks[{from_road_id, to_road_id}].GetPose(from_lane_idx, to_lane_idx);
+}
+

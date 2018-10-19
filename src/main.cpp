@@ -9,19 +9,24 @@
 #include <queue>
 #include <mutex>
 #include "Type/HDMap.h"
-#include "Sender.h"
+#include "Tool/Sender.h"
 #include "Math/Bezier.h"
 #include "Math/CubicFunction.h"
-//#define TEST
-#define XML
+#define TEST
+//#define XML
+#define USER    "\033[33m[User]: \033[0m"
+#define HINT    "\033[31m[Hint]: \033[0m"
 
 using namespace hdmap;
 using namespace std;
 
-bool CMD_AddRoad(HDMap &map);
+bool CMD_StartRoad(HDMap &map);
 bool CMD_StartSection(HDMap &map);
 bool CMD_EndSection(HDMap &map);
-bool CMD_SendSection(HDMap &map, Sender &sender);
+bool CMD_EndRoad(HDMap &map);
+
+bool CMD_StartJunction(HDMap &map);
+bool CMD_EndJunction(HDMap &map);
 
 int main( int argc, char** argv )
 {
@@ -32,29 +37,77 @@ int main( int argc, char** argv )
 
 #ifdef CMD
     HDMap map;
+    map.SetSender(p_sender);
+
     while(true)
     {
-        CMD_AddRoad(map);
+        CMD_StartRoad(map);
 
         while(true)
         {
             CMD_StartSection(map);
             CMD_EndSection(map);
-            CMD_SendSection(map, sender);
-            cout << "Continue to add section?[y/n]\n";
-            cout << "[User]: ";
+            cout << "Continue to add section?\n";
+            cout << HINT << "[y/n]\n";
+            cout << USER;
             string cmd;
             cin >> cmd;
             if(cmd == "n")
                 break;
         }
 
-        cout << "Continue to add road?[y/n]\n";
-        cout << "[User]: ";
+        CMD_EndRoad(map);
+
+        cout << "Continue to add road?\n";
+        cout << HINT << "[y/n]\n";
+        cout << USER;
         string cmd;
         cin >> cmd;
         if(cmd == "n")
             break;
+    }
+
+    while(true)
+    {
+        std::cout << "Adding Junction?\n";
+        cout << HINT << "[y/n]\n";
+        std::cout << USER;
+        string cmd;
+        cin >> cmd;
+        if(cmd == "y")
+        {
+            CMD_StartJunction(map);
+            while(true)
+            {
+                string c;
+                std::cout << "Add a connection?\n";
+                std::cout << HINT << "[y/n]\n";
+                std::cout << USER;
+                cin >> c;
+                if(c == "y")
+                {
+                    std::cout << "To add connection, you need to input following data\n";
+                    std::cout << HINT << "[from_road_id idx to_road_id idx]\n";
+                    std::cout << USER;
+                    unsigned int from_road_id, to_road_id;
+                    int from_lane_idx, to_lane_idx;
+                    cin >> from_road_id >> from_lane_idx >> to_road_id >> to_lane_idx;
+                    map.AddConnection(from_road_id, from_lane_idx, to_road_id, to_lane_idx);
+                }
+                else
+                {
+                    CMD_EndJunction(map);
+                    map.Send();
+                    break;
+                }
+            }
+        }
+        else
+        {
+            break;
+        }
+
+        map.Save("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test2_out.xml");
     }
 #endif
 
@@ -63,139 +116,159 @@ int main( int argc, char** argv )
     map.SetSender(p_sender);
 
     //Road[0]-------------------------------------------------------------
-    map.StartRoad({0, 0, 0});
+    map.StartRoad({-240.809, 1.27231, 26.4284});
 
-    //region sec-0
-    std::tuple<int, double, double> t1 (-2, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> t2 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> t3 ( 1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::vector<std::tuple<int, double, double>> lanes1;
-    lanes1.emplace_back(t1);
-    lanes1.emplace_back(t2);
-    lanes1.emplace_back(t3);
-    std::vector<std::pair<int, int>> links1;
+    //region road[0] / sec[0]
+    std::tuple<int, double, double> r0_s0_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    std::tuple<int, double, double> r0_s0_t1 ( 1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    std::vector<std::tuple<int, double, double>> r0_s0_lanes;
+    r0_s0_lanes.emplace_back(r0_s0_t_1);
+    r0_s0_lanes.emplace_back(r0_s0_t1);
+    std::vector<std::pair<int, int>> r0_s0_links;
 
-    map.StartSection(lanes1, links1);
-    map.EndSection({10, 0, 0});
-    //endregion
-
-    //region sec-1
-    std::tuple<int, double, double> t4 (-2, Lane::DEFAULT_WIDTH, 0);
-    std::tuple<int, double, double> t5 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> t6 ( 1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::vector<std::tuple<int, double, double>> lanes2;
-    lanes2.emplace_back(t4);
-    lanes2.emplace_back(t5);
-    lanes2.emplace_back(t6);
-    std::vector<std::pair<int, int>> links2 = {{-2, -2}, {-1, -1}, {1, 1}};
-
-    map.StartSection(lanes2, links2);
-    map.EndSection({20, 0, 0});
+    map.StartSection(r0_s0_lanes, r0_s0_links);
+    map.EndSection({115.543, 182.945, 24.6765});
     //endregion
 
     map.EndRoad();
+    //--------------------------------------------------------------------
+
+
 
     //Road[1]-------------------------------------------------------------
-    map.StartRoad({25, 1, 0});
+    map.StartRoad({143.963, 173.71, 306.621});
 
-    //region sec-10
-    std::vector<std::tuple<int, double, double>> lanes3;
-    std::tuple<int, double, double> t7 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> t8 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    lanes3.emplace_back(t7);
-    lanes3.emplace_back(t8);
+    //region road[1] / sec[0]
+    std::vector<std::tuple<int, double, double>> r1_s0_lanes;
+    std::vector<std::pair<int, int>> r1_s0_links;
 
-    std::vector<std::pair<int, int>> links3;
-    map.StartSection(lanes3, links3);
+    std::tuple<int, double, double> r1_s0_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    std::tuple<int, double, double> r1_s0_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r1_s0_lanes.emplace_back(r1_s0_t_1);
+    r1_s0_lanes.emplace_back(r1_s0_t1);
 
-    map.EndSection({45, 1, 0});
+    map.StartSection(r1_s0_lanes, r1_s0_links);
+    map.EndSection({225.937, 65.9142, 304.875});
     //endregion
+
     map.EndRoad();
+    //--------------------------------------------------------------------
+
+
 
     //Road[2]-------------------------------------------------------------
 
-    map.StartRoad({50, -3, 270});
+    map.StartRoad({218.451, 39.7093, 207.731});
 
-    std::vector<std::tuple<int, double, double>> lanes4;
-    std::tuple<int, double, double> t9 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> t10 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    lanes4.emplace_back(t9);
-    lanes4.emplace_back(t10);
+    //region road[2] / sec[0]
+    std::vector<std::tuple<int, double, double>> r2_s0_lanes;
+    std::vector<std::pair<int, int>> r2_s0_links;
+    std::tuple<int, double, double> r2_s0_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    std::tuple<int, double, double> r2_s0_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s0_lanes.emplace_back(r2_s0_t_1);
+    r2_s0_lanes.emplace_back(r2_s0_t1);
 
-    std::vector<std::pair<int, int>> links4;
-    map.StartSection(lanes4, links4);
+    map.StartSection(r2_s0_lanes, r2_s0_links);
+    map.EndSection({191.272, 24.1459, 210.586});
+    //endregion
 
-    map.EndSection({50, -16, 270});
+    //region road[2] / sec[1]
+    std::vector<std::tuple<int, double, double>> r2_s1_lanes;
+    std::vector<std::pair<int, int>> r2_s1_links = {{1, 1}, {-1, -1}};
+    std::tuple<int, double, double> r2_s1_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    std::tuple<int, double, double> r2_s1_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s1_lanes.emplace_back(r2_s1_t_1);
+    r2_s1_lanes.emplace_back(r2_s1_t1);
+
+    map.StartSection(r2_s1_lanes, r2_s1_links);
+    map.EndSection({176.956, 14.2475, 218.465}, 5.0, 5.0);
+    //endregion
+
+    //region road[2] / sec[2]
+    std::vector<std::tuple<int, double, double>> r2_s2_lanes;
+    std::vector<std::pair<int, int>> r2_s2_links = {{1, 1}, {-1, -1}};
+    std::tuple<int, double, double> r2_s2_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    std::tuple<int, double, double> r2_s2_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s2_lanes.emplace_back(r2_s2_t_1);
+    r2_s2_lanes.emplace_back(r2_s2_t1);
+
+    map.StartSection(r2_s2_lanes, r2_s2_links);
+    map.EndSection({69.328, -52.1073, 209.138});
+    //endregion
+
     map.EndRoad();
+    //--------------------------------------------------------------------
+
+
 
     //Road[3]-------------------------------------------------------------
+    map.StartRoad({44.6509, -45.716, 124.36});
 
-    map.StartRoad({45, -20, 180});
+    //region road[3] / sec[0]
+    std::vector<std::tuple<int, double, double>> r3_s0_lanes;
+    std::vector<std::pair<int, int>> r3_s0_links;
+    std::tuple<int, double, double> r3_s0_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    std::tuple<int, double, double> r3_s0_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r3_s0_lanes.emplace_back(r3_s0_t_1);
+    r3_s0_lanes.emplace_back(r3_s0_t1);
 
-    std::vector<std::tuple<int, double, double>> lanes5;
-    std::tuple<int, double, double> t11 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> t12 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    lanes5.emplace_back(t11);
-    lanes5.emplace_back(t12);
+    map.StartSection(r3_s0_lanes, r3_s0_links);
+    map.EndSection({22.8185, -14.4651, 126.85});
+    //endregion
 
-    std::vector<std::pair<int, int>> links5;
-    map.StartSection(lanes5, links5);
+    //region road[3] / sec[1]
+    std::vector<std::tuple<int, double, double>> r3_s1_lanes;
+    std::vector<std::pair<int, int>> r3_s1_links = {{1, 1}, {-1, -1}};
+    std::tuple<int, double, double> r3_s1_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    std::tuple<int, double, double> r3_s1_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r3_s1_lanes.emplace_back(r3_s1_t_1);
+    r3_s1_lanes.emplace_back(r3_s1_t1);
 
-    map.EndSection({25, -20, 180});
+    map.StartSection(r3_s1_lanes, r3_s1_links);
+    map.EndSection({15.0057, -4.23992, 125.589});
+    //endregion
+
+    //region road[3] / sec[2]
+    std::vector<std::tuple<int, double, double>> r3_s2_lanes;
+    std::vector<std::pair<int, int>> r3_s2_links = {{1, 1}, {-1, -1}};
+    std::tuple<int, double, double> r3_s2_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    std::tuple<int, double, double> r3_s2_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r3_s2_lanes.emplace_back(r3_s2_t_1);
+    r3_s2_lanes.emplace_back(r3_s2_t1);
+
+    map.StartSection(r3_s2_lanes, r3_s2_links);
+    map.EndSection({-41.1274, 75.0404, 123.11});
+    //endregion
+
     map.EndRoad();
+    //--------------------------------------------------------------------
 
-    //Road[4]-------------------------------------------------------------
 
-    map.StartRoad({22, -16, 90});
+    //--------------------------------------------------------------------
+    map.StartJunction();
+    map.AddConnection(0, 1, 1, 1, 15.0, 15.0);
+    map.AddConnection(1, -1, 0, -1, 15.0, 15.0);
+    map.EndJunction();
 
-    std::vector<std::tuple<int, double, double>> lanes6;
-    std::tuple<int, double, double> t13 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> t14 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    lanes6.emplace_back(t13);
-    lanes6.emplace_back(t14);
 
-    std::vector<std::pair<int, int>> links6;
-    map.StartSection(lanes5, links6);
+    map.StartJunction();
+    map.AddConnection(1, 1, 2, 1, 15.0, 15.0);
+    map.AddConnection(2, -1, 1, -1, 15.0, 15.0);
+    map.EndJunction();
 
-    map.EndSection({22, -3, 90});
-    map.EndRoad();
-
+    map.StartJunction();
+    map.AddConnection(2, 1, 3, 1, 15.0, 15.0);
+    map.AddConnection(3, -1, 2, -1, 15.0, 15.0);
+    map.EndJunction();
     //-------------------------------------------------------------
 
-    map.StartJunction();
-    map.AddConnection(0, 1, 1, 1);
-    map.AddConnection(0, 1, 4, -1, 1.0, 0.5);
+//    map.SetStartPoint({1, 0});
+//    map.SetEndPoint({50, -10.0});
+//    map.GlobalPlanning();
 
-    map.AddConnection(1, -1, 0, -1);
-    map.AddConnection(1, -1, 0, -2);
-    map.AddConnection(1, -1, 4, -1);
+//    map.Save("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test2_out.xml");
+    map.Test();
 
-    map.AddConnection(4, 1, 1, 1);
-    map.AddConnection(4, 1, 0, -1);
-    map.AddConnection(4, 1, 0, -2);
-    map.EndJunction();
-
-    map.StartJunction();
-    map.AddConnection(1, 1, 2, 1);
-    map.AddConnection(2, -1, 1, -1, 3.0, 3.0);
-    map.EndJunction();
-
-    map.StartJunction();
-    map.AddConnection(2, 1, 3, 1);
-    map.AddConnection(3, -1, 2, -1,3.0, 3.0);
-    map.EndJunction();
-
-    map.StartJunction();
-    map.AddConnection(3, 1, 4, 1);
-    map.AddConnection(4, -1, 3, -1, 3.0, 3.0);
-    map.EndJunction();
-
-    //-------------------------------------------------------------
-
-    map.SetStartPoint({1, 0});
-    map.SetEndPoint({50, -10.0});
-    map.GlobalPlanning();
-    map.Save("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test_out.xml");
 //    map.Summary();
     char c;
     while (std::cin >> c)
@@ -210,7 +283,7 @@ int main( int argc, char** argv )
 #ifdef XML
     HDMap map;
     map.SetSender(p_sender);
-    map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test_out.xml");
+    map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test2_out.xml");
     map.Summary();
 
     char c;
@@ -256,10 +329,11 @@ int main( int argc, char** argv )
     return 0;
 }
 
-bool CMD_AddRoad(HDMap &map)
+bool CMD_StartRoad(HDMap &map)
 {
-    cout << "To start a road, you need to input a start pose[x, y, yaw]:\n";
-    cout << "[User]: ";
+    cout << "To start a road, you need to input a start pose:\n";
+    cout << HINT << "[x, y, angle]\n";
+    cout << USER;
     Pose p;
     std::cin >> p.x >> p.y >> p.direction;
     map.StartRoad(p);
@@ -272,17 +346,20 @@ bool CMD_StartSection(HDMap &map)
     int n;
     cout << "To start a section, you need to specify the lane index and links\n";
     cout << "Please input the lane number\n";
-    cout << "[User]: ";
+    cout << HINT << "[unsigned int]\n";
+    cout << USER;
     cin >> n;
     vector<tuple<int, double, double>> lanes;
     vector<pair<int, int>> links;
     for(int i = 0; i < n; i++)
     {
         int t;
-        cout << "[User] lane " << i << " : ";
-        cin >> t;
+        double d1, d2;
+        cout << USER;
+        cout << " lane" << i << " : ";
+        cin >> t >> d1 >> d2;
         //TODO
-        tuple<int, double, double > p(t, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+        tuple<int, double, double > p(t, d1, d2);
         lanes.emplace_back(p);
     }
     cout << "Summary: \n";
@@ -308,13 +385,15 @@ bool CMD_StartSection(HDMap &map)
     }
 
     cout << "Input the links number:" << endl;
-    cout << "[User]: ";
+    cout << HINT << "[unsigned int]\n";
+    cout << USER;
     cin >> n;
     cout << "Please input " << n << " links\n";
     for(int i = 0; i < n; i++)
     {
         int a, b;
-        cout << "[User]: ";
+        cout << HINT << "[int int]\n";
+        cout << USER;
         cin >> a >> b;
         pair<int, int>p(a, b);
         links.emplace_back(p);
@@ -331,27 +410,28 @@ bool CMD_StartSection(HDMap &map)
 
 bool CMD_EndSection(HDMap &map)
 {
-    cout << "To end a section, you need to input a end pose[x, y, yaw]:\n";
-    cout << "[User]: ";
+    cout << "To end a section, you need to input a end pose:\n";
+    cout << HINT << "[x y angle]\n";
+    cout << USER;
     Pose p;
     std::cin >> p.x >> p.y >> p.direction;
     map.EndSection(p);
+    map.Send();
     return true;
 }
 
-bool CMD_SendSection(HDMap &map, Sender &sender)
+bool CMD_EndRoad(HDMap &map)
 {
-    sender.AddSection(map.GetCurrentSection());
+    cout << "Successfully added a road..." << endl;
+    map.EndRoad();
+}
 
-    cout << "To send a new section, enter 'r', if failed enter it again\n";
-    char c;
-    cout << "[User]: ";
-    cin >> c;
-    while (c != 'e')
-    {
-        sender.Send();
-        cout << "[User]: ";
-        cin >> c;
-    }
-    return true;
+bool CMD_StartJunction(HDMap &map)
+{
+    map.StartJunction();
+}
+
+bool CMD_EndJunction(HDMap &map)
+{
+    map.EndJunction();
 }

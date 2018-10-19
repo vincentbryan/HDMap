@@ -13,7 +13,7 @@ unsigned int Sender::id = 0;
 Sender::Sender(ros::Publisher pub_) : frame_id("/hdmap"), pub(pub_)
 {};
 
-visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a)
+visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a, double z)
 {
     visualization_msgs::Marker line_strip;
     line_strip.header.frame_id = "/hdmap";
@@ -42,14 +42,14 @@ visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double 
         geometry_msgs::Point point;
         point.x = p.x;
         point.y = p.y;
-        point.z = 0;
+        point.z = z;
         line_strip.points.push_back(point);
     }
 
     return line_strip;
 }
 
-visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p)
+visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p, double z, double scale)
 {
     visualization_msgs::Marker marker;
     marker.header.frame_id = "/hdmap";
@@ -60,7 +60,7 @@ visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p)
     marker.id = id++;
     marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
 
-    marker.scale.z = 0.5;
+    marker.scale.z = scale;
     marker.color.b = 1;
     marker.color.g = 1;
     marker.color.r = 1;
@@ -69,14 +69,14 @@ visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p)
     geometry_msgs::Pose pose;
     pose.position.x = p.x;
     pose.position.y = p.y;
-    pose.position.z = 0;
+    pose.position.z = z;
     marker.text= content;
     marker.pose=pose;
 
     return marker;
 }
 
-visualization_msgs::Marker Sender::GetArrow(const Vector2d & v, double r, double g, double b, double a)
+visualization_msgs::Marker Sender::GetArrow(const Vector2d & v, double r, double g, double b, double a, double scale) const
 {
     visualization_msgs::Marker marker;
     marker.header.frame_id = "/hdmap";
@@ -87,9 +87,9 @@ visualization_msgs::Marker Sender::GetArrow(const Vector2d & v, double r, double
     marker.id = id++;
     marker.type = visualization_msgs::Marker::ARROW;
 
-    marker.scale.z = 1.0;
-    marker.scale.x = 1.0;
-    marker.scale.y = 1.0;
+    marker.scale.z = scale;
+    marker.scale.x = scale;
+    marker.scale.y = scale;
 
     marker.color.r = r;
     marker.color.g = g;
@@ -100,7 +100,7 @@ visualization_msgs::Marker Sender::GetArrow(const Vector2d & v, double r, double
     geometry_msgs::Point end ;
     start.x = v.x;
     start.y = v.y;
-    start.z = 1.25;
+    start.z = 0.25 + scale;
 
     end.x = v.x;
     end.y = v.y;
@@ -117,9 +117,9 @@ void Sender::Send()
     pub.publish(array);
 }
 
-void Sender::SendPoses(std::vector<Pose> poses)
+void Sender::SendPoses(std::vector<Pose> poses, double r, double g, double b, double a, double z)
 {
-    auto line_strip = GetLineStrip(std::move(poses), 0.5, 0.5, 0.5, 1.0);
+    auto line_strip = GetLineStrip(std::move(poses), r, g, b, a, z);
     array.markers.emplace_back(line_strip);
     pub.publish(array);
 }
@@ -201,7 +201,17 @@ void Sender::AddEndPoint(const Vector2d &v)
     array.markers.emplace_back(m);
 }
 
+
 void Sender::Clear()
 {
     array.markers.clear();
+}
+
+void Sender::AddAnchor(const Pose &p, int id)
+{
+    visualization_msgs::Marker m = GetArrow(p.GetPosition(), 0, 1.0, 0, 1.0, 5.0);
+    array.markers.emplace_back(m);
+    std::string context = "Anchor[" + std::to_string(id) + "] : ( " + std::to_string(p.x) + " " + std::to_string(p.y) + " " + std::to_string(p.GetAngle().Value()) + " )";
+    visualization_msgs::Marker t = GetText(context, p, 6);
+    array.markers.emplace_back(t);
 }

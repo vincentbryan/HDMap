@@ -50,7 +50,7 @@ struct Pose
 
     Pose GetRotation(double n)
     {
-        Pose p(x, y, direction.GetAngle());
+        Pose p(x, y, direction.Value());
         p.Rotate(n);
         return p;
     }
@@ -66,15 +66,15 @@ struct Pose
     Pose GetTranslation(double length, Angle angle)
     {
         Vector2d v = angle.ToVector();
-        return  {x + length * v.x, y + length * v.y, direction.GetAngle()};
+        return  {x + length * v.x, y + length * v.y, direction.Value()};
     }
 
-    Vector2d GetPosition()
+    Vector2d GetPosition() const
     {
         return {x, y};
     }
 
-    Angle GetAngle()
+    Angle GetAngle() const
     {
         return direction;
     }
@@ -90,6 +90,8 @@ struct Pose
         direction.FromYaw(_yaw);
     }
 
+    static bool InLine(const Pose & p1, const Pose & p2);
+    static double AngleThresHold;
 };
 }
 

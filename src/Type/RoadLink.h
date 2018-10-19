@@ -26,6 +26,18 @@ public:
     {
         vLaneLinks.emplace_back(LaneLink(_from_lane_idx, _to_lane_idx, bezier));
     }
+
+    std::vector<Pose> GetPose(int from_lane_idx, int to_lane_idx)
+    {
+        for(auto x : vLaneLinks)
+        {
+            if(x.iFromIndex == from_lane_idx && x.iToIndex == to_lane_idx)
+            {
+                return x.mReferLine.GetAllPose(0.1);
+            }
+        }
+
+    }
 };
 }
 

@@ -11,7 +11,7 @@
 #include <memory>
 #include "Road.h"
 #include "Junction.h"
-#include "../Sender.h"
+#include "../Tool/Sender.h"
 
 namespace hdmap
 {
@@ -66,7 +66,7 @@ public:
 
     void StartRoad(const Pose & _start_pose);
     void EndRoad();
-    void EndSection(const Pose & p);
+    void EndSection(const Pose & p, double _ctrl_len1 = 1.0, double _ctrl_len2 = 1.0);
     void StartSection(std::vector<std::tuple<int, double, double>> new_lane, std::vector<std::pair<int, int>>links);
 
     void StartJunction();
@@ -81,6 +81,11 @@ public:
     void Summary();
     void GlobalPlanning();
     void Send();
+
+    void Trajectory(std::vector<std::pair<unsigned int, int>> sequences);
+
+//    void Test();
+
 };
 }
 

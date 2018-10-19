@@ -51,7 +51,7 @@ public:
         m = atan(v.y / v.x) / M_PI * 180.0;
     }
 
-    double GetAngle() const
+    double Value() const
     {
         return m;
     }
@@ -79,12 +79,12 @@ public:
 
     bool operator == (const Angle & a)
     {
-        return m == a.GetAngle();
+        return m == a.Value();
     }
 
     bool operator != (const Angle & a)
     {
-        return m != a.GetAngle();
+        return m != a.Value();
     }
 };
 }

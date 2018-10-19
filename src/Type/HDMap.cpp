@@ -3,6 +3,7 @@
 //
 
 #include <boost/property_tree/ptree.hpp>
+#include <algorithm>
 #include "HDMap.h"
 
 using namespace hdmap;
@@ -125,13 +126,13 @@ void HDMap::StartSection(std::vector<std::tuple<int, double, double>> new_lane, 
     vTempLink = links;
 }
 
-void HDMap::EndSection(const Pose & p)
+void HDMap::EndSection(const Pose & p, double _ctrl_len1, double _ctrl_len2)
 {
     //Update Pose
     mPrevPose = mCurrPose;
     mCurrPose = p;
 
-    mCurrSection.mReferLine = Bezier(mPrevPose, mCurrPose);
+    mCurrSection.mReferLine = Bezier(mPrevPose, mCurrPose, _ctrl_len1, _ctrl_len2);
     mCurrSection.s = mPrevSection.s + mPrevSection.mReferLine.Length();
     mCurrSection.Clear();
 
@@ -614,4 +615,63 @@ void HDMap::GlobalPlanning()
 void HDMap::Send()
 {
     pSender->Send();
+}
+
+void HDMap::Trajectory(std::vector<std::pair<unsigned int, int>> sequences)
+{
+    /*
+    std::vector<Pose> res;
+
+    for(int i = 0; i < sequences.size()-1; i++)
+    {
+        std::pair<int, int> k;
+        for(auto & j : mJunctions)
+        {
+            if(j.Check({sequences[i].first, sequences[i+1].first}))
+            {
+                k = j.GetLink({sequences[i].first, sequences[i+1].first});
+                break;
+            }
+        }
+
+        auto road_traj = mRoads[sequences[i].first].Trajectory(sequences[i].second, k.first);
+        res.insert(res.end(), road_traj.begin(), road_traj.end());
+
+
+    }
+
+    std::vector<Pose> res;
+    for(auto x : sequences)
+    {
+        unsigned road_id = x.first;
+        int lane_idx = x.second;
+
+        for(auto & section : mRoads[road_id].mSections)
+        {
+            auto lane_pose = section.GetLanePoseByIndex(lane_idx);
+            res.insert(res.end(), lane_pose.begin(), lane_pose.end());
+
+            auto successors = section.mLanes[lane_idx].successors;
+            if(!successors.empty())
+                lane_idx = section.mLanes[lane_idx].successors.front();
+        }
+    }
+     */
+}
+void HDMap::Test()
+{
+    std::vector<Pose> res;
+
+    auto road0 = mRoads[0].Trajectory(1, 1);
+    res.insert(res.end(), road0.begin(), road0.end());
+
+    auto junc0 = mJunctions[0].GetPose(0, 1, 1, 1);
+    res.insert(res.end(), junc0.begin(), junc0.end());
+
+    auto road1 = mRoads[1].Trajectory(1, 1);
+    res.insert(res.end(),road1.begin(), road1.end());
+
+//    pSender->Clear();
+    pSender->SendPoses(res, 1.0, 0, 0, 1.0, 1.0);
+
 }

@@ -7,7 +7,6 @@
 #include <geometry_msgs/Pose2D.h>
 #include <sstream>
 
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "talker");

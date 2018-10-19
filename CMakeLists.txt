@@ -9,6 +9,9 @@ set(CMAKE_CXX_STANDARD 11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
 		roscpp
+		rosbag
+		std_msgs
+		message_generation
 )
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -44,12 +47,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
+ add_message_files(
+   FILES
+   Location.msg
 #   Message2.msg
-# )
-
+ )
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
@@ -65,10 +67,9 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+ generate_messages(
+   DEPENDENCIES std_msgs  # Or other packages containing msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -100,7 +101,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+  	INCLUDE_DIRS include
+	CATKIN_DEPENDS	message_runtime
 #  LIBRARIES HDMap
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
@@ -134,19 +136,28 @@ AUX_SOURCE_DIRECTORY(src SRCS)
 AUX_SOURCE_DIRECTORY(src/Type TYPES)
 AUX_SOURCE_DIRECTORY(src/Math MATH)
 add_executable(${PROJECT_NAME}
-		src/Sender.cpp
-		src/Sender.h
+		src/Tool/Sender.cpp
+		src/Tool/Sender.h
 		${TYPES}
 		${MATH}
 		${SRCS}
-
 )
 
-add_executable(talker
-		talker.cpp)
-
+add_executable(talker talker.cpp)
 add_executable(XMLTest XMLTest.cpp)
+add_executable(DataProcess
+		${TYPES}
+		${MATH}
+		src/Tool/DataProcess.cpp
+		src/Tool/Sender.cpp
+		src/Tool/Sender.h)
 
+add_executable(ViewGPS
+		${TYPES}
+		${MATH}
+		src/Tool/ViewGPS.cpp
+		src/Tool/Sender.cpp
+		src/Tool/Sender.h)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -162,6 +173,14 @@ target_link_libraries(${PROJECT_NAME}
 ${catkin_LIBRARIES}
 )
 target_link_libraries(talker
+${catkin_LIBRARIES}
+)
+
+target_link_libraries(DataProcess
+${catkin_LIBRARIES}
+)
+
+target_link_libraries(ViewGPS
 ${catkin_LIBRARIES}
 )
 #############

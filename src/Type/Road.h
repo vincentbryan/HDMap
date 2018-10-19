@@ -57,6 +57,8 @@ public:
             vPrevRoadId.emplace_back(id);
         }
     }
+
+    std::vector<Pose> Trajectory(int begin_lane_idx, int end_lane_idx);
 };
 }
 

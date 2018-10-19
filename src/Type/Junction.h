@@ -31,6 +31,12 @@ public:
                        unsigned int _to_road_id, int _to_lane_idx, Pose _to_lane_pose,
                        double _ctrl_len1, double _ctrl_len2);
     std::vector<std::vector<Pose>> GetAllPose();
+
+    bool Check(std::pair<unsigned int, unsigned int> links);
+
+    std::pair<int, int>GetLink(std::pair<unsigned int, unsigned int>RoadPair);
+
+    std::vector<Pose> GetPose(unsigned int from_road_id, int from_lane_idx, unsigned int to_road_id, int to_lane_idx);
 };
 }
 

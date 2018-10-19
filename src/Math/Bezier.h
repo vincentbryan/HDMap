@@ -22,7 +22,7 @@ public:
     Pose _GetPose(double t);
 
 public:
-    explicit Bezier(Pose _start_pose = {0, 0, 0}, Pose _end_pose = {0, 0, 0}, double _ctrl_len1 = 2.0, double _ctrl_len2 = 2.0);
+    explicit Bezier(Pose _start_pose = {0, 0, 0}, Pose _end_pose = {0, 0, 0}, double _ctrl_len1 = 5.0, double _ctrl_len2 = 5.0);
     double Length();
     Pose GetPose(double s);
     std::vector<Pose> GetAllPose(double ds);
