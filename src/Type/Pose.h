@@ -63,7 +63,7 @@ struct Pose
         y += length * v.y;
     }
 
-    Pose GetTranslation(double length, Angle angle)
+    Pose GetTranslation(double length, Angle angle) const
     {
         Vector2d v = angle.ToVector();
         return  {x + length * v.x, y + length * v.y, direction.Value()};

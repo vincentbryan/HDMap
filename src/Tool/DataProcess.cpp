@@ -65,7 +65,7 @@ public:
 };
 */
 
-static double dist_threshold = 10.0;
+static double dist_threshold = 5.0;
 static int anchor_id = 0;
 
 void AnchorProcess(hdmap::Sender & sender, std::vector<hdmap::Pose> & anchors, hdmap::Pose anchor)

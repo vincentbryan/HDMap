@@ -84,7 +84,7 @@ public:
 
     void Trajectory(std::vector<std::pair<unsigned int, int>> sequences);
 
-//    void Test();
+    void Test();
 
 };
 }

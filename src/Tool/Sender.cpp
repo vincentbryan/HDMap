@@ -76,7 +76,7 @@ visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p, d
     return marker;
 }
 
-visualization_msgs::Marker Sender::GetArrow(const Vector2d & v, double r, double g, double b, double a, double scale) const
+visualization_msgs::Marker Sender::GetCone(const Vector2d &v, double r, double g, double b, double a, double scale) const
 {
     visualization_msgs::Marker marker;
     marker.header.frame_id = "/hdmap";
@@ -112,6 +112,55 @@ visualization_msgs::Marker Sender::GetArrow(const Vector2d & v, double r, double
     return marker;
 }
 
+visualization_msgs::Marker Sender::GetArrow(const Pose &p, double r, double g, double b, double a, double scale)
+{
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "/hdmap";
+    marker.header.stamp = ros::Time::now();
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.orientation.w = 1.0;
+
+    marker.id = id++;
+    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+
+    marker.scale.z = 1.0;
+    marker.scale.x = 1.0;
+    marker.scale.y = 1.0;
+
+    marker.color.r = r;
+    marker.color.g = g;
+    marker.color.b = b;
+    marker.color.a = a;
+
+
+    geometry_msgs::Point top;
+    geometry_msgs::Point bottom_left;
+    geometry_msgs::Point bottom_right;
+
+    top.x = p.GetPosition().x;
+    top.y = p.GetPosition().y;
+    top.z = 0.0;
+
+    Angle a1 = p.GetAngle();
+    a1.Rotate(160);
+    auto p1 = p.GetTranslation(1.5, a1);
+
+    bottom_left.x = p1.x;
+    bottom_left.y = p1.y;
+    bottom_left.z = 0.0;
+
+    Angle a2 = p.GetAngle();
+    a2.Rotate(-160);
+    auto p2 = p.GetTranslation(1.5, a2);
+    bottom_right.x = p2.x;
+    bottom_right.y = p2.y;
+    bottom_right.z = 0.0;
+
+    marker.points.emplace_back(top);
+    marker.points.emplace_back(bottom_left);
+    marker.points.emplace_back(bottom_right);
+    return marker;
+}
 void Sender::Send()
 {
     pub.publish(array);
@@ -136,13 +185,16 @@ void Sender::AddSection(LaneSection section)
         }
         else
         {
+            //轨迹
             visualization_msgs::Marker line1 = GetLineStrip(x.second, 95.0/255, 217.0/255, 205.0/255, 1.0);
             array.markers.push_back(line1);
+
+            //车道线
             auto poses = Translate(x.second, Lane::DEFAULT_WIDTH/2, -90.0);
             visualization_msgs::Marker line2 = GetLineStrip(poses, 0.7, 0.7, 0.7, 0.3);
             array.markers.push_back(line2);
         }
-        visualization_msgs::Marker m = GetText(std::to_string(x.first), x.second[x.second.size()/2]);
+        visualization_msgs::Marker m = GetText(std::to_string(x.first), x.second[x.second.size()/2], 0, 1.0);
         array.markers.push_back(m);
     }
 }
@@ -153,6 +205,11 @@ void Sender::AddJunction(Junction junction)
     {
         visualization_msgs::Marker line_strip = GetLineStrip(x, 234.0/255, 247.0/255, 134.0/255, 1.0);
         array.markers.emplace_back(line_strip);
+
+        visualization_msgs::Marker arrow1 = GetArrow(x.front(), 95.0/255, 217.0/255, 205.0/255, 1.0);
+        array.markers.emplace_back(arrow1);
+        visualization_msgs::Marker arrow2 = GetArrow(x.back(), 234.0/255, 247.0/255, 134.0/255, 1.0);
+        array.markers.emplace_back(arrow2);
     }
 }
 
@@ -191,13 +248,13 @@ void Sender::AddRoadId(Pose p, int id)
 
 void Sender::AddStartPoint(const Vector2d &v)
 {
-    visualization_msgs::Marker m = GetArrow(v, 1.0, 1.0, 1.0, 1.0);
+    visualization_msgs::Marker m = GetCone(v, 1.0, 1.0, 1.0, 1.0);
     array.markers.emplace_back(m);
 }
 
 void Sender::AddEndPoint(const Vector2d &v)
 {
-    visualization_msgs::Marker m = GetArrow(v, 0, 255.0/255, 128.0/255, 1.0);
+    visualization_msgs::Marker m = GetCone(v, 0, 255.0 / 255, 128.0 / 255, 1.0);
     array.markers.emplace_back(m);
 }
 
@@ -209,9 +266,10 @@ void Sender::Clear()
 
 void Sender::AddAnchor(const Pose &p, int id)
 {
-    visualization_msgs::Marker m = GetArrow(p.GetPosition(), 0, 1.0, 0, 1.0, 5.0);
+    visualization_msgs::Marker m = GetCone(p.GetPosition(), 0, 1.0, 0, 1.0, 5.0);
     array.markers.emplace_back(m);
     std::string context = "Anchor[" + std::to_string(id) + "] : ( " + std::to_string(p.x) + " " + std::to_string(p.y) + " " + std::to_string(p.GetAngle().Value()) + " )";
     visualization_msgs::Marker t = GetText(context, p, 6);
     array.markers.emplace_back(t);
 }
+

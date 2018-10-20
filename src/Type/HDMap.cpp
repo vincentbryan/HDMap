@@ -658,6 +658,7 @@ void HDMap::Trajectory(std::vector<std::pair<unsigned int, int>> sequences)
     }
      */
 }
+
 void HDMap::Test()
 {
     std::vector<Pose> res;
@@ -671,7 +672,12 @@ void HDMap::Test()
     auto road1 = mRoads[1].Trajectory(1, 1);
     res.insert(res.end(),road1.begin(), road1.end());
 
-//    pSender->Clear();
+    auto junc1 = mJunctions[1].GetPose(1, 1, 2, 1);
+    res.insert(res.end(), junc1.begin(), junc1.end());
+
+    auto road2 = mRoads[2].Trajectory(1, 1);
+    res.insert(res.end(), road2.begin(), road2.end());
+
     pSender->SendPoses(res, 1.0, 0, 0, 1.0, 1.0);
 
 }

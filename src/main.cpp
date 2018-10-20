@@ -116,18 +116,19 @@ int main( int argc, char** argv )
     map.SetSender(p_sender);
 
     //Road[0]-------------------------------------------------------------
-    map.StartRoad({-240.809, 1.27231, 26.4284});
+    map.StartRoad({-221.360, 11.736, 27.150});
 
     //region road[0] / sec[0]
-    std::tuple<int, double, double> r0_s0_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> r0_s0_t1 ( 1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
     std::vector<std::tuple<int, double, double>> r0_s0_lanes;
-    r0_s0_lanes.emplace_back(r0_s0_t_1);
-    r0_s0_lanes.emplace_back(r0_s0_t1);
+    r0_s0_lanes.emplace_back(-2, 3.30, 3.30);
+    r0_s0_lanes.emplace_back(-1, 3.65, 3.65);
+    r0_s0_lanes.emplace_back( 1, 3.63, 3.63);
+    r0_s0_lanes.emplace_back( 2, 3.36, 3.36);
+    r0_s0_lanes.emplace_back( 3, 3.30, 3.30);
     std::vector<std::pair<int, int>> r0_s0_links;
 
     map.StartSection(r0_s0_lanes, r0_s0_links);
-    map.EndSection({115.543, 182.945, 24.6765});
+    map.EndSection({-80.123, 83.702, 27.03});
     //endregion
 
     map.EndRoad();
@@ -136,19 +137,42 @@ int main( int argc, char** argv )
 
 
     //Road[1]-------------------------------------------------------------
-    map.StartRoad({143.963, 173.71, 306.621});
+    map.StartRoad({-42.530, 73.328, 304.10});
 
     //region road[1] / sec[0]
     std::vector<std::tuple<int, double, double>> r1_s0_lanes;
     std::vector<std::pair<int, int>> r1_s0_links;
-
-    std::tuple<int, double, double> r1_s0_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> r1_s0_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    r1_s0_lanes.emplace_back(r1_s0_t_1);
-    r1_s0_lanes.emplace_back(r1_s0_t1);
+    r1_s0_lanes.emplace_back(-2, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r1_s0_lanes.emplace_back(-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r1_s0_lanes.emplace_back(1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
 
     map.StartSection(r1_s0_lanes, r1_s0_links);
-    map.EndSection({225.937, 65.9142, 304.875});
+    map.EndSection({-25.445, 47.668, 304.36});
+    //endregion
+
+    //region road[1] / sec[1]
+    std::vector<std::tuple<int, double, double>> r1_s1_lanes;
+    std::vector<std::pair<int, int>> r1_s1_links = {{1, 1}, {1, 2}, {-1, -1}, {-2, -2}};
+
+    r1_s1_lanes.emplace_back(-2, Lane::DEFAULT_WIDTH, 0);
+    r1_s1_lanes.emplace_back(-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r1_s1_lanes.emplace_back( 1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r1_s1_lanes.emplace_back( 2, 0, Lane::DEFAULT_WIDTH);
+
+    map.StartSection(r1_s1_lanes, r1_s1_links);
+    map.EndSection({-9.152, 28.882, 304.36}, 10.0, 10.0);
+    //endregion
+
+    //region road[1] / sec[2]
+    std::vector<std::tuple<int, double, double>> r1_s2_lanes;
+    std::vector<std::pair<int, int>> r1_s2_links = {{1, 1}, {2, 2}, {-1, -1}, {-2, -1}};
+
+    r1_s2_lanes.emplace_back(-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r1_s2_lanes.emplace_back(1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r1_s2_lanes.emplace_back(2, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+
+    map.StartSection(r1_s2_lanes, r1_s2_links);
+    map.EndSection({40.15, -43.230, 303.046});
     //endregion
 
     map.EndRoad();
@@ -158,42 +182,67 @@ int main( int argc, char** argv )
 
     //Road[2]-------------------------------------------------------------
 
-    map.StartRoad({218.451, 39.7093, 207.731});
+    map.StartRoad({69.40, -54.40, 28.30});
 
     //region road[2] / sec[0]
     std::vector<std::tuple<int, double, double>> r2_s0_lanes;
     std::vector<std::pair<int, int>> r2_s0_links;
-    std::tuple<int, double, double> r2_s0_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> r2_s0_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    r2_s0_lanes.emplace_back(r2_s0_t_1);
-    r2_s0_lanes.emplace_back(r2_s0_t1);
+
+    r2_s0_lanes.emplace_back(-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s0_lanes.emplace_back(1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s0_lanes.emplace_back(2, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
 
     map.StartSection(r2_s0_lanes, r2_s0_links);
-    map.EndSection({191.272, 24.1459, 210.586});
+    map.EndSection({98.933, -37.35, 28.95});
     //endregion
+
 
     //region road[2] / sec[1]
     std::vector<std::tuple<int, double, double>> r2_s1_lanes;
-    std::vector<std::pair<int, int>> r2_s1_links = {{1, 1}, {-1, -1}};
-    std::tuple<int, double, double> r2_s1_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> r2_s1_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    r2_s1_lanes.emplace_back(r2_s1_t_1);
-    r2_s1_lanes.emplace_back(r2_s1_t1);
+    std::vector<std::pair<int, int>> r2_s1_links = {{1, 1}, {2, 2}, {-1, -1}};
+    r2_s1_lanes.emplace_back(-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s1_lanes.emplace_back(1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s1_lanes.emplace_back(2, Lane::DEFAULT_WIDTH, 0);
 
     map.StartSection(r2_s1_lanes, r2_s1_links);
-    map.EndSection({176.956, 14.2475, 218.465}, 5.0, 5.0);
+    map.EndSection({115.21, -26.412, 29.90}, 10, 10);
     //endregion
+
 
     //region road[2] / sec[2]
     std::vector<std::tuple<int, double, double>> r2_s2_lanes;
-    std::vector<std::pair<int, int>> r2_s2_links = {{1, 1}, {-1, -1}};
-    std::tuple<int, double, double> r2_s2_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> r2_s2_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    r2_s2_lanes.emplace_back(r2_s2_t_1);
-    r2_s2_lanes.emplace_back(r2_s2_t1);
+    std::vector<std::pair<int, int>> r2_s2_links = {{1, 1}, {2, 1}, {-1, -1}};
+    r2_s2_lanes.emplace_back(-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s2_lanes.emplace_back(1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
 
     map.StartSection(r2_s2_lanes, r2_s2_links);
-    map.EndSection({69.328, -52.1073, 209.138});
+    map.EndSection({166.287, 3.545, 30.60});
+    //endregion
+
+
+    //region road[2] / sec[3]
+    std::vector<std::tuple<int, double, double>> r2_s3_lanes;
+    std::vector<std::pair<int, int>> r2_s3_links = {{1, 1}, {1, 2}, {1, 3}, {-1, -1}};
+    r2_s3_lanes.emplace_back(-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s3_lanes.emplace_back(1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s3_lanes.emplace_back(2, 0, Lane::DEFAULT_WIDTH);
+    r2_s3_lanes.emplace_back(3, 0, Lane::DEFAULT_WIDTH);
+
+    map.StartSection(r2_s3_lanes, r2_s3_links);
+    map.EndSection({187.942, 19.417, 29.53}, 15.0, 15.0);
+    //endregion
+
+    //region road[2] / sec[4]
+
+    std::vector<std::tuple<int, double, double>> r2_s4_lanes;
+    std::vector<std::pair<int, int>> r2_s4_links = {{1, 1}, {2, 2}, {3, 3}, {-1, -1}};
+    r2_s4_lanes.emplace_back(-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s4_lanes.emplace_back(1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s4_lanes.emplace_back(2, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+    r2_s4_lanes.emplace_back(3, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
+
+    map.StartSection(r2_s4_lanes, r2_s4_links);
+    map.EndSection({216.912, 36.511, 29.30});
     //endregion
 
     map.EndRoad();
@@ -202,74 +251,96 @@ int main( int argc, char** argv )
 
 
     //Road[3]-------------------------------------------------------------
-    map.StartRoad({44.6509, -45.716, 124.36});
+    map.StartRoad({226.176, 70.656, 127.505});
 
     //region road[3] / sec[0]
     std::vector<std::tuple<int, double, double>> r3_s0_lanes;
     std::vector<std::pair<int, int>> r3_s0_links;
-    std::tuple<int, double, double> r3_s0_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> r3_s0_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    r3_s0_lanes.emplace_back(r3_s0_t_1);
-    r3_s0_lanes.emplace_back(r3_s0_t1);
+    r3_s0_lanes.emplace_back(-3, 3.4, 3.4);
+    r3_s0_lanes.emplace_back(-2, 3.4, 3.4);
+    r3_s0_lanes.emplace_back(-1, 3.8, 3.8);
+    r3_s0_lanes.emplace_back( 1, 3.8, 3.8);
+    r3_s0_lanes.emplace_back( 2, 3.4, 3.4);
 
     map.StartSection(r3_s0_lanes, r3_s0_links);
-    map.EndSection({22.8185, -14.4651, 126.85});
-    //endregion
-
-    //region road[3] / sec[1]
-    std::vector<std::tuple<int, double, double>> r3_s1_lanes;
-    std::vector<std::pair<int, int>> r3_s1_links = {{1, 1}, {-1, -1}};
-    std::tuple<int, double, double> r3_s1_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> r3_s1_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    r3_s1_lanes.emplace_back(r3_s1_t_1);
-    r3_s1_lanes.emplace_back(r3_s1_t1);
-
-    map.StartSection(r3_s1_lanes, r3_s1_links);
-    map.EndSection({15.0057, -4.23992, 125.589});
-    //endregion
-
-    //region road[3] / sec[2]
-    std::vector<std::tuple<int, double, double>> r3_s2_lanes;
-    std::vector<std::pair<int, int>> r3_s2_links = {{1, 1}, {-1, -1}};
-    std::tuple<int, double, double> r3_s2_t_1 (-1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    std::tuple<int, double, double> r3_s2_t1 (1, Lane::DEFAULT_WIDTH, Lane::DEFAULT_WIDTH);
-    r3_s2_lanes.emplace_back(r3_s2_t_1);
-    r3_s2_lanes.emplace_back(r3_s2_t1);
-
-    map.StartSection(r3_s2_lanes, r3_s2_links);
-    map.EndSection({-41.1274, 75.0404, 123.11});
+    map.EndSection({147.307, 170.876, 126.747});
     //endregion
 
     map.EndRoad();
     //--------------------------------------------------------------------
 
 
+
+    //Road[4]-------------------------------------------------------------
+    map.StartRoad({106.649, 181.677, 207.139});
+
+    std::vector<std::tuple<int, double, double>> r4_s0_lanes;
+    std::vector<std::pair<int, int>> r4_s0_links;
+    r4_s0_lanes.emplace_back(-2, 3.4, 3.4);
+    r4_s0_lanes.emplace_back(-1, 3.8, 3.8);
+    r4_s0_lanes.emplace_back( 1, 3.8, 3.8);
+    r4_s0_lanes.emplace_back( 2, 3.4, 3.4);
+
+    map.StartSection(r4_s0_lanes, r4_s0_links);
+    map.EndSection({-31.914, 110.871, 205.507});
     //--------------------------------------------------------------------
+
+    //region junc0
     map.StartJunction();
-    map.AddConnection(0, 1, 1, 1, 15.0, 15.0);
+
+    map.AddConnection(0, 1, 4, -1, 10.0, 10.0);
+    map.AddConnection(0, 2, 4, -2, 10.0, 10.0);
+    map.AddConnection(0, 3, 1, 1, 10.0, 10.0);
+
     map.AddConnection(1, -1, 0, -1, 15.0, 15.0);
+    map.AddConnection(1, -1, 0, -2, 15.0, 15.0);
+    map.AddConnection(1, -2, 4, -1, 15.0, 15.0);
+    map.AddConnection(1, -2, 4, -2, 15.0, 15.0);
+
+    map.AddConnection(4, 1, 0, -1, 15.0, 15.0);
+    map.AddConnection(4, 1, 1,  1, 15.0, 15.0);
+    map.AddConnection(4, 2, 0, -2, 15.0, 15.0);
     map.EndJunction();
+    //endregion
 
-
+    //region junc1
     map.StartJunction();
     map.AddConnection(1, 1, 2, 1, 15.0, 15.0);
+    map.AddConnection(1, 1, 2, 2, 15.0, 15.0);
+
     map.AddConnection(2, -1, 1, -1, 15.0, 15.0);
     map.EndJunction();
+    //endregion
 
+    //region junc2
     map.StartJunction();
     map.AddConnection(2, 1, 3, 1, 15.0, 15.0);
-    map.AddConnection(3, -1, 2, -1, 15.0, 15.0);
+    map.AddConnection(2, 1, 3, 2, 15.0, 15.0);
+
+    map.AddConnection(3, -3, 2, -1, 10.0, 10.0);
     map.EndJunction();
-    //-------------------------------------------------------------
+    //endregion
+
+    //region junc3
+    map.StartJunction();
+    map.AddConnection(3, 1, 4, 1, 15.0, 15.0);
+    map.AddConnection(3, 1, 4, 2, 15.0, 15.0);
+
+    map.AddConnection(4, -2, 3, -1, 10.0, 15.0);
+    map.AddConnection(4, -2, 3, -2, 10.0, 15.0);
+    map.AddConnection(4, -2, 3, -3, 10.0, 15.0);
+    map.EndJunction();
+    //endregion
 
 //    map.SetStartPoint({1, 0});
 //    map.SetEndPoint({50, -10.0});
 //    map.GlobalPlanning();
 
 //    map.Save("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test2_out.xml");
-    map.Test();
+//    map.Test();
 
 //    map.Summary();
+
     char c;
     while (std::cin >> c)
     {
