@@ -196,8 +196,8 @@ void Map::AddConnection(unsigned int from_road, int from_lane_idx,
          to_road, to_lane_idx, end_pose,
          _ctrl_len1, _ctrl_len2
     );
-    mRoads[from_road].AddNextRoadId(to_road);
-    mRoads[to_road].AddPrevRoadId(from_road);
+    mRoads[from_road].SetNextJid(mJunctions.back().iJunctionId);
+    mRoads[to_road].SetPrevJid(mJunctions.back().iJunctionId);
 }
 
 void Map::EndJunction()
@@ -218,6 +218,8 @@ void Map::Load(const std::string &file_name)
             Road oRoad;
             oRoad.iRoadId = road.second.get<int>("<xmlattr>.id");
             oRoad.dLength = road.second.get<double>("<xmlattr>.length");
+            oRoad.SetPrevJid(road.second.get<int>("<xmlattr>.prev_jid"));
+            oRoad.SetNextJid(road.second.get<int>("<xmlattr>.next_jid"));
 
             for(auto section : road.second.get_child(""))
             {
@@ -384,10 +386,10 @@ void Map::Save(const std::string &file_name)
         pt::ptree p_road;
         for(auto & x : mRoads)
         {
-
             p_road.add("<xmlattr>.id", x.iRoadId);
             p_road.add("<xmlattr>.length", x.dLength);
-
+            p_road.add("<xmlattr>.prev_jid", x.GetPrevJid());
+            p_road.add("<xmlattr>.next_jid", x.GetNextJid());
             pt::ptree p_sec;
             for(auto & sec : x.mSections)
             {
@@ -545,55 +547,75 @@ void Map::Summary()
 void Map::GlobalPlanning()
 {
 
+    //region 确定起点和终点位置
     double min_dist = 100000;
     unsigned int start_road_id = 0;
     unsigned int end_road_id = 0;
+
     for(auto & x : mRoads)
     {
-        if (x.Distance(mStartPoint).second < min_dist)
+        double t = Vector2d::SegmentDistance(x.GetStartPose().GetPosition(),
+                                             x.GetEndPose().GetPosition(),
+                                             mStartPoint);
+        if( t < min_dist)
         {
-            min_dist = x.Distance(mStartPoint).second;
+            min_dist = t;
             start_road_id = x.iRoadId;
         }
     }
+
     min_dist = 100000;
     for(auto & x : mRoads)
     {
-        if(x.Distance(mEndPoint).second < min_dist)
+        double t = Vector2d::SegmentDistance(x.GetStartPose().GetPosition(),
+                                             x.GetEndPose().GetPosition(),
+                                             mEndPoint);
+        if( t < min_dist)
         {
-            min_dist = x.Distance(mEndPoint).second;
+            min_dist = t;
             end_road_id = x.iRoadId;
         }
     }
-    std::cout << "start id: " << start_road_id << " end id: " << end_road_id << std::endl;
 
+    auto p1 = mRoads[start_road_id].Locate(mStartPoint);
+    double start_sec_idx = p1.first;
+    int start_direction = p1.second > 0 ? 1 : -1;
+
+    auto p2 = mRoads[end_road_id].Locate(mEndPoint);
+    double end_sec_idx = p2.first;
+    int end_direction = p2.second > 0 ? 1 : -1;
+
+    std::cout << "start : " << start_road_id << " " << start_sec_idx << " " << start_direction << std::endl;
+    std::cout << "end   : " << end_road_id << " " << end_sec_idx << " " << end_direction <<  std::endl;
+    //endregion
+
+
+    //region 搜索出所有可行路径
     std::vector<std::vector<unsigned int>>routings;
     std::vector<unsigned int>routing;
     std::map<unsigned int, bool> is_visited;
-    for(auto x : mRoads)
-    {
-        is_visited.insert(std::pair<unsigned int, bool>(x.iRoadId, false));
-    }
 
-    auto search = std::function<void(unsigned int, std::vector<unsigned int>)>();
+    for(auto x : mRoads) is_visited.insert(std::pair<unsigned int, bool>(x.iRoadId, false));
 
-    search = [&](unsigned int curr_road_id, std::vector<unsigned int> v)
+    auto search = std::function<void(unsigned int, int, std::vector<unsigned int>)>();
+
+    search = [&](unsigned int curr_road_id, int curr_dir, std::vector<unsigned int> v)
     {
-        if(mRoads[curr_road_id].iRoadId == end_road_id)
+        if(mRoads[curr_road_id].iRoadId == end_road_id && curr_dir == end_direction)
         {
             routings.emplace_back(v);
         }
         else
         {
-            for(auto x : mRoads[curr_road_id].GetNextRoads())
+            for(auto x : QueryNextRoadInfo(curr_road_id, curr_dir))
             {
-                if(!is_visited[x])
+                if(!is_visited[x.first])
                 {
-                    is_visited[x] = true;
-                    v.emplace_back(x);
-                    search(x, v);
+                    is_visited[x.first] = true;
+                    v.emplace_back(x.first);
+                    search(x.first, x.second, v);
                     v.pop_back();
-                    is_visited[x] = false;
+                    is_visited[x.first] = false;
                 }
             }
         }
@@ -601,7 +623,7 @@ void Map::GlobalPlanning()
 
     routing.emplace_back(start_road_id);
     is_visited[start_road_id] = true;
-    search(start_road_id, routing);
+    search(start_road_id, start_direction, routing);
 
     for(auto &x : routings)
     {
@@ -609,6 +631,7 @@ void Map::GlobalPlanning()
             std::cout << y << " ";
         std::cout << std::endl;
     }
+    //endregion
 
     //TODO Evaluate
 }
@@ -694,4 +717,31 @@ bool Map::OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response
     response.junction.conns = lanes;
     response.next_road.lanes = lanes;
     return true;
+}
+
+
+std::vector<std::pair<unsigned int, int>> Map::QueryNextRoadInfo(unsigned int _rid, int direction)
+{
+    int jid = mRoads[_rid].GetNextJid();
+    if( jid == -1)
+        return std::vector<std::pair<unsigned int, int>>();
+
+    std::vector<std::pair<unsigned int, int>> res;
+
+    for(auto const & m : mJunctions[jid].mRoadLinks)
+    {
+        if(m.first.first == _rid)
+        {
+            int dir = m.second.vLaneLinks.front().iToIndex > 0 ? 1 : -1;
+
+            //TODO throw
+            for(auto x : m.second.vLaneLinks)
+            {
+                assert(x.iToIndex * dir > 0);
+            }
+
+            res.emplace_back(m.first.second, dir);
+        }
+    }
+    return res;
 }

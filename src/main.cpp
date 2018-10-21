@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "hdmap");
     ros::NodeHandle n;
-    ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("Map", 1000);
+    ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 1000);
     shared_ptr<Sender> p_sender(new Sender(pub));
 
 #ifdef CMD
@@ -122,6 +122,8 @@ int main(int argc, char** argv)
         a.Rotate(90);
         return p.GetTranslation(w, a);
     };
+
+
     //Road[0]-------------------------------------------------------------
     map.StartRoad(Offset({-221.360, 11.736, 27.150}));
 
@@ -203,7 +205,6 @@ int main(int argc, char** argv)
     map.EndSection(Offset({98.933, -37.35, 28.95}));
     //endregion
 
-
     //region road[2] / sec[1]
     std::vector<std::tuple<int, double, double>> r2_s1_lanes;
     std::vector<std::pair<int, int>> r2_s1_links = {{-2, -2}, {-1, -1}, {1, 1}};
@@ -215,7 +216,6 @@ int main(int argc, char** argv)
     map.EndSection(Offset({115.21, -26.412, 29.90}), 10, 10);
     //endregion
 
-
     //region road[2] / sec[2]
     std::vector<std::tuple<int, double, double>> r2_s2_lanes;
     std::vector<std::pair<int, int>> r2_s2_links = {{-2, -1}, {-1, -1}, {1, 1}};
@@ -225,7 +225,6 @@ int main(int argc, char** argv)
     map.StartSection(r2_s2_lanes, r2_s2_links);
     map.EndSection(Offset({166.287, 3.545, 30.60}));
     //endregion
-
 
     //region road[2] / sec[3]
     std::vector<std::tuple<int, double, double>> r2_s3_lanes;
@@ -281,6 +280,7 @@ int main(int argc, char** argv)
     //Road[4]-------------------------------------------------------------
     map.StartRoad(Offset({106.649, 181.677, 207.139}));
 
+    //region road[4] / sec[0]
     std::vector<std::tuple<int, double, double>> r4_s0_lanes;
     std::vector<std::pair<int, int>> r4_s0_links;
     r4_s0_lanes.emplace_back(-2, 3.5, 3.5);
@@ -290,6 +290,9 @@ int main(int argc, char** argv)
 
     map.StartSection(r4_s0_lanes, r4_s0_links);
     map.EndSection(Offset({-31.914, 110.871, 205.507}));
+    //endregion
+
+    map.EndRoad();
     //--------------------------------------------------------------------
 
     //region junc0
@@ -337,11 +340,11 @@ int main(int argc, char** argv)
     map.EndJunction();
     //endregion
 
-//    map.SetStartPoint({1, 0});
-//    map.SetEndPoint({50, -10.0});
-//    map.GlobalPlanning();
+    map.SetStartPoint({-221.360, 11.736});
+    map.SetEndPoint({106.649, 161.677});
+    map.GlobalPlanning();
 
-    map.Save("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/Map/data/test2_out.xml");
+    map.Save("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test2_out.xml");
 //    map.Test();
 
 //    map.Summary();
@@ -362,13 +365,13 @@ int main(int argc, char** argv)
     map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test2_out.xml");
 //    map.Summary();
 
-    map.SetStartPoint({1, 0});
-    map.SetEndPoint({50, -10.0});
+    map.SetStartPoint({-221.360, 11.736});
+    map.SetEndPoint({106.649, 161.677});
     map.GlobalPlanning();
 
-    ros::ServiceServer server = n.advertiseService("local_map", &Map::OnRequest, &map);
-    ROS_INFO("HDMap is ready...");
-    ros::spin();
+//    ros::ServiceServer server = n.advertiseService("local_map", &Map::OnRequest, &map);
+//    ROS_INFO("HDMap is ready...");
+//    ros::spin();
 
 #endif
 

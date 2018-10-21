@@ -68,6 +68,8 @@ public:
     {
         return std::sqrt(x*x + y*y);
     }
+
+    static double SegmentDistance(const Vector2d & start, const Vector2d & end, const Vector2d & target);
 };
 }
 

@@ -20,8 +20,8 @@ public:
 
     std::vector<LaneSection> mSections;
 
-    std::vector<unsigned int> vPrevRoadId;
-    std::vector<unsigned int> vNextRoadId;
+    int iPrevJid;
+    int iNextJid;
 
     explicit Road();
 
@@ -30,35 +30,33 @@ public:
         mSections.emplace_back(s);
     }
 
-    std::pair<int, double> Distance(const Vector2d & v);
-
-    std::vector<unsigned int> GetPrevRoads()
+    void SetPrevJid(unsigned int jid)
     {
-        return vPrevRoadId;
+        iPrevJid = jid;
     }
 
-    std::vector<unsigned int> GetNextRoads()
+    int GetPrevJid()
     {
-        return vNextRoadId;
+        return iPrevJid;
+    }
+    void SetNextJid(unsigned int jid)
+    {
+        iNextJid = jid;
     }
 
-    void AddNextRoadId(unsigned int id)
+    int GetNextJid()
     {
-        if(std::find(vNextRoadId.begin(), vNextRoadId.end(), id) == vNextRoadId.end())
-        {
-            vNextRoadId.emplace_back(id);
-        }
-    }
-
-    void AddPrevRoadId(unsigned int id)
-    {
-        if(std::find(vPrevRoadId.begin(), vPrevRoadId.end(), id) == vPrevRoadId.end())
-        {
-            vPrevRoadId.emplace_back(id);
-        }
+        return iNextJid;
     }
 
     std::vector<Pose> Trajectory(int begin_lane_idx, int end_lane_idx);
+
+    Pose GetStartPose();
+
+    Pose GetEndPose();
+
+    std::pair<unsigned int, int> Locate(const Vector2d & v);
+
 };
 }
 

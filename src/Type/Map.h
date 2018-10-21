@@ -77,6 +77,9 @@ public:
                        double _ctrl_len1 = Bezier::DEFAULT_LENGTH,
                        double _ctrl_len2 = Bezier::DEFAULT_LENGTH);
     void EndJunction();
+
+    std::vector<std::pair<unsigned int, int>>QueryNextRoadInfo(unsigned int _rid, int direction);
+
     void Load(const std::string &file_name);
     void Save(const std::string &file_name);
 

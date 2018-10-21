@@ -12,23 +12,9 @@ Road::Road()
 {
     iRoadId = ROAD_ID++;
     dLength = 0;
+    iPrevJid = iNextJid = -1;
 }
 
-std::pair<int, double> Road::Distance(const Vector2d &v)
-{
-    double min_distance = 1000000;
-    double min_sec_idx = 0;
-    for(auto & x : mSections)
-    {
-        auto t = x.Distance(v);
-        if(min_distance > t)
-        {
-            min_distance = t;
-            min_sec_idx = x.iSectionId;
-        }
-    }
-    return {min_sec_idx, min_distance};
-}
 std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
 {
     if(mSections.size() == 1)
@@ -85,4 +71,58 @@ std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
         res.insert(res.end(), p.begin(), p.end());
     }
     return res;
+}
+
+
+Pose Road::GetStartPose()
+{
+    if(mSections.empty())
+        return Pose();
+
+    return mSections.front().mReferLine.GetStartPose();
+}
+
+
+Pose Road::GetEndPose()
+{
+    if(mSections.empty())
+        return Pose();
+
+    return mSections.back().mReferLine.GetEndPose();
+}
+
+
+std::pair<unsigned int, int> Road::Locate(const Vector2d &v)
+{
+    double min_dist = 100000;
+    int min_sec_idx = 0;
+
+    for(int i = 0; i < mSections.size(); i++)
+    {
+        double t = Vector2d::SegmentDistance(mSections[i].GetReferPose().front().GetPosition(),
+                                             mSections[i].GetReferPose().back().GetPosition(),
+                                             v);
+        if(t < min_dist)
+        {
+            min_dist = t;
+            min_sec_idx = i;
+        }
+    }
+
+    min_dist = 100000;
+    double min_lane_idx = 0;
+    for(auto x : mSections[min_sec_idx].mLanes)
+    {
+        auto p = mSections[min_sec_idx].GetLanePoseByIndex(x.first);
+        double t = Vector2d::SegmentDistance(p.front().GetPosition(),
+                                             p.back().GetPosition(),
+                                             v);
+        if(t < min_dist)
+        {
+            min_dist = t;
+            min_lane_idx = x.first;
+        }
+    }
+
+    return {min_sec_idx, min_lane_idx};
 }

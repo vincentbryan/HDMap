@@ -98,3 +98,12 @@ std::vector<Pose> Bezier::GetAllPose(double ds)
 
     return res;
 }
+
+Pose Bezier::GetStartPose()
+{
+    return GetPose(0);
+}
+Pose Bezier::GetEndPose()
+{
+    return GetPose(length);
+}
