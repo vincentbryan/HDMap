@@ -11,11 +11,11 @@
 #include "../Type/Pose.h"
 #include "../Type/LaneSection.h"
 #include "../Type/Junction.h"
-#include "../Type/HDMap.h"
+#include "../Type/Map.h"
 
 namespace hdmap
 {
-class HDMap;
+class Map;
 class Sender
 {
 private:
@@ -37,7 +37,7 @@ public:
     void SendPoses(std::vector<Pose> poses, double r = 0.5, double g = 0.5, double b = 0.5, double a = 1.0, double z = 0.0);
     void AddSection(LaneSection section);
     void AddJunction(Junction junction);
-//    void AddMap(HDMap &map);
+//    void AddMap(Map &map);
     void AddRoadId(Pose p, int id);
     void AddStartPoint(const Vector2d & v);
     void AddEndPoint(const Vector2d & v);

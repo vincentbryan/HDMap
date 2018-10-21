@@ -44,13 +44,13 @@ public:
             geometry_msgs::Point p1;
             p1.x = poses.front().first;
             p1.y = poses.front().second;
-            p1.z = 1.0;
+            p1.z = 0;
             points.points.push_back(p1);
 
             geometry_msgs::Point p2;
             p2.x = poses.back().first;
             p2.y = poses.back().second;
-            p2.z = 1.0;
+            p2.z = 0;
             points.points.push_back(p2);
 
             pub.publish(points);

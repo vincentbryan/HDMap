@@ -12,12 +12,14 @@
 #include "Road.h"
 #include "Junction.h"
 #include "../Tool/Sender.h"
+#include "LocalMap.h"
+#include "Pose2DArray.h"
 
 namespace hdmap
 {
 //需要前向声明
 class Sender;
-class HDMap
+class Map
 {
 private:
     std::vector<Road> mRoads;
@@ -41,7 +43,7 @@ private:
     std::shared_ptr<Sender> pSender;
 
 public:
-    HDMap();
+    Map();
 
     //region Setter And Getter
     void SetSender(std::shared_ptr<Sender> _sender);
@@ -85,6 +87,8 @@ public:
     void Trajectory(std::vector<std::pair<unsigned int, int>> sequences);
 
     void Test();
+
+    bool OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response & response);
 
 };
 }

@@ -213,7 +213,7 @@ void Sender::AddJunction(Junction junction)
     }
 }
 
-//void Sender::AddMap(HDMap &map)
+//void Sender::AddMap(Map &map)
 //{
 //    for(auto & sec : map.GetAllSection())
 //    {

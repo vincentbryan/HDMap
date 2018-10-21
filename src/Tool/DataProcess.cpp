@@ -21,7 +21,7 @@ public:
     int id = 0;
 
 
-    void CallBack(const HDMap::Location & msg)
+    void CallBack(const Map::Location & msg)
     {
         hdmap::Angle a;
         a.FromYaw(msg.yaw);
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
     hdmap::Sender sender(pub);
 
     rosbag::Bag bag;
-    bag.open("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/2018-10-17-21-20-44.bag");
+    bag.open("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/Map/data/2018-10-17-21-20-44.bag");
     std::vector<hdmap::Pose> anchors;
 
     bool has_guiding_anchor = false;
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 
     bag.close();
 
-    std::ofstream os("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/out.txt");
+    std::ofstream os("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/Map/data/out.txt");
     if(os.is_open())
     {
         for(int i = 0; i < anchors.size(); i++)

@@ -4,54 +4,54 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <algorithm>
-#include "HDMap.h"
+#include "Map.h"
 
 using namespace hdmap;
 namespace pt = boost::property_tree;
 
-HDMap::HDMap() : mCurrPose(Pose()),
+Map::Map() : mCurrPose(Pose()),
                  mPrevPose(Pose()),
                  mPrevSection(LaneSection()),
                  mCurrSection(LaneSection())
 {}
 
 //region Setter And Getter
-void HDMap::SetSender(std::shared_ptr<Sender> _sender)
+void Map::SetSender(std::shared_ptr<Sender> _sender)
 {
     pSender = _sender;
 }
 
-void HDMap::SetCurrPose(const Pose &pose)
+void Map::SetCurrPose(const Pose &pose)
 {
     mCurrPose = pose;
 }
 
-Pose HDMap::GetCurrPose() const
+Pose Map::GetCurrPose() const
 {
     return mCurrPose;
 }
 
-void HDMap::SetPrevPose(const Pose &pose)
+void Map::SetPrevPose(const Pose &pose)
 {
     mPrevPose = pose;
 }
 
-Pose HDMap::GetPrevPose() const
+Pose Map::GetPrevPose() const
 {
     return mPrevPose;
 }
 
-LaneSection HDMap::GetCurrentSection() const
+LaneSection Map::GetCurrentSection() const
 {
     return mCurrSection;
 }
 
-Junction HDMap::GetCurrentJunction() const
+Junction Map::GetCurrentJunction() const
 {
     return mJunctions.back();
 }
 
-std::vector<LaneSection> HDMap::GetAllSection()
+std::vector<LaneSection> Map::GetAllSection()
 {
     std::vector<LaneSection> res;
     for(auto road : mRoads)
@@ -64,35 +64,35 @@ std::vector<LaneSection> HDMap::GetAllSection()
     return res;
 }
 
-std::vector<Junction> HDMap::GetAllJunction()
+std::vector<Junction> Map::GetAllJunction()
 {
     return mJunctions;
 }
 
-void HDMap::SetStartPoint(const Vector2d &v)
+void Map::SetStartPoint(const Vector2d &v)
 {
     mStartPoint = v;
     pSender->AddStartPoint(mStartPoint);
 }
 
-Vector2d HDMap::GetStartPoint() const
+Vector2d Map::GetStartPoint() const
 {
     return mStartPoint;
 }
 
-void HDMap::SetEndPoint(const Vector2d &v)
+void Map::SetEndPoint(const Vector2d &v)
 {
     mEndPoint = v;
     pSender->AddEndPoint(mEndPoint);
 }
 
-Vector2d HDMap::GetEndPoint() const
+Vector2d Map::GetEndPoint() const
 {
     return mEndPoint;
 }
 //endregion
 
-void HDMap::StartRoad(const Pose & _start_pose)
+void Map::StartRoad(const Pose & _start_pose)
 {
     mRoads.emplace_back(Road());
     mPrevSection.s = 0;
@@ -105,7 +105,7 @@ void HDMap::StartRoad(const Pose & _start_pose)
     pSender->AddRoadId(mCurrPose, mRoads.back().iRoadId);
 }
 
-void HDMap::EndRoad()
+void Map::EndRoad()
 {
     if(!mRoads.empty())
     {
@@ -113,7 +113,7 @@ void HDMap::EndRoad()
     }
 }
 
-void HDMap::StartSection(std::vector<std::tuple<int, double, double>> new_lane, std::vector<std::pair<int, int>>links)
+void Map::StartSection(std::vector<std::tuple<int, double, double>> new_lane, std::vector<std::pair<int, int>>links)
 {
     assert(!mRoads.empty());
 
@@ -126,7 +126,7 @@ void HDMap::StartSection(std::vector<std::tuple<int, double, double>> new_lane, 
     vTempLink = links;
 }
 
-void HDMap::EndSection(const Pose & p, double _ctrl_len1, double _ctrl_len2)
+void Map::EndSection(const Pose & p, double _ctrl_len1, double _ctrl_len2)
 {
     //Update Pose
     mPrevPose = mCurrPose;
@@ -160,22 +160,22 @@ void HDMap::EndSection(const Pose & p, double _ctrl_len1, double _ctrl_len2)
     pSender->AddSection(mCurrSection);
 }
 
-unsigned int HDMap::CalcuSectionId(unsigned int road, unsigned int section)
+unsigned int Map::CalcuSectionId(unsigned int road, unsigned int section)
 {
     return road * 10 + section;
 }
 
-unsigned int HDMap::CalcuLaneId(unsigned int section, int lane)
+unsigned int Map::CalcuLaneId(unsigned int section, int lane)
 {
     return section*10 + 5 + lane;
 }
 
-void HDMap::StartJunction()
+void Map::StartJunction()
 {
     mJunctions.emplace_back(Junction());
 }
 
-void HDMap::AddConnection(unsigned int from_road, int from_lane_idx,
+void Map::AddConnection(unsigned int from_road, int from_lane_idx,
                           unsigned int to_road, int to_lane_idx,
                           double _ctrl_len1, double _ctrl_len2)
 {
@@ -200,12 +200,12 @@ void HDMap::AddConnection(unsigned int from_road, int from_lane_idx,
     mRoads[to_road].AddPrevRoadId(from_road);
 }
 
-void HDMap::EndJunction()
+void Map::EndJunction()
 {
     pSender->AddJunction(mJunctions.back());
 }
 
-void HDMap::Load(const std::string &file_name)
+void Map::Load(const std::string &file_name)
 {
     try
     {
@@ -375,7 +375,7 @@ void HDMap::Load(const std::string &file_name)
     }
 }
 
-void HDMap::Save(const std::string &file_name)
+void Map::Save(const std::string &file_name)
 {
     try
     {
@@ -490,7 +490,7 @@ void HDMap::Save(const std::string &file_name)
 
 }
 
-void HDMap::Summary()
+void Map::Summary()
 {
     std::cout << "Summary: = = = = = = = = = = = = = = =\n";
     std::cout << "Road: " << mRoads.size() << std::endl;
@@ -542,8 +542,9 @@ void HDMap::Summary()
     }
 }
 
-void HDMap::GlobalPlanning()
+void Map::GlobalPlanning()
 {
+
     double min_dist = 100000;
     unsigned int start_road_id = 0;
     unsigned int end_road_id = 0;
@@ -612,12 +613,12 @@ void HDMap::GlobalPlanning()
     //TODO Evaluate
 }
 
-void HDMap::Send()
+void Map::Send()
 {
     pSender->Send();
 }
 
-void HDMap::Trajectory(std::vector<std::pair<unsigned int, int>> sequences)
+void Map::Trajectory(std::vector<std::pair<unsigned int, int>> sequences)
 {
     /*
     std::vector<Pose> res;
@@ -659,14 +660,14 @@ void HDMap::Trajectory(std::vector<std::pair<unsigned int, int>> sequences)
      */
 }
 
-void HDMap::Test()
+void Map::Test()
 {
     std::vector<Pose> res;
 
-    auto road0 = mRoads[0].Trajectory(1, 1);
+    auto road0 = mRoads[0].Trajectory(3, 3);
     res.insert(res.end(), road0.begin(), road0.end());
 
-    auto junc0 = mJunctions[0].GetPose(0, 1, 1, 1);
+    auto junc0 = mJunctions[0].GetPose(0, 3, 1, 1);
     res.insert(res.end(), junc0.begin(), junc0.end());
 
     auto road1 = mRoads[1].Trajectory(1, 1);
@@ -680,4 +681,17 @@ void HDMap::Test()
 
     pSender->SendPoses(res, 1.0, 0, 0, 1.0, 1.0);
 
+}
+bool Map::OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response &response)
+{
+    std::cout << "From LocalMap : " << request.x << " " << request.y << std::endl;
+
+    std::vector<geometry_msgs::Pose2D> pose_2d_array;
+    std::vector<HDMap::Pose2DArray> lanes;
+    response.curr_road.lanes = lanes;
+    response.junction.in = std::vector<int64_t>();
+    response.junction.out = std::vector<int64_t>();
+    response.junction.conns = lanes;
+    response.next_road.lanes = lanes;
+    return true;
 }

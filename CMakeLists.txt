@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 		roscpp
 		rosbag
 		std_msgs
+		geometry_msgs
 		message_generation
 )
 ## System dependencies are found with CMake's conventions
@@ -49,15 +50,15 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   Location.msg
+   Location.msg Pose2DArray.msg JunctionMSG.msg RoadMSG.msg
 #   Message2.msg
  )
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
+ add_service_files(
+   FILES LocalMap.srv
 #   Service1.srv
 #   Service2.srv
-# )
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -68,7 +69,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
-   DEPENDENCIES std_msgs  # Or other packages containing msgs
+   DEPENDENCIES std_msgs geometry_msgs # Or other packages containing msgs
  )
 
 ################################################
@@ -103,7 +104,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   	INCLUDE_DIRS include
 	CATKIN_DEPENDS	message_runtime
-#  LIBRARIES HDMap
+#  LIBRARIES Map
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
@@ -121,7 +122,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/HDMap.cpp
+#   src/${PROJECT_NAME}/Map.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -158,6 +159,7 @@ add_executable(ViewGPS
 		src/Tool/ViewGPS.cpp
 		src/Tool/Sender.cpp
 		src/Tool/Sender.h)
+add_executable(LocalMap src/Tool/LocalMap.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -181,6 +183,10 @@ ${catkin_LIBRARIES}
 )
 
 target_link_libraries(ViewGPS
+${catkin_LIBRARIES}
+)
+
+target_link_libraries(LocalMap
 ${catkin_LIBRARIES}
 )
 #############
