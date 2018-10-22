@@ -196,8 +196,16 @@ void Map::AddConnection(unsigned int from_road, int from_lane_idx,
          to_road, to_lane_idx, end_pose,
          _ctrl_len1, _ctrl_len2
     );
-    mRoads[from_road].SetNextJid(mJunctions.back().iJunctionId);
-    mRoads[to_road].SetPrevJid(mJunctions.back().iJunctionId);
+    
+    if(from_lane_idx > 0)
+        mRoads[from_road].SetNextJid(mJunctions.back().iJunctionId);
+    else
+        mRoads[from_road].SetPrevJid(mJunctions.back().iJunctionId);
+    
+    if(to_lane_idx > 0)
+        mRoads[to_road].SetPrevJid(mJunctions.back().iJunctionId);
+    else
+        mRoads[to_road].SetNextJid(mJunctions.back().iJunctionId);
 }
 
 void Map::EndJunction()
@@ -302,6 +310,7 @@ void Map::Load(const std::string &file_name)
                 }
             }
             mRoads.emplace_back(oRoad);
+            pSender->AddRoadId(oRoad.GetStartPose(), oRoad.iRoadId);
         }
         mPrevSection = mCurrSection = mRoads.back().mSections.back();
         Road::ROAD_ID = mRoads.back().iRoadId + 1;
@@ -428,6 +437,12 @@ void Map::Save(const std::string &file_name)
                     p_lane.add("offset.y0", k.second.width.y0);
                     p_lane.add("offset.x1", k.second.width.x1);
                     p_lane.add("offset.y1", k.second.width.y1);
+
+                    for(auto & s : k.second.predecessors)
+                        p_lane.add("predecessor", s);
+
+                    for(auto & s : k.second.successors)
+                        p_lane.add("successors", s);
 
                     p_sec.add_child("lane", p_lane);
                     p_lane.clear();
@@ -591,28 +606,29 @@ void Map::GlobalPlanning()
 
 
     //region 搜索出所有可行路径
-    std::vector<std::vector<unsigned int>>routings;
-    std::vector<unsigned int>routing;
+    std::vector<std::vector<std::pair<unsigned int, int>>>routings;
+    std::vector<std::pair<unsigned int, int>>routing;
     std::map<unsigned int, bool> is_visited;
 
     for(auto x : mRoads) is_visited.insert(std::pair<unsigned int, bool>(x.iRoadId, false));
 
-    auto search = std::function<void(unsigned int, int, std::vector<unsigned int>)>();
+    ///DFS
+    auto search = std::function<void(unsigned int, int, std::vector<std::pair<unsigned int, int>>)>();
 
-    search = [&](unsigned int curr_road_id, int curr_dir, std::vector<unsigned int> v)
+    search = [&](unsigned int curr_road_id, int curr_dir, std::vector<std::pair<unsigned int, int>> v)
     {
-        if(mRoads[curr_road_id].iRoadId == end_road_id && curr_dir == end_direction)
+        if(mRoads[curr_road_id].iRoadId == end_road_id and curr_dir == end_direction)
         {
             routings.emplace_back(v);
         }
         else
         {
-            for(auto x : QueryNextRoadInfo(curr_road_id, curr_dir))
+            for(auto x : AdjacentRoadInfo(curr_road_id, curr_dir))
             {
                 if(!is_visited[x.first])
                 {
                     is_visited[x.first] = true;
-                    v.emplace_back(x.first);
+                    v.emplace_back(x.first, x.second);
                     search(x.first, x.second, v);
                     v.pop_back();
                     is_visited[x.first] = false;
@@ -621,19 +637,50 @@ void Map::GlobalPlanning()
         }
     };
 
-    routing.emplace_back(start_road_id);
+    routing.emplace_back(start_road_id, start_direction);
     is_visited[start_road_id] = true;
     search(start_road_id, start_direction, routing);
 
     for(auto &x : routings)
     {
         for(auto & y : x)
-            std::cout << y << " ";
+            std::cout << "[" << y.first << "/" << y.second << "] ";
         std::cout << std::endl;
     }
     //endregion
 
     //TODO Evaluate
+    mBestRouting = routings.front();
+
+    for(int i = 0; i < mBestRouting.size(); ++i)
+    {
+        //region send road
+        unsigned int rid = mBestRouting[i].first;
+        int dir = mBestRouting[i].second;
+
+        auto x = mRoads[rid].GetLanePosesByDirection(dir);
+        for(auto & y : x) pSender->SendPoses(y, 195.0/255, 190.0/255, 212.0/255, 0.7, 0.0, 0.4);
+        //endregion
+
+        if(i == mBestRouting.size()-1) break;
+
+        //region send junction
+
+        int jid = dir > 0 ? mRoads[rid].GetNextJid() : mRoads[rid].GetPrevJid();
+
+        for(auto & j : mJunctions[jid].mRoadLinks)
+        {
+            if(j.first.first == mBestRouting[i].first && j.first.second == mBestRouting[i+1].first)
+            {
+                auto ps = j.second.GetAllPose();
+                for(auto & p : ps)
+                {
+                    pSender->SendPoses(p, 195.0/255, 190.0/255, 212.0/255, 0.7, 0.0, 0.4);
+                }
+            }
+        }
+        //endregion
+    }
 }
 
 void Map::Send()
@@ -720,10 +767,11 @@ bool Map::OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response
 }
 
 
-std::vector<std::pair<unsigned int, int>> Map::QueryNextRoadInfo(unsigned int _rid, int direction)
+std::vector<std::pair<unsigned int, int>> Map::AdjacentRoadInfo(unsigned int _rid, int direction)
 {
-    int jid = mRoads[_rid].GetNextJid();
-    if( jid == -1)
+
+    int jid = direction > 0 ? mRoads[_rid].GetNextJid() : mRoads[_rid].GetPrevJid();
+    if(jid == -1)
         return std::vector<std::pair<unsigned int, int>>();
 
     std::vector<std::pair<unsigned int, int>> res;

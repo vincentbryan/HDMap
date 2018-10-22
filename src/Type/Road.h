@@ -57,6 +57,8 @@ public:
 
     std::pair<unsigned int, int> Locate(const Vector2d & v);
 
+    std::vector<std::vector<Pose>> GetLanePosesByDirection(int direction);
+
 };
 }
 

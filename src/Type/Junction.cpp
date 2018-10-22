@@ -58,11 +58,15 @@ bool Junction::Check(std::pair<unsigned int, unsigned int> links)
     else
         return false;
 }
+
+
 std::pair<int, int> Junction::GetLink(std::pair<unsigned int, unsigned int> RoadPair)
 {
     auto it = mRoadLinks.find(RoadPair);
     return  it->first;
 }
+
+
 std::vector<Pose> Junction::GetPose(unsigned int from_road_id,
                                     int from_lane_idx,
                                     unsigned int to_road_id,

@@ -36,7 +36,18 @@ public:
                 return x.mReferLine.GetAllPose(0.1);
             }
         }
+    }
 
+    std::vector<std::vector<Pose>> GetAllPose()
+    {
+        std::vector<std::vector<Pose>> res;
+
+        for(auto & x : vLaneLinks)
+        {
+            res.emplace_back(x.mReferLine.GetAllPose(0.1));
+        }
+
+        return res;
     }
 };
 }

@@ -13,7 +13,7 @@ unsigned int Sender::id = 0;
 Sender::Sender(ros::Publisher pub_) : frame_id("/hdmap"), pub(pub_)
 {};
 
-visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a, double z)
+visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a, double z, double width)
 {
     visualization_msgs::Marker line_strip;
     line_strip.header.frame_id = "/hdmap";
@@ -22,7 +22,7 @@ visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double 
     line_strip.action = visualization_msgs::Marker::ADD;
     line_strip.type = visualization_msgs::Marker::LINE_STRIP;
 
-    line_strip.scale.x = 0.08;
+    line_strip.scale.x = width;
 
     auto func = [](double x)
     {
@@ -166,9 +166,9 @@ void Sender::Send()
     pub.publish(array);
 }
 
-void Sender::SendPoses(std::vector<Pose> poses, double r, double g, double b, double a, double z)
+void Sender::SendPoses(std::vector<Pose> poses, double r, double g, double b, double a, double z, double width)
 {
-    auto line_strip = GetLineStrip(std::move(poses), r, g, b, a, z);
+    auto line_strip = GetLineStrip(std::move(poses), r, g, b, a, z, width);
     array.markers.emplace_back(line_strip);
     pub.publish(array);
 }

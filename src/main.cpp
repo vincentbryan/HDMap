@@ -340,8 +340,8 @@ int main(int argc, char** argv)
     map.EndJunction();
     //endregion
 
-    map.SetStartPoint({-221.360, 11.736});
-    map.SetEndPoint({106.649, 161.677});
+    map.SetStartPoint({226.176, 70.656});
+    map.SetEndPoint({106.649, 181.677});
     map.GlobalPlanning();
 
     map.Save("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test2_out.xml");
@@ -365,10 +365,18 @@ int main(int argc, char** argv)
     map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test2_out.xml");
 //    map.Summary();
 
-    map.SetStartPoint({-221.360, 11.736});
-    map.SetEndPoint({106.649, 161.677});
-    map.GlobalPlanning();
+    map.SetStartPoint({106.649, 181.677});
+    map.SetEndPoint({226.176, 70.656});
 
+    map.GlobalPlanning();
+    char c;
+    while (std::cin >> c)
+    {
+        if(c != 'e')
+            map.Send();
+        else
+            break;
+    }
 //    ros::ServiceServer server = n.advertiseService("local_map", &Map::OnRequest, &map);
 //    ROS_INFO("HDMap is ready...");
 //    ros::spin();

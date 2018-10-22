@@ -126,3 +126,48 @@ std::pair<unsigned int, int> Road::Locate(const Vector2d &v)
 
     return {min_sec_idx, min_lane_idx};
 }
+
+
+std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
+{
+    std::vector<std::vector<int>> scheme;
+
+    auto search = std::function<void(unsigned int, int, std::vector<int>)>();
+    search = [&](unsigned int curr_sec_idx, int curr_lane_idx, std::vector<int> v)
+    {
+        if(curr_sec_idx + 1 == mSections.size())
+        {
+            scheme.emplace_back(v);
+        }
+        else
+        {
+            for(auto x : mSections[curr_sec_idx].mLanes[curr_lane_idx].successors)
+            {
+                v.emplace_back(x);
+                search(curr_sec_idx+1, x, v);
+                v.pop_back();
+            }
+        }
+    };
+
+    for(auto x : mSections.front().mLanes)
+    {
+        if(x.first * direction > 0)
+            search(0, x.first, {x.first});
+    }
+
+    std::vector<std::vector<Pose>> res;
+
+    for(auto & x : scheme)
+    {
+        std::vector<Pose> p;
+        for(int i = 0; i < x.size(); ++i)
+        {
+            auto y = mSections[i].GetLanePoseByIndex(x[i]);
+            p.insert(p.end(), y.begin(), y.end());
+        }
+        res.emplace_back(p);
+    }
+
+    return res;
+}

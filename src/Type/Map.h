@@ -37,6 +37,8 @@ private:
     Vector2d mStartPoint;
     Vector2d mEndPoint;
 
+    std::vector<std::pair<unsigned int, int>> mBestRouting;
+
     unsigned int CalcuSectionId(unsigned int road, unsigned int section);
     unsigned int CalcuLaneId(unsigned int section, int lane);
 
@@ -78,7 +80,7 @@ public:
                        double _ctrl_len2 = Bezier::DEFAULT_LENGTH);
     void EndJunction();
 
-    std::vector<std::pair<unsigned int, int>>QueryNextRoadInfo(unsigned int _rid, int direction);
+    std::vector<std::pair<unsigned int, int>>AdjacentRoadInfo(unsigned int _rid, int direction);
 
     void Load(const std::string &file_name);
     void Save(const std::string &file_name);
