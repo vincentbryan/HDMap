@@ -7,10 +7,9 @@
 
 #include <ros/service_traits.h>
 
-#include "LocalMapResponse.h"
+
 #include "LocalMapRequest.h"
-//#include <HDMap/LocalMapRequest.h>
-//#include <HDMap/LocalMapResponse.h>
+#include "LocalMapResponse.h"
 
 
 namespace HDMap
@@ -41,7 +40,7 @@ template<>
 struct MD5Sum< ::HDMap::LocalMap > {
   static const char* value()
   {
-    return "408b68bca21d7ed4f2f51e7ca5c6a3d8";
+    return "9b95e06638142dcc7cd09553930c341b";
   }
 
   static const char* value(const ::HDMap::LocalMap&) { return value(); }

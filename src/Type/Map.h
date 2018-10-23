@@ -38,6 +38,17 @@ private:
     Vector2d mEndPoint;
 
     std::vector<std::pair<unsigned int, int>> mBestRouting;
+    std::map<unsigned int, bool> mRoadRecord;
+
+    struct
+    {
+        int curr_routing_idx = -1;
+        int curr_rid = -1;
+        int curr_road_dir = 1;
+        int jid = -1;
+        int next_rid = -1;
+        int next_road_dir = 1;
+    }mRecord;
 
     unsigned int CalcuSectionId(unsigned int road, unsigned int section);
     unsigned int CalcuLaneId(unsigned int section, int lane);

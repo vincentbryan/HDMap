@@ -74,21 +74,27 @@ std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
 }
 
 
-Pose Road::GetStartPose()
+Pose Road::GetStartPose(int direction)
 {
     if(mSections.empty())
         return Pose();
 
-    return mSections.front().mReferLine.GetStartPose();
+    if(direction > 0)
+        return mSections.front().mReferLine.GetStartPose();
+    else
+        return mSections.back().mReferLine.GetEndPose();
 }
 
 
-Pose Road::GetEndPose()
+Pose Road::GetEndPose(int direction)
 {
     if(mSections.empty())
         return Pose();
 
-    return mSections.back().mReferLine.GetEndPose();
+    if(direction > 0)
+        return mSections.back().mReferLine.GetEndPose();
+    else
+        return mSections.front().mReferLine.GetStartPose();
 }
 
 
@@ -161,10 +167,21 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
     for(auto & x : scheme)
     {
         std::vector<Pose> p;
-        for(int i = 0; i < x.size(); ++i)
+        if(x.front() > 0)
         {
-            auto y = mSections[i].GetLanePoseByIndex(x[i]);
-            p.insert(p.end(), y.begin(), y.end());
+            for(int i = 0; i < x.size(); ++i)
+            {
+                auto y = mSections[i].GetLanePoseByIndex(x[i]);
+                p.insert(p.end(), y.begin(), y.end());
+            }
+        }
+        else
+        {
+            for(int i = x.size()-1; i >= 0; i--)
+            {
+                auto y = mSections[i].GetLanePoseByIndex(x[i]);
+                p.insert(p.end(), y.begin(), y.end());
+            }
         }
         res.emplace_back(p);
     }

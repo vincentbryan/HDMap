@@ -4,6 +4,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <algorithm>
+#include <LocalMapRequest.h>
 #include "Map.h"
 
 using namespace hdmap;
@@ -15,7 +16,6 @@ Map::Map() : mCurrPose(Pose()),
                  mCurrSection(LaneSection())
 {}
 
-//region Setter And Getter
 void Map::SetSender(std::shared_ptr<Sender> _sender)
 {
     pSender = _sender;
@@ -90,7 +90,6 @@ Vector2d Map::GetEndPoint() const
 {
     return mEndPoint;
 }
-//endregion
 
 void Map::StartRoad(const Pose & _start_pose)
 {
@@ -651,7 +650,12 @@ void Map::GlobalPlanning()
 
     //TODO Evaluate
     mBestRouting = routings.front();
+    for(auto x : mBestRouting)
+    {
+        mRoadRecord.insert(std::pair<int, bool>(x.first, false));
+    }
 
+    //region 显示全局规划结果
     for(int i = 0; i < mBestRouting.size(); ++i)
     {
         //region send road
@@ -666,8 +670,7 @@ void Map::GlobalPlanning()
 
         //region send junction
 
-        int jid = dir > 0 ? mRoads[rid].GetNextJid() : mRoads[rid].GetPrevJid();
-
+        int jid = mRoads[rid].AdjacentJid(dir);
         for(auto & j : mJunctions[jid].mRoadLinks)
         {
             if(j.first.first == mBestRouting[i].first && j.first.second == mBestRouting[i+1].first)
@@ -680,6 +683,25 @@ void Map::GlobalPlanning()
             }
         }
         //endregion
+    }
+    //endregion
+
+    mRecord.curr_routing_idx = 0;
+    mRecord.curr_rid = mBestRouting.front().first;
+    mRecord.curr_road_dir = mBestRouting.front().second;
+    if(mRecord.curr_routing_idx + 1 < mBestRouting.size())
+    {
+        mRecord.next_rid= mBestRouting[mRecord.curr_routing_idx+1].first;
+        mRecord.next_road_dir = mBestRouting[mRecord.curr_routing_idx+1].second;
+
+        mRecord.jid = mRecord.curr_road_dir > 0 ?
+                      mRoads[mRecord.curr_rid].GetNextJid():
+                      mRoads[mRecord.curr_rid].GetPrevJid();
+    }
+    else
+    {
+        mRecord.next_rid = mRecord.next_road_dir = -1;
+        mRecord.jid = -1;
     }
 }
 
@@ -752,25 +774,170 @@ void Map::Test()
     pSender->SendPoses(res, 1.0, 0, 0, 1.0, 1.0);
 
 }
+
 bool Map::OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response &response)
 {
-    std::cout << "From LocalMap : " << request.x << " " << request.y << std::endl;
 
-    std::vector<geometry_msgs::Pose2D> pose_2d_array;
-    std::vector<HDMap::Pose2DArray> lanes;
-    response.curr_road.lanes = lanes;
-    response.junction.in = std::vector<int64_t>();
-    response.junction.out = std::vector<int64_t>();
-    response.junction.conns = lanes;
-    response.next_road.lanes = lanes;
-    return true;
+    //region 发送LocalMap
+    auto func = [&]()
+    {
+        if(mRecord.curr_rid != -1)
+        {
+            auto ps = mRoads[mRecord.curr_rid].GetLanePosesByDirection(mRecord.curr_road_dir);
+
+            for(auto & p : ps)
+            {
+                HDMap::Pose2DArray array;
+                for(auto & x : p)
+                {
+                    geometry_msgs::Pose2D pose2D;
+                    pose2D.x = x.GetPosition().x;
+                    pose2D.y = x.GetPosition().y;
+                    pose2D.theta = x.GetAngle().ToYaw();
+                    array.lane.emplace_back(pose2D);
+                }
+                response.curr_road.lanes.emplace_back(array);
+            }
+        }
+
+        if(mRecord.jid != -1)
+        {
+            for(auto & j : mJunctions[mRecord.jid].mRoadLinks)
+            {
+                if(j.first.first == mRecord.curr_rid and j.first.second == mRecord.next_rid)
+                {
+                    for(auto & i : j.second.vLaneLinks)
+                    {
+                        response.junction.in.emplace_back(i.iFromIndex);
+                        response.junction.out.emplace_back(i.iToIndex);
+                    }
+
+                    auto ps = j.second.GetAllPose();
+                    for(auto & p : ps)
+                    {
+                        HDMap::Pose2DArray array;
+                        for(auto & x : p)
+                        {
+                            geometry_msgs::Pose2D pose2D;
+                            pose2D.x = x.GetPosition().x;
+                            pose2D.y = x.GetPosition().y;
+                            pose2D.theta = x.GetAngle().ToYaw();
+                            array.lane.emplace_back(pose2D);
+                        }
+                        response.junction.conns.emplace_back(array);
+                    }
+                }
+            }
+        }
+
+        if(mRecord.next_rid != -1)
+        {
+            auto ps = mRoads[mRecord.next_rid].GetLanePosesByDirection(mRecord.next_road_dir);
+
+            for(auto & p : ps)
+            {
+                HDMap::Pose2DArray array;
+                for(auto & x : p)
+                {
+                    geometry_msgs::Pose2D pose2D;
+                    pose2D.x = x.GetPosition().x;
+                    pose2D.y = x.GetPosition().y;
+                    pose2D.theta = x.GetAngle().ToYaw();
+                    array.lane.emplace_back(pose2D);
+                }
+                response.next_road.lanes.emplace_back(array);
+            }
+        }
+        return true;
+    };
+    //endregion
+
+    ROS_INFO("Map::OnRequest: from local map [%f\t%f]", request.x, request.y);
+
+    if(!request.has_local_map)
+    {
+        response.need_update = true;
+        return func();
+    }
+
+    double t1 = 100000;
+    if(mRecord.curr_rid != -1)
+    {
+        t1 = Vector2d::SegmentDistance(mRoads[mRecord.curr_rid].GetStartPose(mRecord.curr_road_dir).GetPosition(),
+                                       mRoads[mRecord.curr_rid].GetEndPose(mRecord.curr_road_dir).GetPosition(),
+                                       {request.x, request.y});
+    }
+    double t2 = 100000;
+    if(mRecord.jid != -1)
+    {
+        t2 = Vector2d::SegmentDistance(mRoads[mRecord.curr_rid].GetEndPose(mRecord.curr_road_dir).GetPosition(),
+                                       mRoads[mRecord.next_rid].GetStartPose(mRecord.next_road_dir).GetPosition(),
+                                       {request.x, request.y});
+    }
+    double t3 = 100000;
+    if(mRecord.next_rid != -1)
+    {
+        t3 = Vector2d::SegmentDistance(mRoads[mRecord.next_rid].GetStartPose(mRecord.next_road_dir).GetPosition(),
+                                       mRoads[mRecord.next_rid].GetEndPose(mRecord.next_road_dir).GetPosition(),
+                                       {request.x, request.y});
+    }
+
+    if(t1 < t2 and t1 < t3)
+    {
+        ROS_INFO("Map::OnRequest: in curr_road, no need to update local map");
+        response.need_update = false;
+    }
+    if(t2 < t1 and t2 < t3)
+    {
+        ROS_INFO("Map::OnRequest: in junction, no need to update local map");
+        response.need_update = false;
+    }
+    if(t3 < t1 and t3 < t2)
+    {
+        ROS_INFO("Map::OnRequest: in next_road, attempt to update local map");
+        response.need_update = true;
+    }
+
+    if(std::min(std::min(t1, t2), t3) > 50.0)
+    {
+        ROS_ERROR("Current position is too far away from the local map!!!");
+    }
+
+    if(response.need_update)
+    {
+        mRecord.curr_routing_idx++;
+
+        if(mRecord.curr_routing_idx < mBestRouting.size())
+        {
+            mRecord.curr_rid = mBestRouting[mRecord.curr_routing_idx].first;
+            mRecord.curr_road_dir = mBestRouting[mRecord.curr_routing_idx].second;
+        }
+        else
+        {
+            ROS_ERROR("Reaching the end road of the routing");
+            mRecord.curr_rid = -1;
+        }
+
+        if(mRecord.curr_routing_idx + 1 < mBestRouting.size())
+        {
+            mRecord.next_rid = mBestRouting[mRecord.curr_routing_idx+1].first;
+            mRecord.next_road_dir = mBestRouting[mRecord.curr_routing_idx+1].second;
+            mRecord.jid = mRoads[mRecord.curr_rid].AdjacentJid(mRecord.curr_road_dir);
+        }
+        else
+        {
+            mRecord.next_rid = -1;
+            mRecord.jid = -1;
+        }
+    }
+
+    return func();
 }
-
 
 std::vector<std::pair<unsigned int, int>> Map::AdjacentRoadInfo(unsigned int _rid, int direction)
 {
 
-    int jid = direction > 0 ? mRoads[_rid].GetNextJid() : mRoads[_rid].GetPrevJid();
+    int jid = mRoads[_rid].AdjacentJid(direction);
     if(jid == -1)
         return std::vector<std::pair<unsigned int, int>>();
 

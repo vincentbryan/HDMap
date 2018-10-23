@@ -365,21 +365,24 @@ int main(int argc, char** argv)
     map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/test2_out.xml");
 //    map.Summary();
 
-    map.SetStartPoint({106.649, 181.677});
-    map.SetEndPoint({226.176, 70.656});
-
+    map.SetStartPoint({-221.360, 11.736});
+    map.SetEndPoint({-38.530, 70.328});
     map.GlobalPlanning();
+
+    ROS_INFO("Input 's' to start");
+
     char c;
     while (std::cin >> c)
     {
-        if(c != 'e')
+        if(c == 's')
             map.Send();
         else
             break;
     }
-//    ros::ServiceServer server = n.advertiseService("local_map", &Map::OnRequest, &map);
-//    ROS_INFO("HDMap is ready...");
-//    ros::spin();
+
+    ros::ServiceServer server = n.advertiseService("local_map", &Map::OnRequest, &map);
+    ROS_INFO("HDMap is ready...");
+    ros::spin();
 
 #endif
 

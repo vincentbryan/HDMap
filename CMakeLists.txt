@@ -159,7 +159,13 @@ add_executable(ViewGPS
 		src/Tool/ViewGPS.cpp
 		src/Tool/Sender.cpp
 		src/Tool/Sender.h)
-add_executable(LocalMap src/Tool/LocalMap.cpp)
+add_executable(LocalMap
+		src/Tool/LocalMap.cpp
+		src/Tool/Sender.cpp
+		src/Tool/Sender.h
+		${TYPES}
+		${MATH}
+)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use

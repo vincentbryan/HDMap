@@ -248,13 +248,13 @@ void Sender::AddRoadId(Pose p, int id)
 
 void Sender::AddStartPoint(const Vector2d &v)
 {
-    visualization_msgs::Marker m = GetCone(v, 1.0, 1.0, 1.0, 1.0);
+    visualization_msgs::Marker m = GetCone(v, 1.0, 1.0, 1.0, 1.0, 3.0);
     array.markers.emplace_back(m);
 }
 
 void Sender::AddEndPoint(const Vector2d &v)
 {
-    visualization_msgs::Marker m = GetCone(v, 0, 255.0 / 255, 128.0 / 255, 1.0);
+    visualization_msgs::Marker m = GetCone(v, 0, 255.0 / 255, 128.0 / 255, 1.0, 3.0);
     array.markers.emplace_back(m);
 }
 

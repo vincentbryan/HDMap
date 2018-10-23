@@ -39,6 +39,7 @@ public:
     {
         return iPrevJid;
     }
+
     void SetNextJid(unsigned int jid)
     {
         iNextJid = jid;
@@ -49,11 +50,17 @@ public:
         return iNextJid;
     }
 
+    int AdjacentJid(int direction)
+    {
+        if(direction > 0) return iNextJid;
+        else return iPrevJid;
+    }
+
     std::vector<Pose> Trajectory(int begin_lane_idx, int end_lane_idx);
 
-    Pose GetStartPose();
+    Pose GetStartPose(int direction = 1);
 
-    Pose GetEndPose();
+    Pose GetEndPose(int direction = 1);
 
     std::pair<unsigned int, int> Locate(const Vector2d & v);
 

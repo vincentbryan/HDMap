@@ -25,11 +25,13 @@ struct LocalMapRequest_
 
   LocalMapRequest_()
     : x(0.0)
-    , y(0.0)  {
+    , y(0.0)
+    , has_local_map(false)  {
     }
   LocalMapRequest_(const ContainerAllocator& _alloc)
     : x(0.0)
-    , y(0.0)  {
+    , y(0.0)
+    , has_local_map(false)  {
   (void)_alloc;
     }
 
@@ -40,6 +42,9 @@ struct LocalMapRequest_
 
    typedef double _y_type;
   _y_type y;
+
+   typedef uint8_t _has_local_map_type;
+  _has_local_map_type has_local_map;
 
 
 
@@ -119,12 +124,12 @@ struct MD5Sum< ::HDMap::LocalMapRequest_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "209f516d3eb691f0663e25cb750d67c1";
+    return "0c63853715d9971380928b9f7f319a2c";
   }
 
   static const char* value(const ::HDMap::LocalMapRequest_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x209f516d3eb691f0ULL;
-  static const uint64_t static_value2 = 0x663e25cb750d67c1ULL;
+  static const uint64_t static_value1 = 0x0c63853715d99713ULL;
+  static const uint64_t static_value2 = 0x80928b9f7f319a2cULL;
 };
 
 template<class ContainerAllocator>
@@ -145,6 +150,7 @@ struct Definition< ::HDMap::LocalMapRequest_<ContainerAllocator> >
   {
     return "float64 x\n\
 float64 y\n\
+bool has_local_map\n\
 ";
   }
 
@@ -165,6 +171,7 @@ namespace serialization
     {
       stream.next(m.x);
       stream.next(m.y);
+      stream.next(m.has_local_map);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER
@@ -187,6 +194,8 @@ struct Printer< ::HDMap::LocalMapRequest_<ContainerAllocator> >
     Printer<double>::stream(s, indent + "  ", v.x);
     s << indent << "y: ";
     Printer<double>::stream(s, indent + "  ", v.y);
+    s << indent << "has_local_map: ";
+    Printer<uint8_t>::stream(s, indent + "  ", v.has_local_map);
   }
 };
 

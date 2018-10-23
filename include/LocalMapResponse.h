@@ -15,12 +15,8 @@
 #include <ros/builtin_message_traits.h>
 #include <ros/message_operations.h>
 
-//#include <HDMap/RoadMSG.h>
-//#include <HDMap/JunctionMSG.h>
-//#include <HDMap/RoadMSG.h>
 #include "RoadMSG.h"
 #include "JunctionMSG.h"
-#include "RoadMSG.h"
 
 namespace HDMap
 {
@@ -30,18 +26,23 @@ struct LocalMapResponse_
   typedef LocalMapResponse_<ContainerAllocator> Type;
 
   LocalMapResponse_()
-    : curr_road()
+    : need_update(false)
+    , curr_road()
     , junction()
     , next_road()  {
     }
   LocalMapResponse_(const ContainerAllocator& _alloc)
-    : curr_road(_alloc)
+    : need_update(false)
+    , curr_road(_alloc)
     , junction(_alloc)
     , next_road(_alloc)  {
   (void)_alloc;
     }
 
 
+
+   typedef uint8_t _need_update_type;
+  _need_update_type need_update;
 
    typedef  ::HDMap::RoadMSG_<ContainerAllocator>  _curr_road_type;
   _curr_road_type curr_road;
@@ -130,12 +131,12 @@ struct MD5Sum< ::HDMap::LocalMapResponse_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "d470c991daacc08efea5b83d7b0a09ff";
+    return "f7937e144ae1603b7baba171c1771bce";
   }
 
   static const char* value(const ::HDMap::LocalMapResponse_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xd470c991daacc08eULL;
-  static const uint64_t static_value2 = 0xfea5b83d7b0a09ffULL;
+  static const uint64_t static_value1 = 0xf7937e144ae1603bULL;
+  static const uint64_t static_value2 = 0x7baba171c1771bceULL;
 };
 
 template<class ContainerAllocator>
@@ -154,7 +155,8 @@ struct Definition< ::HDMap::LocalMapResponse_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "HDMap/RoadMSG curr_road\n\
+    return "bool need_update\n\
+HDMap/RoadMSG curr_road\n\
 HDMap/JunctionMSG junction\n\
 HDMap/RoadMSG next_road\n\
 \n\
@@ -215,6 +217,7 @@ namespace serialization
   {
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
+      stream.next(m.need_update);
       stream.next(m.curr_road);
       stream.next(m.junction);
       stream.next(m.next_road);
@@ -236,6 +239,8 @@ struct Printer< ::HDMap::LocalMapResponse_<ContainerAllocator> >
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::HDMap::LocalMapResponse_<ContainerAllocator>& v)
   {
+    s << indent << "need_update: ";
+    Printer<uint8_t>::stream(s, indent + "  ", v.need_update);
     s << indent << "curr_road: ";
     s << std::endl;
     Printer< ::HDMap::RoadMSG_<ContainerAllocator> >::stream(s, indent + "  ", v.curr_road);

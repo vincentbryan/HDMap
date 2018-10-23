@@ -16,7 +16,6 @@
 #include <ros/message_operations.h>
 
 #include <std_msgs/Header.h>
-//#include <HDMap/Pose2DArray.h>
 #include "Pose2DArray.h"
 
 namespace HDMap
