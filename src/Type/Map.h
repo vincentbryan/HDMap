@@ -37,19 +37,6 @@ private:
     Vector2d mStartPoint;
     Vector2d mEndPoint;
 
-    std::vector<std::pair<unsigned int, int>> mBestRouting;
-    std::map<unsigned int, bool> mRoadRecord;
-
-    struct
-    {
-        int curr_routing_idx = -1;
-        int curr_rid = -1;
-        int curr_road_dir = 1;
-        int jid = -1;
-        int next_rid = -1;
-        int next_road_dir = 1;
-    }mRecord;
-
     unsigned int CalcuSectionId(unsigned int road, unsigned int section);
     unsigned int CalcuLaneId(unsigned int section, int lane);
 
@@ -91,20 +78,21 @@ public:
                        double _ctrl_len2 = Bezier::DEFAULT_LENGTH);
     void EndJunction();
 
-    std::vector<std::pair<unsigned int, int>>AdjacentRoadInfo(unsigned int _rid, int direction);
+    std::vector<std::shared_ptr<SubRoad>>AdjacentRoadInfo(std::shared_ptr<SubRoad> pSubRoad);
 
     void Load(const std::string &file_name);
     void Save(const std::string &file_name);
 
     void Summary();
-    void GlobalPlanning();
     void Send();
 
     void Trajectory(std::vector<std::pair<unsigned int, int>> sequences);
 
-    void Test();
+//    bool OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response & response);
 
-    bool OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response & response);
+    std::shared_ptr<SubRoad> Locate(const Vector2d & v);
+
+    std::vector<unsigned int> GetRoadId();
 
 };
 }

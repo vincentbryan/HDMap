@@ -8,12 +8,13 @@ using namespace hdmap;
 
 unsigned int Road::ROAD_ID = 0;
 
-Road::Road()
+Road::Road() : mForwardRoad(1), mBackwardRoad(-1)
 {
     iRoadId = ROAD_ID++;
     dLength = 0;
     iPrevJid = iNextJid = -1;
 }
+
 
 std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
 {
@@ -188,3 +189,78 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
 
     return res;
 }
+
+
+void Road::Send(Sender &sender)
+{
+    std::string text = "Road[" + std::to_string(iRoadId) + "]: " + std::to_string(dLength);
+    auto m = sender.GetText(text, GetStartPose(1));
+    sender.array.markers.emplace_back(m);
+    sender.Send();
+
+    for(auto & s : mSections) s.Send(sender);
+//    mForwardRoad.Send(sender);
+//    mBackwardRoad.Send(sender);
+
+}
+
+
+std::shared_ptr<SubRoad> Road::GetSubRoadPtr(int dir)
+{
+    if(dir > 0)
+        return std::make_shared<SubRoad>(mForwardRoad);
+    else
+        return std::make_shared<SubRoad>(mBackwardRoad);
+}
+
+void Road::InitSubRoad()
+{
+    mForwardRoad.Init(std::shared_ptr<Road>(this));
+    mBackwardRoad.Init(std::shared_ptr<Road>(this));
+}
+
+SubRoad::SubRoad(int direction) : direction(direction) {}
+
+void SubRoad::Send(hdmap::Sender &sender)
+{
+    auto ps = GetLanePose();
+    for(auto const & p : ps)
+    {
+        sender.SendPoses(p, 0.7, 0.7, 0.7, 0.8, 0.0, 0.5);
+    }
+}
+
+Pose SubRoad::GetStartPose()
+{
+    if(direction > 0)
+        return pBaseRoad->mSections.front().mReferLine.GetStartPose();
+    else
+        return pBaseRoad->mSections.back().mReferLine.GetEndPose();
+}
+
+std::vector<std::vector<Pose>> SubRoad::GetLanePose()
+{
+    return pBaseRoad->GetLanePosesByDirection(direction);
+}
+
+void SubRoad::Init(std::shared_ptr<Road> p_road)
+{
+    pBaseRoad = p_road;
+    iRoadId = pBaseRoad->iRoadId;
+    iPrevJid = direction > 0 ? pBaseRoad->GetPrevJid() : pBaseRoad->GetNextJid();
+    iNextJid = direction > 0 ? pBaseRoad->GetNextJid() : pBaseRoad->GetPrevJid();
+
+    for(auto & s : pBaseRoad->mSections)
+    {
+        this->mSubRoadSection.emplace_back(s.GetSubSection(direction));
+    }
+
+    if(direction < 0)
+    {
+        for(int i = 1; i < mSubRoadSection.size(); ++i)
+        {
+            mSubRoadSection[i].s = mSubRoadSection[i-1].s + mSubRoadSection[i-1].mReferLine.Length();
+        }
+    }
+}
+

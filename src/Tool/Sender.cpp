@@ -164,6 +164,7 @@ visualization_msgs::Marker Sender::GetArrow(const Pose &p, double r, double g, d
 void Sender::Send()
 {
     pub.publish(array);
+    array.markers.clear();
 }
 
 void Sender::SendPoses(std::vector<Pose> poses, double r, double g, double b, double a, double z, double width)
@@ -172,59 +173,6 @@ void Sender::SendPoses(std::vector<Pose> poses, double r, double g, double b, do
     array.markers.emplace_back(line_strip);
     pub.publish(array);
 }
-
-void Sender::AddSection(LaneSection section)
-{
-    for(auto & x : section.GetAllPose())
-    {
-
-        if(x.first == 0)
-        {
-            visualization_msgs::Marker line_strip = GetLineStrip(x.second, 199.0/255, 166.0/255, 33.0/255, 1.0);
-            array.markers.push_back(line_strip);
-        }
-        else
-        {
-            //轨迹
-            visualization_msgs::Marker line1 = GetLineStrip(x.second, 95.0/255, 217.0/255, 205.0/255, 1.0);
-            array.markers.push_back(line1);
-
-            //车道线
-            auto poses = Translate(x.second, Lane::DEFAULT_WIDTH/2, -90.0);
-            visualization_msgs::Marker line2 = GetLineStrip(poses, 0.7, 0.7, 0.7, 0.3);
-            array.markers.push_back(line2);
-        }
-        visualization_msgs::Marker m = GetText(std::to_string(x.first), x.second[x.second.size()/2], 0, 1.0);
-        array.markers.push_back(m);
-    }
-}
-
-void Sender::AddJunction(Junction junction)
-{
-    for(auto & x : junction.GetAllPose())
-    {
-        visualization_msgs::Marker line_strip = GetLineStrip(x, 234.0/255, 247.0/255, 134.0/255, 1.0);
-        array.markers.emplace_back(line_strip);
-
-        visualization_msgs::Marker arrow1 = GetArrow(x.front(), 95.0/255, 217.0/255, 205.0/255, 1.0);
-        array.markers.emplace_back(arrow1);
-        visualization_msgs::Marker arrow2 = GetArrow(x.back(), 234.0/255, 247.0/255, 134.0/255, 1.0);
-        array.markers.emplace_back(arrow2);
-    }
-}
-
-//void Sender::AddMap(Map &map)
-//{
-//    for(auto & sec : map.GetAllSection())
-//    {
-//        AddSection(sec);
-//    }
-//
-//    for(auto & jun : map.GetAllJunction())
-//    {
-//        AddJunction(jun);
-//    }
-//}
 
 std::vector<Pose> Sender::Translate(std::vector<Pose> poses, double length, double theta)
 {
@@ -237,13 +185,6 @@ std::vector<Pose> Sender::Translate(std::vector<Pose> poses, double length, doub
         res.emplace_back(p);
     }
     return res;
-}
-
-void Sender::AddRoadId(Pose p, int id)
-{
-    std::string text = "Road[" + std::to_string(id) + "]";
-    visualization_msgs::Marker m = GetText(text, p);
-    array.markers.emplace_back(m);
 }
 
 void Sender::AddStartPoint(const Vector2d &v)

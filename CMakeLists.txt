@@ -133,19 +133,31 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-AUX_SOURCE_DIRECTORY(src SRCS)
+
 AUX_SOURCE_DIRECTORY(src/Type TYPES)
 AUX_SOURCE_DIRECTORY(src/Math MATH)
-add_executable(${PROJECT_NAME}
-		src/Tool/Sender.cpp
-		src/Tool/Sender.h
+add_executable(MapService
 		${TYPES}
 		${MATH}
-		${SRCS}
+		src/MapService.cpp
+		src/Tool/Sender.cpp
+		src/Tool/Sender.h
+		src/Interface/IView.h
+)
+
+add_executable(MapGenerator
+		${TYPES}
+		${MATH}
+		src/Tool/Sender.cpp
+		src/Tool/Sender.h
+		src/Interface/IView.h
+		src/MapGenerator.cpp
 )
 
 add_executable(talker talker.cpp)
+
 add_executable(XMLTest XMLTest.cpp)
+
 add_executable(DataProcess
 		${TYPES}
 		${MATH}
@@ -177,7 +189,8 @@ add_executable(LocalMap
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}
+
+target_link_libraries(MapService
 ${catkin_LIBRARIES}
 )
 target_link_libraries(talker
@@ -193,6 +206,10 @@ ${catkin_LIBRARIES}
 )
 
 target_link_libraries(LocalMap
+${catkin_LIBRARIES}
+)
+
+target_link_libraries(MapGenerator
 ${catkin_LIBRARIES}
 )
 #############

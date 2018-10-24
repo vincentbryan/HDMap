@@ -122,3 +122,75 @@ std::map<int, std::vector<Pose>> LaneSection::GetAllPose()
     return mAllLanePose;
 }
 
+
+void LaneSection::Send(Sender &sender)
+{
+    if(mAllLanePose.empty()) GenerateAllPose(0.1);
+
+    for(auto & x : mAllLanePose)
+    {
+        if(x.first == 0)
+        {
+            auto refer_line = sender.GetLineStrip(x.second, 199.0/255, 166.0/255, 33.0/255, 1.0);
+            sender.array.markers.push_back(refer_line);
+        }
+        else
+        {
+            auto track = sender.GetLineStrip(x.second, 95.0/255, 217.0/255, 205.0/255, 1.0);
+            sender.array.markers.push_back(track);
+
+            double w = std::max(mLanes[x.first].width.y0, mLanes[x.first].width.y1);
+            auto poses = sender.Translate(x.second, w/2, -90.0);
+            auto solid_line = sender.GetLineStrip(poses, 0.7, 0.7, 0.7, 0.3);
+            sender.array.markers.push_back(solid_line);
+        }
+        auto lane_idx = sender.GetText(std::to_string(x.first), x.second[x.second.size()/2], 0, 1.0);
+        sender.array.markers.push_back(lane_idx);
+    }
+    sender.Send();
+}
+
+LaneSection LaneSection::GetSubSection(int direction)
+{
+    LaneSection res;
+    res.iSectionId = iSectionId;
+    if(direction > 0)
+    {
+        res.mReferLine = mReferLine;
+        res.mLaneOffset = mLaneOffset;
+        res.most_right_lane_idx = most_right_lane_idx;
+        res.most_left_lane_idx = 0;
+        for(auto & x : mLanes)
+        {
+            if(x.first > 0)
+                res.mLanes.insert(x);
+        }
+    }
+    else
+    {
+        Pose s = mReferLine.GetStartPose();
+        Pose e = mReferLine.GetEndPose();
+        s.Rotate(180);
+        e.Rotate(180);
+        res.mReferLine = Bezier(e, s, mReferLine.ctrl_len2, mReferLine.ctrl_len1);
+        res.most_left_lane_idx = 0;
+        res.most_right_lane_idx = std::abs(most_left_lane_idx);
+        for(auto & x : mLanes)
+        {
+            if(x.first < 0)
+            {
+                CubicFunction width(x.second.width.y1,
+                                    res.mReferLine.Length(),
+                                    x.second.width.y0);
+                Lane lane(x.second.land_id, width);
+
+                for(auto & y : x.second.predecessors) lane.successors.emplace_back(y);
+                for(auto & y : x.second.successors) lane.predecessors.emplace_back(y);
+
+                res.mLanes.insert({std::abs(x.first), lane});
+            }
+        }
+    }
+    return res;
+}
+

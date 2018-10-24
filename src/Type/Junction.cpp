@@ -39,24 +39,14 @@ void Junction::AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pos
 std::vector<std::vector<Pose>> Junction::GetAllPose()
 {
     if(vPoses.empty())
-    {
-        for(auto x : mRoadLinks)
-        {
-            for(auto y : x.second.vLaneLinks)
-            {
-                vPoses.emplace_back(y.mReferLine.GetAllPose(0.1));
-            }
-        }
-    }
+        GenerateAllPose();
+
     return vPoses;
 }
 
 bool Junction::Check(std::pair<unsigned int, unsigned int> links)
 {
-    if(mRoadLinks.find(links) != mRoadLinks.end())
-        return true;
-    else
-        return false;
+    return mRoadLinks.find(links) != mRoadLinks.end();
 }
 
 
@@ -73,5 +63,34 @@ std::vector<Pose> Junction::GetPose(unsigned int from_road_id,
                                     int to_lane_idx)
 {
     return mRoadLinks[{from_road_id, to_road_id}].GetPose(from_lane_idx, to_lane_idx);
+}
+
+void Junction::Send(Sender &sender)
+{
+    if(vPoses.empty())
+        GenerateAllPose();
+
+    for(auto & x : vPoses)
+    {
+        auto conn = sender.GetLineStrip(x, 234.0/255, 247.0/255, 134.0/255, 1.0);
+        sender.array.markers.emplace_back(conn);
+
+        auto from = sender.GetArrow(x.front(), 95.0/255, 217.0/255, 205.0/255, 1.0);
+        sender.array.markers.emplace_back(from);
+        auto to = sender.GetArrow(x.back(), 234.0/255, 247.0/255, 134.0/255, 1.0);
+        sender.array.markers.emplace_back(to);
+    }
+    sender.Send();
+}
+
+void Junction::GenerateAllPose()
+{
+    for(auto x : mRoadLinks)
+    {
+        for(auto y : x.second.vLaneLinks)
+        {
+            vPoses.emplace_back(y.mReferLine.GetAllPose(0.1));
+        }
+    }
 }
 

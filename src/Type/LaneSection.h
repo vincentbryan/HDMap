@@ -10,9 +10,12 @@
 #include "Lane.h"
 #include "../Math/Line.h"
 #include "../Math/Bezier.h"
+#include "../Interface/IView.h"
+#include "../Tool/Sender.h"
+
 namespace hdmap
 {
-class LaneSection
+class LaneSection : public IView
 {
 public:
     double s;
@@ -62,10 +65,13 @@ public:
         return mAllLanePose[idx];
     }
 
+    void Send(Sender &sender) override;
+
+    LaneSection GetSubSection(int direction);
+
 private:
     void AppendPose(double s_);
     void GenerateAllPose(double ds);
-
 };
 }
 #endif //HDMAP_LANESECTION_H
