@@ -21,7 +21,7 @@ namespace hdmap
 class Sender;
 class Map
 {
-private:
+public:
     std::vector<Road> mRoads;
     std::vector<Junction> mJunctions;
 

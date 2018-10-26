@@ -143,6 +143,8 @@ add_executable(MapService
 		src/Tool/Sender.cpp
 		src/Tool/Sender.h
 		src/Interface/IView.h
+		src/Tool/Planner.cpp
+		src/Tool/Planner.h
 )
 
 add_executable(MapGenerator
@@ -152,7 +154,8 @@ add_executable(MapGenerator
 		src/Tool/Sender.h
 		src/Interface/IView.h
 		src/MapGenerator.cpp
-)
+		src/Interface/Pipe.h
+		)
 
 add_executable(talker talker.cpp)
 

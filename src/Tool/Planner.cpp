@@ -79,4 +79,18 @@ void Planner::Send()
     {
         r->Send(*pSender);
     }
+
+    for(int i = 0; i < mRouting.size(); i++)
+    {
+        mRouting[i]->Send(*pSender);
+
+        if(i + 1 < mRouting.size())
+        {
+            int jid = mRouting[i]->iNextJid;
+            mHDMap.mJunctions[jid](mRouting[i]->iRoadId,
+                                   mRouting[i]->direction,
+                                   mRouting[i+1]->iRoadId,
+                                   mRouting[i+1]->direction).Send(*pSender);
+        }
+    }
 }

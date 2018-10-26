@@ -6,8 +6,19 @@
 #define HDMAP_ROADLINK_H
 
 #include "LaneLink.h"
+#include "../Interface/IView.h"
 namespace hdmap
 {
+
+class SubRoadLink : public IView
+{
+public:
+    unsigned int iFromRoadId;
+    unsigned int iToRoadId;
+    std::vector<LaneLink> vLaneLinks;
+    void Send(Sender &sender) override;
+};
+
 class RoadLink
 {
 public:
@@ -49,6 +60,9 @@ public:
 
         return res;
     }
+
+
+    SubRoadLink operator ()(int _form_dir, int _to_dir);
 };
 }
 

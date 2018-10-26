@@ -40,7 +40,10 @@ public:
     std::vector<Pose> GetPose(unsigned int from_road_id, int from_lane_idx, unsigned int to_road_id, int to_lane_idx);
 
     void GenerateAllPose();
+
     void Send(Sender &sender) override;
+
+    SubRoadLink operator () (int rid1, int dir1, int rid2 = -1, int dir2 = 0);
 };
 }
 

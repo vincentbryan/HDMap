@@ -98,9 +98,7 @@ void Map::StartRoad(const Pose & _start_pose)
     mPrevSection.mReferLine = Bezier({0,0,0}, {0,0,0}, 0, 0);
     mPrevSection.mLanes.clear();
     mCurrSection = mPrevSection;
-
     mCurrPose = _start_pose;
-
 }
 
 void Map::EndRoad()
@@ -796,6 +794,7 @@ std::shared_ptr<SubRoad> Map::Locate(const Vector2d &v)
     auto p1 = mRoads[road_id].Locate(v);
     return mRoads[road_id].GetSubRoadPtr(p1.second);
 }
+
 
 std::vector<unsigned int> Map::GetRoadId()
 {

@@ -219,7 +219,6 @@ void Road::InitSubRoad()
     mBackwardRoad.Init(std::shared_ptr<Road>(this));
 }
 
-SubRoad::SubRoad(int direction) : direction(direction) {}
 
 void SubRoad::Send(hdmap::Sender &sender)
 {
@@ -264,3 +263,4 @@ void SubRoad::Init(std::shared_ptr<Road> p_road)
     }
 }
 
+SubRoad::SubRoad(int direction) : direction(direction) {};
