@@ -7,6 +7,7 @@
 
 
 #include "LaneSection.h"
+#include "Signal.h"
 #include <algorithm>
 
 namespace hdmap
@@ -22,6 +23,7 @@ public:
 
     std::shared_ptr<Road> pBaseRoad;
     std::vector<LaneSection> mSubRoadSection;
+    std::vector<Signal> mSubRoadSignals;
 
 public:
     SubRoad(int direction);
@@ -50,6 +52,8 @@ public:
 
     SubRoad mForwardRoad;
     SubRoad mBackwardRoad;
+
+    std::vector<Signal> mSignals;
 
     explicit Road();
 

@@ -194,11 +194,12 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
 void Road::Send(Sender &sender)
 {
     std::string text = "Road[" + std::to_string(iRoadId) + "]: " + std::to_string(dLength);
-    auto m = sender.GetText(text, GetStartPose(1));
+    auto m = sender.GetText(text, GetStartPose(1).GetPosition());
     sender.array.markers.emplace_back(m);
     sender.Send();
 
     for(auto & s : mSections) s.Send(sender);
+    for(auto & s : mSignals) s.Send(sender);
 //    mForwardRoad.Send(sender);
 //    mBackwardRoad.Send(sender);
 
@@ -227,6 +228,11 @@ void SubRoad::Send(hdmap::Sender &sender)
     {
         sender.SendPoses(p, 0.7, 0.7, 0.7, 0.8, 0.0, 0.5);
     }
+
+    for(auto & s : mSubRoadSignals)
+    {
+        s.Send(sender);
+    }
 }
 
 Pose SubRoad::GetStartPose()
@@ -248,6 +254,14 @@ void SubRoad::Init(std::shared_ptr<Road> p_road)
     iRoadId = pBaseRoad->iRoadId;
     iPrevJid = direction > 0 ? pBaseRoad->GetPrevJid() : pBaseRoad->GetNextJid();
     iNextJid = direction > 0 ? pBaseRoad->GetNextJid() : pBaseRoad->GetPrevJid();
+
+    for(auto & s : pBaseRoad->mSignals)
+    {
+        if(s.direction == direction)
+        {
+            this->mSubRoadSignals.emplace_back(s);
+        }
+    }
 
     for(auto & s : pBaseRoad->mSections)
     {

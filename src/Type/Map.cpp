@@ -154,6 +154,12 @@ void Map::EndSection(const Pose & p, double _ctrl_len1, double _ctrl_len2)
     mPrevSection = mCurrSection;
 }
 
+void Map::AddSignal(Signal s)
+{
+    mRoads.back().mSignals.emplace_back(s);
+}
+
+
 unsigned int Map::CalcuSectionId(unsigned int road, unsigned int section)
 {
     return road * 10 + section;
@@ -302,8 +308,18 @@ void Map::Load(const std::string &file_name)
                     //endregion
                     oRoad.mSections.emplace_back(oSection);
                 }
+
+                if(section.first == "signals")
+                {
+                    Signal s;
+                    s.direction = section.second.get<int>("direction");
+                    s.position.x = section.second.get<double>("x");
+                    s.position.y = section.second.get<double>("y");
+                    s.type = section.second.get<std::string>("type");
+                    s.info = section.second.get<std::string>("info");
+                    oRoad.mSignals.emplace_back(s);
+                }
             }
-//            oRoad.InitSubRoad();
             mRoads.emplace_back(oRoad);
         }
         mPrevSection = mCurrSection = mRoads.back().mSections.back();
@@ -433,6 +449,19 @@ void Map::Save(const std::string &file_name)
                 p_road.add_child("lanesection", p_sec);
                 p_sec.clear();
             }
+
+            pt::ptree p_sig;
+            for(auto & sig : x.mSignals)
+            {
+                p_sig.add("x", sig.position.x);
+                p_sig.add("y", sig.position.y);
+                p_sig.add("direction", sig.direction);
+                p_sig.add("type", sig.type);
+                p_sig.add("info", sig.info);
+                p_road.add_child("signals", p_sig);
+                p_sig.clear();
+            }
+
             tree.add_child("hdmap.roads.road", p_road);
             p_road.clear();
         }

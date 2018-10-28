@@ -52,10 +52,19 @@ int main(int argc, char** argv)
 
 
     Planner planner(map, p_sender);
+/*
+    double start_x, start_y, end_x, end_y;
+    n.getParam("MapService/start_x", start_x);
+    n.getParam("MapService/start_y", start_y);
+    n.getParam("MapService/end_x", end_x);
+    n.getParam("MapService/end_y", end_y);
+    planner.SetStartPoint({start_x, start_y});
+    planner.SetEndPoint({end_x, end_y});
+    ROS_INFO_STREAM("Position: " << start_x << " " << start_y << " " << end_x << " " << end_y);
+*/
     planner.SetStartPoint({-221.360, 11.736});
     planner.SetEndPoint({-38.530, 70.328});
     planner.GlobalPlanning();
-
     planner.Send();
 
     char c;
@@ -66,6 +75,7 @@ int main(int argc, char** argv)
         else
             break;
     }
+
     return 0;
 }
 

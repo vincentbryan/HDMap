@@ -11,6 +11,7 @@
 #include "Sender.h"
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
+#include <fstream>
 
 /*
 class Listener

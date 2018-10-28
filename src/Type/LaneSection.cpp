@@ -144,7 +144,7 @@ void LaneSection::Send(Sender &sender)
             auto solid_line = sender.GetLineStrip(poses, 0.7, 0.7, 0.7, 0.3);
             sender.array.markers.push_back(solid_line);
         }
-        auto lane_idx = sender.GetText(std::to_string(x.first), x.second[x.second.size()/2], 0, 1.0);
+        auto lane_idx = sender.GetText(std::to_string(x.first), x.second[x.second.size()/2].GetPosition());
         sender.array.markers.push_back(lane_idx);
     }
     sender.Send();

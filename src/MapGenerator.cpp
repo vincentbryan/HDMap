@@ -55,6 +55,9 @@ int main(int argc, char** argv)
     map.StartSection(r0_s0_lanes, r0_s0_links);
     map.EndSection(Offset({-80.123, 83.702, 27.03}));
     //endregion
+    //-31.914, 110.871
+    map.AddSignal(Signal({-55.123, 92.702}, 1, "SIG", "010"));
+    map.AddSignal(Signal({-55.123, 90.702}, 1, "SIG", "001"));
 
     map.EndRoad();
     //--------------------------------------------------------------------

@@ -68,8 +68,9 @@ public:
 
     void StartRoad(const Pose & _start_pose);
     void EndRoad();
-    void EndSection(const Pose & p, double _ctrl_len1 = 1.0, double _ctrl_len2 = 1.0);
     void StartSection(std::vector<std::tuple<int, double, double>> new_lane, std::vector<std::pair<int, int>>links);
+    void EndSection(const Pose & p, double _ctrl_len1 = 1.0, double _ctrl_len2 = 1.0);
+    void AddSignal(Signal s);
 
     void StartJunction();
     void AddConnection(unsigned int from_road_id, int from_lane_idx,

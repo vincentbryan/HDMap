@@ -135,7 +135,9 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 
 AUX_SOURCE_DIRECTORY(src/Type TYPES)
+
 AUX_SOURCE_DIRECTORY(src/Math MATH)
+
 add_executable(MapService
 		${TYPES}
 		${MATH}
@@ -154,8 +156,7 @@ add_executable(MapGenerator
 		src/Tool/Sender.h
 		src/Interface/IView.h
 		src/MapGenerator.cpp
-		src/Interface/Pipe.h
-		)
+)
 
 add_executable(talker talker.cpp)
 

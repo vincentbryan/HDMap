@@ -49,7 +49,7 @@ visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double 
     return line_strip;
 }
 
-visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p, double z, double scale)
+visualization_msgs::Marker Sender::GetText(const std::string &content, Vector2d p, double r, double g, double b, double a, double z, double scale)
 {
     visualization_msgs::Marker marker;
     marker.header.frame_id = "/hdmap";
@@ -61,10 +61,10 @@ visualization_msgs::Marker Sender::GetText(const std::string &content, Pose p, d
     marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
 
     marker.scale.z = scale;
-    marker.color.b = 1;
-    marker.color.g = 1;
-    marker.color.r = 1;
-    marker.color.a = 1;
+    marker.color.b = b;
+    marker.color.g = g;
+    marker.color.r = r;
+    marker.color.a = a;
 
     geometry_msgs::Pose pose;
     pose.position.x = p.x;
@@ -210,7 +210,7 @@ void Sender::AddAnchor(const Pose &p, int id)
     visualization_msgs::Marker m = GetCone(p.GetPosition(), 0, 1.0, 0, 1.0, 5.0);
     array.markers.emplace_back(m);
     std::string context = "Anchor[" + std::to_string(id) + "] : ( " + std::to_string(p.x) + " " + std::to_string(p.y) + " " + std::to_string(p.GetAngle().Value()) + " )";
-    visualization_msgs::Marker t = GetText(context, p, 6);
+    visualization_msgs::Marker t = GetText(context, p.GetPosition(), 6);
     array.markers.emplace_back(t);
 }
 
