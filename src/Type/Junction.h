@@ -43,7 +43,7 @@ public:
 
     void Send(Sender &sender) override;
 
-    SubRoadLink operator () (int rid1, int dir1, int rid2 = -1, int dir2 = 0);
+    SubRoadLink GetSubRoadLink (int rid1, int dir1, int rid2 = -1, int dir2 = 0);
 };
 }
 

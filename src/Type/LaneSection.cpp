@@ -5,6 +5,7 @@
 #include "LaneSection.h"
 #include <algorithm>
 #include "../Math/Line.h"
+#include "common.h"
 
 using namespace hdmap;
 
@@ -18,13 +19,17 @@ LaneSection::LaneSection(unsigned int section_id, double _s,
     mLaneOffset = lane_offset;
 }
 
-void LaneSection::AddLane(int lane_idx, unsigned int lane_id, double _start_width, double _end_width)
+void LaneSection::AddLane(int lane_idx, double _start_width, double _end_width, std::vector<int> _pred, std::vector<int> _succ)
 {
     if(lane_idx > 0) most_right_lane_idx = std::max(most_right_lane_idx, lane_idx);
     if(lane_idx < 0) most_left_lane_idx = std::min(most_left_lane_idx, lane_idx);
 
+    int lane_id = iSectionId * 10 + 5 + lane_idx;
     CubicFunction width(_start_width, mReferLine.Length(), _end_width);
     Lane lane(lane_id, width);
+    lane.predecessors = std::move(_pred);
+    lane.successors = std::move(_succ);
+
     mLanes.insert(std::pair<int, Lane>(lane_idx, lane));
 }
 
@@ -122,7 +127,6 @@ std::map<int, std::vector<Pose>> LaneSection::GetAllPose()
     return mAllLanePose;
 }
 
-
 void LaneSection::Send(Sender &sender)
 {
     if(mAllLanePose.empty()) GenerateAllPose(0.1);
@@ -150,20 +154,20 @@ void LaneSection::Send(Sender &sender)
     sender.Send();
 }
 
-LaneSection LaneSection::GetSubSection(int direction)
+SecPtr LaneSection::GetSubSection(int direction)
 {
-    LaneSection res;
-    res.iSectionId = iSectionId;
+    SecPtr res(new LaneSection());
+    res->iSectionId = iSectionId;
     if(direction > 0)
     {
-        res.mReferLine = mReferLine;
-        res.mLaneOffset = mLaneOffset;
-        res.most_right_lane_idx = most_right_lane_idx;
-        res.most_left_lane_idx = 0;
+        res->mReferLine = mReferLine;
+        res->mLaneOffset = mLaneOffset;
+        res->most_right_lane_idx = most_right_lane_idx;
+        res->most_left_lane_idx = 0;
         for(auto & x : mLanes)
         {
             if(x.first > 0)
-                res.mLanes.insert(x);
+                res->mLanes.insert(x);
         }
     }
     else
@@ -172,22 +176,22 @@ LaneSection LaneSection::GetSubSection(int direction)
         Pose e = mReferLine.GetEndPose();
         s.Rotate(180);
         e.Rotate(180);
-        res.mReferLine = Bezier(e, s, mReferLine.ctrl_len2, mReferLine.ctrl_len1);
-        res.most_left_lane_idx = 0;
-        res.most_right_lane_idx = std::abs(most_left_lane_idx);
+        res->mReferLine = Bezier(e, s, mReferLine.ctrl_len2, mReferLine.ctrl_len1);
+        res->most_left_lane_idx = 0;
+        res->most_right_lane_idx = std::abs(most_left_lane_idx);
         for(auto & x : mLanes)
         {
             if(x.first < 0)
             {
                 CubicFunction width(x.second.width.y1,
-                                    res.mReferLine.Length(),
+                                    res->mReferLine.Length(),
                                     x.second.width.y0);
                 Lane lane(x.second.land_id, width);
 
                 for(auto & y : x.second.predecessors) lane.successors.emplace_back(y);
                 for(auto & y : x.second.successors) lane.predecessors.emplace_back(y);
 
-                res.mLanes.insert({std::abs(x.first), lane});
+                res->mLanes.insert({std::abs(x.first), lane});
             }
         }
     }

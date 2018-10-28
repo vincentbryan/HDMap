@@ -8,19 +8,20 @@ using namespace hdmap;
 
 unsigned int Road::ROAD_ID = 0;
 
-Road::Road() : mForwardRoad(1), mBackwardRoad(-1)
+Road::Road(Pose _start_pose) : mForwardRoad(1), mBackwardRoad(-1)
 {
     iRoadId = ROAD_ID++;
     dLength = 0;
     iPrevJid = iNextJid = -1;
+    mStartPose = _start_pose;
 }
 
 
 std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
 {
-    if(mSections.size() == 1)
+    if(mSecPtrs.size() == 1)
     {
-        return mSections.back().GetLanePoseByIndex(end_lane_idx);
+        return mSecPtrs.back()->GetLanePoseByIndex(end_lane_idx);
     }
 
     std::vector<std::vector<int>> scheme;
@@ -29,9 +30,9 @@ std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
 
     search = [&](unsigned int curr_sec_id, int curr_lane_idx, std::vector<int> v)
     {
-        if(curr_sec_id + 1 == mSections.size()-1)
+        if(curr_sec_id + 1 == mSecPtrs.size()-1)
         {
-            for(auto & m : mSections[curr_sec_id].mLanes[curr_lane_idx].successors)
+            for(auto & m : mSecPtrs[curr_sec_id]->mLanes[curr_lane_idx].successors)
             {
                 if(m == end_lane_idx)
                 {
@@ -43,7 +44,7 @@ std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
         }
         else
         {
-            for(auto & x : mSections[curr_sec_id].mLanes[curr_lane_idx].successors)
+            for(auto & x : mSecPtrs[curr_sec_id]->mLanes[curr_lane_idx].successors)
             {
                 v.emplace_back(curr_lane_idx);
                 search(curr_sec_id+1, x, v);
@@ -66,9 +67,9 @@ std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
     auto r = scheme.front();
 
     std::vector<Pose> res;
-    for(int i = 0; i < mSections.size(); i++)
+    for(int i = 0; i < mSecPtrs.size(); i++)
     {
-        auto p = mSections[i].GetLanePoseByIndex(r[i]);
+        auto p = mSecPtrs[i]->GetLanePoseByIndex(r[i]);
         res.insert(res.end(), p.begin(), p.end());
     }
     return res;
@@ -77,25 +78,25 @@ std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
 
 Pose Road::GetStartPose(int direction)
 {
-    if(mSections.empty())
+    if(mSecPtrs.empty())
         return Pose();
 
     if(direction > 0)
-        return mSections.front().mReferLine.GetStartPose();
+        return mSecPtrs.front()->mReferLine.GetStartPose();
     else
-        return mSections.back().mReferLine.GetEndPose();
+        return mSecPtrs.back()->mReferLine.GetEndPose();
 }
 
 
 Pose Road::GetEndPose(int direction)
 {
-    if(mSections.empty())
+    if(mSecPtrs.empty())
         return Pose();
 
     if(direction > 0)
-        return mSections.back().mReferLine.GetEndPose();
+        return mSecPtrs.back()->mReferLine.GetEndPose();
     else
-        return mSections.front().mReferLine.GetStartPose();
+        return mSecPtrs.front()->mReferLine.GetStartPose();
 }
 
 
@@ -104,10 +105,10 @@ std::pair<unsigned int, int> Road::Locate(const Vector2d &v)
     double min_dist = 100000;
     int min_sec_idx = 0;
 
-    for(int i = 0; i < mSections.size(); i++)
+    for(int i = 0; i < mSecPtrs.size(); i++)
     {
-        double t = Vector2d::SegmentDistance(mSections[i].GetReferPose().front().GetPosition(),
-                                             mSections[i].GetReferPose().back().GetPosition(),
+        double t = Vector2d::SegmentDistance(mSecPtrs[i]->GetReferPose().front().GetPosition(),
+                                             mSecPtrs[i]->GetReferPose().back().GetPosition(),
                                              v);
         if(t < min_dist)
         {
@@ -118,9 +119,9 @@ std::pair<unsigned int, int> Road::Locate(const Vector2d &v)
 
     min_dist = 100000;
     double min_lane_idx = 0;
-    for(auto x : mSections[min_sec_idx].mLanes)
+    for(auto x : mSecPtrs[min_sec_idx]->mLanes)
     {
-        auto p = mSections[min_sec_idx].GetLanePoseByIndex(x.first);
+        auto p = mSecPtrs[min_sec_idx]->GetLanePoseByIndex(x.first);
         double t = Vector2d::SegmentDistance(p.front().GetPosition(),
                                              p.back().GetPosition(),
                                              v);
@@ -142,13 +143,13 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
     auto search = std::function<void(unsigned int, int, std::vector<int>)>();
     search = [&](unsigned int curr_sec_idx, int curr_lane_idx, std::vector<int> v)
     {
-        if(curr_sec_idx + 1 == mSections.size())
+        if(curr_sec_idx + 1 == mSecPtrs.size())
         {
             scheme.emplace_back(v);
         }
         else
         {
-            for(auto x : mSections[curr_sec_idx].mLanes[curr_lane_idx].successors)
+            for(auto x : mSecPtrs[curr_sec_idx]->mLanes[curr_lane_idx].successors)
             {
                 v.emplace_back(x);
                 search(curr_sec_idx+1, x, v);
@@ -157,7 +158,7 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
         }
     };
 
-    for(auto x : mSections.front().mLanes)
+    for(auto x : mSecPtrs.front()->mLanes)
     {
         if(x.first * direction > 0)
             search(0, x.first, {x.first});
@@ -172,7 +173,7 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
         {
             for(int i = 0; i < x.size(); ++i)
             {
-                auto y = mSections[i].GetLanePoseByIndex(x[i]);
+                auto y = mSecPtrs[i]->GetLanePoseByIndex(x[i]);
                 p.insert(p.end(), y.begin(), y.end());
             }
         }
@@ -180,7 +181,7 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
         {
             for(int i = x.size()-1; i >= 0; i--)
             {
-                auto y = mSections[i].GetLanePoseByIndex(x[i]);
+                auto y = mSecPtrs[i]->GetLanePoseByIndex(x[i]);
                 p.insert(p.end(), y.begin(), y.end());
             }
         }
@@ -198,8 +199,8 @@ void Road::Send(Sender &sender)
     sender.array.markers.emplace_back(m);
     sender.Send();
 
-    for(auto & s : mSections) s.Send(sender);
-    for(auto & s : mSignals) s.Send(sender);
+    for(auto & s : mSecPtrs) s->Send(sender);
+    for(auto & s : mSigPtrs) s->Send(sender);
 //    mForwardRoad.Send(sender);
 //    mBackwardRoad.Send(sender);
 
@@ -220,6 +221,35 @@ void Road::InitSubRoad()
     mBackwardRoad.Init(std::shared_ptr<Road>(this));
 }
 
+SecPtr Road::AddSection(const Pose &_end_pose, double _ctrl_len1, double _ctrl_len2)
+{
+    unsigned int sec_id_ = iRoadId * 10 + mSecPtrs.size();
+    double s_;
+    Pose start_pose_ ;
+
+    if(mSecPtrs.empty())
+    {
+        s_ = 0;
+        start_pose_ = mStartPose;
+    }
+    else
+    {
+        s_ = mSecPtrs.back()->s + mSecPtrs.back()->mReferLine.Length();
+        start_pose_ = mSecPtrs.back()->mReferLine.GetEndPose();
+    }
+
+    auto refer_line_ = Bezier(start_pose_, _end_pose, _ctrl_len1, _ctrl_len2);
+
+    SecPtr p(new LaneSection(sec_id_, s_, refer_line_));
+    mSecPtrs.emplace_back(p);
+    return p;
+}
+
+void Road::AddSignal(Vector2d v, int dir, std::string _type, std::string _info)
+{
+    mSigPtrs.emplace_back(new Signal(v, dir, _type, _info));
+}
+
 
 void SubRoad::Send(hdmap::Sender &sender)
 {
@@ -229,18 +259,18 @@ void SubRoad::Send(hdmap::Sender &sender)
         sender.SendPoses(p, 0.7, 0.7, 0.7, 0.8, 0.0, 0.5);
     }
 
-    for(auto & s : mSubRoadSignals)
+    for(auto & s : mSubRoadSigPtrs)
     {
-        s.Send(sender);
+        s->Send(sender);
     }
 }
 
 Pose SubRoad::GetStartPose()
 {
     if(direction > 0)
-        return pBaseRoad->mSections.front().mReferLine.GetStartPose();
+        return pBaseRoad->mSecPtrs.front()->mReferLine.GetStartPose();
     else
-        return pBaseRoad->mSections.back().mReferLine.GetEndPose();
+        return pBaseRoad->mSecPtrs.back()->mReferLine.GetEndPose();
 }
 
 std::vector<std::vector<Pose>> SubRoad::GetLanePose()
@@ -255,24 +285,24 @@ void SubRoad::Init(std::shared_ptr<Road> p_road)
     iPrevJid = direction > 0 ? pBaseRoad->GetPrevJid() : pBaseRoad->GetNextJid();
     iNextJid = direction > 0 ? pBaseRoad->GetNextJid() : pBaseRoad->GetPrevJid();
 
-    for(auto & s : pBaseRoad->mSignals)
+    for(auto & s : pBaseRoad->mSigPtrs)
     {
-        if(s.direction == direction)
+        if(s->direction == direction)
         {
-            this->mSubRoadSignals.emplace_back(s);
+            this->mSubRoadSigPtrs.emplace_back(s);
         }
     }
 
-    for(auto & s : pBaseRoad->mSections)
+    for(auto & s : pBaseRoad->mSecPtrs)
     {
-        this->mSubRoadSection.emplace_back(s.GetSubSection(direction));
+        this->mSubRoadSecPtrs.emplace_back(s->GetSubSection(direction));
     }
 
     if(direction < 0)
     {
-        for(int i = 1; i < mSubRoadSection.size(); ++i)
+        for(int i = 1; i < mSubRoadSecPtrs.size(); ++i)
         {
-            mSubRoadSection[i].s = mSubRoadSection[i-1].s + mSubRoadSection[i-1].mReferLine.Length();
+            mSubRoadSecPtrs[i]->s = mSubRoadSecPtrs[i-1]->s + mSubRoadSecPtrs[i-1]->mReferLine.Length();
         }
     }
 }

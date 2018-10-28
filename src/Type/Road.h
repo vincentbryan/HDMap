@@ -5,14 +5,13 @@
 #ifndef HDMAP_ROAD_H
 #define HDMAP_ROAD_H
 
-
 #include "LaneSection.h"
 #include "Signal.h"
+#include "common.h"
 #include <algorithm>
 
 namespace hdmap
 {
-class Road;
 class SubRoad: public IView
 {
 public:
@@ -22,8 +21,8 @@ public:
     int iNextJid = -1;
 
     std::shared_ptr<Road> pBaseRoad;
-    std::vector<LaneSection> mSubRoadSection;
-    std::vector<Signal> mSubRoadSignals;
+    std::vector<SecPtr> mSubRoadSecPtrs;
+    std::vector<SigPtr> mSubRoadSigPtrs;
 
 public:
     SubRoad(int direction);
@@ -45,38 +44,27 @@ public:
     unsigned int iRoadId;
     double dLength;
 
-    std::vector<LaneSection> mSections;
+    std::vector<SecPtr> mSecPtrs;
+    std::vector<SigPtr> mSigPtrs;
 
     int iPrevJid;
     int iNextJid;
 
+    Pose mStartPose;
+    Pose mEndPose;
+
     SubRoad mForwardRoad;
     SubRoad mBackwardRoad;
 
-    std::vector<Signal> mSignals;
+    explicit Road(Pose _start_pose = Pose());
 
-    explicit Road();
-
-    void AddSection(const LaneSection & s)
-    {
-        mSections.emplace_back(s);
-    }
-
-    void SetPrevJid(unsigned int jid)
-    {
-        iPrevJid = jid;
-    }
+    SecPtr AddSection(const Pose & _end_pose, double _ctrl_len1 = 1.0, double _ctrl_len2 = 1.0);
+    void AddSignal(Vector2d v, int dir, std::string _type, std::string _info);
 
     int GetPrevJid()
     {
         return iPrevJid;
     }
-
-    void SetNextJid(unsigned int jid)
-    {
-        iNextJid = jid;
-    }
-
     int GetNextJid()
     {
         return iNextJid;
@@ -91,7 +79,6 @@ public:
     std::vector<Pose> Trajectory(int begin_lane_idx, int end_lane_idx);
 
     Pose GetStartPose(int direction);
-
     Pose GetEndPose(int direction);
 
     std::pair<unsigned int, int> Locate(const Vector2d & v);

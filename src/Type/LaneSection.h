@@ -12,6 +12,7 @@
 #include "../Math/Bezier.h"
 #include "../Interface/IView.h"
 #include "../Tool/Sender.h"
+#include "common.h"
 
 namespace hdmap
 {
@@ -37,7 +38,7 @@ public:
                          Bezier refer_line = Bezier(),
                          CubicFunction lane_offset = CubicFunction());
 
-    void AddLane(int lane_idx, unsigned int lane_id, double _start_width, double _end_width);
+    void AddLane(int lane_idx, double _start_width, double _end_width, std::vector<int> _pred, std::vector<int> _succ);
 
     std::map<int, std::vector<Pose>> GetAllPose();
 
@@ -67,7 +68,7 @@ public:
 
     void Send(Sender &sender) override;
 
-    LaneSection GetSubSection(int direction);
+    SecPtr GetSubSection(int direction);
 
 private:
     void AppendPose(double s_);

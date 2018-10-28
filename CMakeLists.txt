@@ -156,6 +156,7 @@ add_executable(MapGenerator
 		src/Tool/Sender.h
 		src/Interface/IView.h
 		src/MapGenerator.cpp
+		src/Type/common.h
 )
 
 add_executable(talker talker.cpp)

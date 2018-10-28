@@ -8,7 +8,7 @@ using namespace hdmap;
 
 Planner::Planner(const Map & map, std::shared_ptr<Sender> _sender) :
     mHDMap(map),
-    pSender(_sender)
+    pSender(std::move(_sender))
 {}
 
 
@@ -69,6 +69,11 @@ void Planner::DFS(Planner::SubRoadPtr p_curr, std::vector<Planner::SubRoadPtr> v
 
 void Planner::Evaluate()
 {
+    if(mAllRouting.empty())
+    {
+        ROS_INFO("Global planning failed");
+        return;
+    }
     mRouting = mAllRouting.front();
 }
 
@@ -87,7 +92,7 @@ void Planner::Send()
         if(i + 1 < mRouting.size())
         {
             int jid = mRouting[i]->iNextJid;
-            mHDMap.mJunctions[jid](mRouting[i]->iRoadId,
+            mHDMap.mJuncPtrs[jid]->GetSubRoadLink(mRouting[i]->iRoadId,
                                    mRouting[i]->direction,
                                    mRouting[i+1]->iRoadId,
                                    mRouting[i+1]->direction).Send(*pSender);
