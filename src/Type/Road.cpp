@@ -169,25 +169,13 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
     for(auto & x : scheme)
     {
         std::vector<Pose> p;
-        if(x.front() > 0)
+        for(int i = 0; i < x.size(); ++i)
         {
-            for(int i = 0; i < x.size(); ++i)
-            {
-                auto y = mSecPtrs[i]->GetLanePoseByIndex(x[i]);
-                p.insert(p.end(), y.begin(), y.end());
-            }
-        }
-        else
-        {
-            for(int i = x.size()-1; i >= 0; i--)
-            {
-                auto y = mSecPtrs[i]->GetLanePoseByIndex(x[i]);
-                p.insert(p.end(), y.begin(), y.end());
-            }
+            auto y = mSecPtrs[i]->GetLanePoseByIndex(x[i]);
+            p.insert(p.end(), y.begin(), y.end());
         }
         res.emplace_back(p);
     }
-
     return res;
 }
 
@@ -201,9 +189,6 @@ void Road::Send(Sender &sender)
 
     for(auto & s : mSecPtrs) s->Send(sender);
     for(auto & s : mSigPtrs) s->Send(sender);
-//    mForwardRoad.Send(sender);
-//    mBackwardRoad.Send(sender);
-
 }
 
 
@@ -239,7 +224,6 @@ SecPtr Road::AddSection(const Pose &_end_pose, double _ctrl_len1, double _ctrl_l
     }
 
     auto refer_line_ = Bezier(start_pose_, _end_pose, _ctrl_len1, _ctrl_len2);
-
     SecPtr p(new LaneSection(sec_id_, s_, refer_line_));
     mSecPtrs.emplace_back(p);
     return p;
@@ -255,14 +239,13 @@ void SubRoad::Send(hdmap::Sender &sender)
 {
     auto ps = GetLanePose();
     for(auto const & p : ps)
-    {
-        sender.SendPoses(p, 0.7, 0.7, 0.7, 0.8, 0.0, 0.5);
-    }
+        sender.SendPoses(p, 0.7, 0.7, 0.7, 0.8, 0.0, 0.38);
+
+    for(auto & s : mSubRoadSecPtrs)
+        sender.SendPoses(s->GetReferPose(), 199.0/255, 166.0/255, 33.0/255, 1.0);
 
     for(auto & s : mSubRoadSigPtrs)
-    {
         s->Send(sender);
-    }
 }
 
 Pose SubRoad::GetStartPose()
@@ -280,7 +263,7 @@ std::vector<std::vector<Pose>> SubRoad::GetLanePose()
 
 void SubRoad::Init(std::shared_ptr<Road> p_road)
 {
-    pBaseRoad = p_road;
+    pBaseRoad = std::move(p_road);
     iRoadId = pBaseRoad->iRoadId;
     iPrevJid = direction > 0 ? pBaseRoad->GetPrevJid() : pBaseRoad->GetNextJid();
     iNextJid = direction > 0 ? pBaseRoad->GetNextJid() : pBaseRoad->GetPrevJid();
@@ -296,14 +279,6 @@ void SubRoad::Init(std::shared_ptr<Road> p_road)
     for(auto & s : pBaseRoad->mSecPtrs)
     {
         this->mSubRoadSecPtrs.emplace_back(s->GetSubSection(direction));
-    }
-
-    if(direction < 0)
-    {
-        for(int i = 1; i < mSubRoadSecPtrs.size(); ++i)
-        {
-            mSubRoadSecPtrs[i]->s = mSubRoadSecPtrs[i-1]->s + mSubRoadSecPtrs[i-1]->mReferLine.Length();
-        }
     }
 }
 

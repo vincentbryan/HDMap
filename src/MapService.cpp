@@ -14,7 +14,6 @@
 #include "Math/CubicFunction.h"
 #include "Tool/Planner.h"
 
-
 using namespace hdmap;
 using namespace std;
 
@@ -36,12 +35,6 @@ int main(int argc, char** argv)
     map.Load(argv[1]);
 //    map.Summary();
 
-/*
-    map.SetStartPoint({-221.360, 11.736});
-    map.SetEndPoint({-38.530, 70.328});
-    map.GlobalPlanning();
-*/
-
     ROS_INFO("Input 's' to start");
 //    ros::ServiceServer server = n.advertiseService("local_map", &Map::OnRequest, &map);
 //    ROS_INFO("HDMap is ready...");
@@ -62,7 +55,7 @@ int main(int argc, char** argv)
     planner.SetEndPoint({-38.530, 70.328});
     planner.GlobalPlanning();
     planner.Send();
-
+    planner.ToXML("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/planner0_out.xml");
     char c;
     while (std::cin >> c)
     {

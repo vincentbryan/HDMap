@@ -47,15 +47,35 @@ void Map::AddConnection(JuncPtr p, unsigned int from_road, int from_lane_idx,
 {
     Pose start_pose, end_pose;
 
-    if(from_lane_idx >= 0)
-        start_pose = mRoadPtrs[from_road]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx).back();
+    if(from_lane_idx > 0)
+    {
+        auto p1 = mRoadPtrs[from_road]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx).back();
+        auto p2 = mRoadPtrs[from_road]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx-1).back();
+        start_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
+    }
     else
-        start_pose = mRoadPtrs[from_road]->mSecPtrs.front()->GetLanePoseByIndex(from_lane_idx).back();
+    {
+        auto p1 = mRoadPtrs[from_road]->mSecPtrs.front()->GetLanePoseByIndex(from_lane_idx).front();
+        auto p2 = mRoadPtrs[from_road]->mSecPtrs.front()->GetLanePoseByIndex(from_lane_idx+1).front();
+        start_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
+        start_pose.Rotate(180);
+    }
 
-    if(to_lane_idx >= 0)
-        end_pose = mRoadPtrs[to_road]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx).front();
+
+    if(to_lane_idx >  0)
+    {
+        auto p1 = mRoadPtrs[to_road]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx).front();
+        auto p2 = mRoadPtrs[to_road]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx-1).front();
+        end_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
+    }
     else
-        end_pose = mRoadPtrs[to_road]->mSecPtrs.back()->GetLanePoseByIndex(to_lane_idx).front();
+    {
+        auto p1 = mRoadPtrs[to_road]->mSecPtrs.back()->GetLanePoseByIndex(to_lane_idx).back();
+        auto p2 = mRoadPtrs[to_road]->mSecPtrs.back()->GetLanePoseByIndex(to_lane_idx+1).back();
+        end_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
+        end_pose.Rotate(180);
+    }
+
 
     p->AddConnection(
          from_road, from_lane_idx, start_pose,
@@ -82,7 +102,6 @@ void Map::CommitRoadInfo()
             p->dLength = p->mSecPtrs.back()->s + p->mSecPtrs.back()->mReferLine.Length();
     }
 }
-
 
 void Map::Save(const std::string &file_name)
 {
@@ -137,7 +156,7 @@ void Map::Save(const std::string &file_name)
                     p_lane.add("offset.y1", k.second.width.y1);
 
                     for(auto & s : k.second.predecessors)
-                        p_lane.add("predecessor", s);
+                        p_lane.add("predecessors", s);
 
                     for(auto & s : k.second.successors)
                         p_lane.add("successors", s);
@@ -295,7 +314,7 @@ void Map::Load(const std::string &file_name)
                             //Add link
                             for(auto link : section_child.second.get_child(""))
                             {
-                                if(link.first == "predecessor")
+                                if(link.first == "predecessors")
                                 {
                                     int n = atoi(link.second.data().c_str());
                                     lane.predecessors.emplace_back(n);
@@ -494,6 +513,7 @@ void Map::Trajectory(std::vector<std::pair<unsigned int, int>> sequences)
 
 }
 */
+
 /*
 bool Map::OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response &response)
 {
@@ -654,9 +674,6 @@ bool Map::OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response
     return func();
 }
 */
-
-
-
 
 std::shared_ptr<SubRoad> Map::Locate(const Vector2d &v)
 {

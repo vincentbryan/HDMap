@@ -6,6 +6,7 @@
 #define HDMAP_PLANNER_H
 
 #include "../Type/Map.h"
+
 namespace hdmap
 {
 class Planner
@@ -28,10 +29,10 @@ private:
     {
         int curr_idx = -1;
         int curr_rid = -1;
-        int curr_dir = 0;
+        int curr_dir =  0;
         int curr_jid = -1;
         int next_rid = -1;
-        int next_dir = 0;
+        int next_dir =  0;
     }mRecord;
 
     std::shared_ptr<Sender> pSender;
@@ -52,10 +53,11 @@ public:
 
     void GlobalPlanning();
     void Send();
+    std::string ToXML(const std::string &file_name);
+
 private:
     void DFS(SubRoadPtr p_curr, std::vector<SubRoadPtr> v);
     void Evaluate();
-
 };
 }
 

@@ -9,7 +9,7 @@ namespace hdmap
 {
 class CubicFunction
 {
-private:
+public:
     double a, b, c, d;
     double range;
 

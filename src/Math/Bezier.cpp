@@ -103,7 +103,17 @@ Pose Bezier::GetStartPose()
 {
     return GetPose(0);
 }
+
 Pose Bezier::GetEndPose()
 {
     return GetPose(length);
+}
+
+std::vector<double> Bezier::GetParam()
+{
+    Vector2d a = -1 * p0 + 3 * p1 +  (-3) * p2 + p3;
+    Vector2d b = 3 * p0 + (-6) * p1 + 3 * p2;
+    Vector2d c = (-3) * p0 + 3 * p1;
+    Vector2d d = p0;
+    return {a.x, b.x, c.x, d.x, a.y, b.y, c.y, d.y};
 }

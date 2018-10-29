@@ -51,7 +51,7 @@ find_package(catkin REQUIRED COMPONENTS
  add_message_files(
    FILES
    Location.msg Pose2DArray.msg JunctionMSG.msg RoadMSG.msg
-#   Message2.msg
+   msg_lane.msg msg_section.msg msg_signal.msg msg_road.msg msg_connection.msg msg_junction.msg msg_scene.msg
  )
 ## Generate services in the 'srv' folder
  add_service_files(
@@ -145,6 +145,7 @@ add_executable(MapService
 		src/Tool/Sender.cpp
 		src/Tool/Sender.h
 		src/Interface/IView.h
+		src/Interface/IXML.h
 		src/Tool/Planner.cpp
 		src/Tool/Planner.h
 )
@@ -155,6 +156,7 @@ add_executable(MapGenerator
 		src/Tool/Sender.cpp
 		src/Tool/Sender.h
 		src/Interface/IView.h
+		src/Interface/IXML.h
 		src/MapGenerator.cpp
 		src/Type/common.h
 )

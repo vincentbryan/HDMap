@@ -92,12 +92,12 @@ int main(int argc, char** argv)
             srv.request.has_local_map = map.hasMap;
             if(client.call(srv))
             {
-                ROS_INFO("recv: %d  %d  %d  %d  %d",
-                         srv.response.curr_road.lanes.size(),
-                         srv.response.junction.in.size(),
-                         srv.response.junction.out.size(),
-                         srv.response.junction.conns.size(),
-                         srv.response.next_road.lanes.size());
+//                ROS_INFO("recv: %d  %d  %d  %d  %d",
+//                         srv.response.curr_road.lanes.size(),
+//                         srv.response.junction.in.size(),
+//                         srv.response.junction.out.size(),
+//                         srv.response.junction.conns.size(),
+//                         srv.response.next_road.lanes.size());
                 map.hasMap = true;
                 if(srv.response.need_update)
                 {

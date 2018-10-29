@@ -8,6 +8,8 @@
 #include <memory>
 #include "../Math/Curve.h"
 #include "../Math/CubicFunction.h"
+#include "../Interface/IXML.h"
+
 namespace hdmap
 {
 class Lane
@@ -21,8 +23,6 @@ public:
         OffRamp, OnRamp
     };
     static double DEFAULT_WIDTH;
-    //TODO lane:level
-    //int level;
 
     CubicFunction width;
     unsigned land_id;
@@ -45,7 +45,5 @@ public:
         successors.emplace_back(idx);
     }
 };
-
-
 }
 
