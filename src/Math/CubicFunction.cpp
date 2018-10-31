@@ -29,3 +29,12 @@ double CubicFunction::Value(double x)
     double t = x/range;
     return a*(t*t*t) + b*(t*t) + c*t + d;
 }
+
+CubicFunction::CubicFunction(double _a, double _b, double _c, double _d, double _range)
+{
+    a = _a;
+    b = _b;
+    c = _c;
+    d = _d;
+    range = _range;
+}

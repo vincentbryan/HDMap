@@ -12,38 +12,28 @@
 
 namespace hdmap
 {
-class Lane
+class Lane : public IXML
 {
 public:
-    enum LANE_TYPE
-    {
-        NONE, Driving, Stop, Shoulder, Biking, Sidewalk, Border,
-        Restricted, Parking, Bidirectional,Median, Special1,
-        Special2, Special3, RoadWorks, Tram, Rail, Entry, Exit,
-        OffRamp, OnRamp
-    };
-    static double DEFAULT_WIDTH;
+    enum LANE_TYPE { NONE, Driving };
 
-    CubicFunction width;
-    unsigned land_id;
-    LANE_TYPE type;
+    CubicFunction mOffset;
+    unsigned mLandId;
+    int mLaneIndex;
+    LANE_TYPE mType;
 
-    std::vector<int> predecessors;
-    std::vector<int> successors;
+    std::vector<int> mPredecessors;
+    std::vector<int> mSuccessors;
 
 public:
-    explicit Lane(int _lane_id = 0, CubicFunction _width = CubicFunction(), LANE_TYPE _type = LANE_TYPE ::Driving);
+    explicit Lane(int _lane_id = 0, CubicFunction _offset = CubicFunction(), LANE_TYPE _type = LANE_TYPE ::Driving);
     ~Lane();
 
-    void AddPredecessor(int idx)
-    {
-        predecessors.emplace_back(idx);
-    }
+    void AddPredecessor(int idx);
+    void AddSuccessors(int idx);
 
-    void AddSuccessors(int idx)
-    {
-        successors.emplace_back(idx);
-    }
+    boost::property_tree::ptree ToXML() override;
+    void FromXML(const pt::ptree &p) override;
 };
 }
 

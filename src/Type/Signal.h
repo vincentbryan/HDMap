@@ -5,20 +5,24 @@
 #pragma once
 #include <string>
 #include "../Interface/IView.h"
+#include "../Interface/IXML.h"
 
 namespace hdmap
 {
-class Signal : public IView
+class Signal : public IView, public IXML
 {
 public:
-    Vector2d position;
-    int direction = 0;
-    std::string type;
-    std::string info;
+    Vector2d mPosition;
+    int mDirection = 0;
+    std::string mType;
+    std::string mInfo;
 
-    Signal(){};
-    Signal(Vector2d v, int dir, std::string _type, std::string _info);
+public:
+    explicit Signal(){};
+    Signal(Vector2d _v, int _dir, std::string _type, std::string _info);
     void Send(Sender &sender) override;
+    boost::property_tree::ptree ToXML() override;
+    void FromXML(const pt::ptree &p) override;
 };
 }
 

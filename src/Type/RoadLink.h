@@ -7,62 +7,42 @@
 
 #include "LaneLink.h"
 #include "../Interface/IView.h"
+#include "../Interface/IXML.h"
 namespace hdmap
 {
-
-class SubRoadLink : public IView
+class SubRoadLink : public IView, public IXML
 {
 public:
-    unsigned int iFromRoadId;
-    unsigned int iToRoadId;
-    std::vector<LaneLink> vLaneLinks;
+    unsigned int mFromRoadId;
+    unsigned int mToRoadId;
+    std::vector<LaneLink> mLaneLinks;
+
+public:
     void Send(Sender &sender) override;
+    void FromXML(const pt::ptree &p) override;
+    boost::property_tree::ptree ToXML() override;
 };
 
-class RoadLink
+class RoadLink: public IXML
 {
 public:
-    unsigned int iFromRoadId;
-    unsigned int iToRoadId;
-    std::vector<LaneLink> vLaneLinks;
+    unsigned int mFromRoadId;
+    unsigned int mToRoadId;
+    std::vector<LaneLink> mLaneLinks;
 
 public:
-    explicit RoadLink(unsigned int _from_road_id = 0, unsigned int _to_road_id = 0)
-    {
-        iFromRoadId = _from_road_id;
-        iToRoadId = _to_road_id;
-    }
+    explicit RoadLink(unsigned int _from_road_id = 0, unsigned int _to_road_id = 0);
 
-    void AddLaneLink(int _from_lane_idx, int _to_lane_idx, Bezier bezier)
-    {
-        vLaneLinks.emplace_back(LaneLink(_from_lane_idx, _to_lane_idx, bezier));
-    }
+    void AddLaneLink(int _from_lane_idx, int _to_lane_idx, Bezier _bezier);
 
-    std::vector<Pose> GetPose(int from_lane_idx, int to_lane_idx)
-    {
-        for(auto x : vLaneLinks)
-        {
-            if(x.iFromIndex == from_lane_idx && x.iToIndex == to_lane_idx)
-            {
-                return x.mReferLine.GetAllPose(0.1);
-            }
-        }
-    }
+    std::vector<Pose> GetPose(int _from_lane_idx, int _to_lane_idx);
 
-    std::vector<std::vector<Pose>> GetAllPose()
-    {
-        std::vector<std::vector<Pose>> res;
-
-        for(auto & x : vLaneLinks)
-        {
-            res.emplace_back(x.mReferLine.GetAllPose(0.1));
-        }
-
-        return res;
-    }
-
+    std::vector<std::vector<Pose>> GetAllPose();
 
     SubRoadLink operator ()(int _form_dir, int _to_dir);
+
+    boost::property_tree::ptree ToXML() override;
+    void FromXML(const pt::ptree &p) override;
 };
 }
 

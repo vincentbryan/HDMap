@@ -20,7 +20,7 @@ namespace hdmap
 {
 //需要前向声明
 class Sender;
-class Map
+class Map : public IXML
 {
 public:
     std::vector<RoadPtr> mRoadPtrs;
@@ -56,6 +56,8 @@ public:
     std::shared_ptr<SubRoad> Locate(const Vector2d & v);
 
     void Send();
+    boost::property_tree::ptree ToXML() override;
+    void FromXML(const pt::ptree &p) override;
 };
 }
 

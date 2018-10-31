@@ -10,12 +10,12 @@ unsigned int Road::ROAD_ID = 0;
 
 Road::Road(Pose _start_pose) : mForwardRoad(1), mBackwardRoad(-1)
 {
-    iRoadId = ROAD_ID++;
-    dLength = 0;
-    iPrevJid = iNextJid = -1;
+    mRoadId = ROAD_ID++;
+    mLength = 0;
+    mPrevJid = mNextJid = -1;
+    mDirection = 0;
     mStartPose = _start_pose;
 }
-
 
 std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
 {
@@ -32,7 +32,7 @@ std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
     {
         if(curr_sec_id + 1 == mSecPtrs.size()-1)
         {
-            for(auto & m : mSecPtrs[curr_sec_id]->mLanes[curr_lane_idx].successors)
+            for(auto & m : mSecPtrs[curr_sec_id]->mLanes[curr_lane_idx].mSuccessors)
             {
                 if(m == end_lane_idx)
                 {
@@ -44,7 +44,7 @@ std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
         }
         else
         {
-            for(auto & x : mSecPtrs[curr_sec_id]->mLanes[curr_lane_idx].successors)
+            for(auto & x : mSecPtrs[curr_sec_id]->mLanes[curr_lane_idx].mSuccessors)
             {
                 v.emplace_back(curr_lane_idx);
                 search(curr_sec_id+1, x, v);
@@ -149,7 +149,7 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
         }
         else
         {
-            for(auto x : mSecPtrs[curr_sec_idx]->mLanes[curr_lane_idx].successors)
+            for(auto x : mSecPtrs[curr_sec_idx]->mLanes[curr_lane_idx].mSuccessors)
             {
                 v.emplace_back(x);
                 search(curr_sec_idx+1, x, v);
@@ -182,13 +182,29 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
 
 void Road::Send(Sender &sender)
 {
-    std::string text = "Road[" + std::to_string(iRoadId) + "]: " + std::to_string(dLength);
+    std::string text = "Road[" + std::to_string(mRoadId) + "]: " + std::to_string(mLength);
     auto m = sender.GetText(text, GetStartPose(1).GetPosition());
     sender.array.markers.emplace_back(m);
     sender.Send();
 
     for(auto & s : mSecPtrs) s->Send(sender);
     for(auto & s : mSigPtrs) s->Send(sender);
+}
+
+boost::property_tree::ptree Road::ToXML()
+{
+    pt::ptree p_road;
+
+    p_road.add("<xmlattr>.id", mRoadId);
+    p_road.add("<xmlattr>.direction", mDirection);
+    p_road.add("<xmlattr>.length", mLength);
+    p_road.add("<xmlattr>.prev_jid", mPrevJid);
+    p_road.add("<xmlattr>.next_jid", mNextJid);
+
+    for(auto & s : mSecPtrs) p_road.add_child("laneSection", s->ToXML());
+    for(auto & s : mSigPtrs) p_road.add_child("signal", s->ToXML());
+
+    return p_road;
 }
 
 
@@ -208,7 +224,7 @@ void Road::InitSubRoad()
 
 SecPtr Road::AddSection(const Pose &_end_pose, double _ctrl_len1, double _ctrl_len2)
 {
-    unsigned int sec_id_ = iRoadId * 10 + mSecPtrs.size();
+    unsigned int sec_id_ = mRoadId * 10 + mSecPtrs.size();
     double s_;
     Pose start_pose_ ;
 
@@ -219,7 +235,7 @@ SecPtr Road::AddSection(const Pose &_end_pose, double _ctrl_len1, double _ctrl_l
     }
     else
     {
-        s_ = mSecPtrs.back()->s + mSecPtrs.back()->mReferLine.Length();
+        s_ = mSecPtrs.back()->mStartS + mSecPtrs.back()->mReferLine.Length();
         start_pose_ = mSecPtrs.back()->mReferLine.GetEndPose();
     }
 
@@ -234,7 +250,6 @@ void Road::AddSignal(Vector2d v, int dir, std::string _type, std::string _info)
     mSigPtrs.emplace_back(new Signal(v, dir, _type, _info));
 }
 
-
 void SubRoad::Send(hdmap::Sender &sender)
 {
     auto ps = GetLanePose();
@@ -248,9 +263,35 @@ void SubRoad::Send(hdmap::Sender &sender)
         s->Send(sender);
 }
 
+void Road::FromXML(const pt::ptree &p)
+{
+    mRoadId = p.get<int>("<xmlattr>.id");
+    mLength = p.get<double>("<xmlattr>.length");
+    mPrevJid = p.get<int>("<xmlattr>.prev_jid");
+    mNextJid = p.get<int>("<xmlattr>.next_jid");
+
+    for(auto s : p.get_child(""))
+    {
+        if(s.first == "laneSection")
+        {
+            SecPtr p_section(new LaneSection());
+            p_section->FromXML(s.second);
+            mSecPtrs.emplace_back(p_section);
+        }
+
+        if(s.first == "signal")
+        {
+            SigPtr p_signal(new Signal());
+            p_signal->FromXML(s.second);
+            mSigPtrs.emplace_back(p_signal);
+        }
+    }
+    InitSubRoad();
+}
+
 Pose SubRoad::GetStartPose()
 {
-    if(direction > 0)
+    if(mDirection > 0)
         return pBaseRoad->mSecPtrs.front()->mReferLine.GetStartPose();
     else
         return pBaseRoad->mSecPtrs.back()->mReferLine.GetEndPose();
@@ -258,19 +299,19 @@ Pose SubRoad::GetStartPose()
 
 std::vector<std::vector<Pose>> SubRoad::GetLanePose()
 {
-    return pBaseRoad->GetLanePosesByDirection(direction);
+    return pBaseRoad->GetLanePosesByDirection(mDirection);
 }
 
 void SubRoad::Init(std::shared_ptr<Road> p_road)
 {
     pBaseRoad = std::move(p_road);
-    iRoadId = pBaseRoad->iRoadId;
-    iPrevJid = direction > 0 ? pBaseRoad->GetPrevJid() : pBaseRoad->GetNextJid();
-    iNextJid = direction > 0 ? pBaseRoad->GetNextJid() : pBaseRoad->GetPrevJid();
+    mRoadId = pBaseRoad->mRoadId;
+    mPrevJid = mDirection > 0 ? pBaseRoad->GetPrevJid() : pBaseRoad->GetNextJid();
+    mNextJid = mDirection > 0 ? pBaseRoad->GetNextJid() : pBaseRoad->GetPrevJid();
 
     for(auto & s : pBaseRoad->mSigPtrs)
     {
-        if(s->direction == direction)
+        if(s->mDirection == mDirection)
         {
             this->mSubRoadSigPtrs.emplace_back(s);
         }
@@ -278,8 +319,29 @@ void SubRoad::Init(std::shared_ptr<Road> p_road)
 
     for(auto & s : pBaseRoad->mSecPtrs)
     {
-        this->mSubRoadSecPtrs.emplace_back(s->GetSubSection(direction));
+        this->mSubRoadSecPtrs.emplace_back(s->GetSubSection(mDirection));
     }
 }
 
-SubRoad::SubRoad(int direction) : direction(direction) {};
+SubRoad::SubRoad(int direction) : mDirection(direction) {}
+
+boost::property_tree::ptree SubRoad::ToXML()
+{
+    pt::ptree p_sub_road;
+
+    p_sub_road.add("<xmlattr>.id", mRoadId);
+    p_sub_road.add("<xmlattr>.direction", mDirection);
+    p_sub_road.add("<xmlattr>.length", pBaseRoad->mLength);
+    p_sub_road.add("<xmlattr>.prev_jid", mPrevJid);
+    p_sub_road.add("<xmlattr>.next_jid", mNextJid);
+
+    for(auto & sec : mSubRoadSecPtrs) p_sub_road.add_child("laneSection", sec->ToXML());
+    for(auto & sig : mSubRoadSigPtrs) p_sub_road.add_child("signal", sig->ToXML());
+
+    return p_sub_road;
+}
+
+void SubRoad::FromXML(const pt::ptree &p)
+{
+
+};

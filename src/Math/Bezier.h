@@ -19,10 +19,14 @@ public:
     bool is_line;
     double ctrl_len1;
     double ctrl_len2;
+
+    Vector2d a, b, c, d;
+
     Pose _GetPose(double t);
 
 public:
     explicit Bezier(Pose _start_pose = {0, 0, 0}, Pose _end_pose = {0, 0, 0}, double _ctrl_len1 = 5.0, double _ctrl_len2 = 5.0);
+    explicit Bezier(std::vector<double> v);
     double Length();
     Pose GetPose(double s);
     Pose GetStartPose();

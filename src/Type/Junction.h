@@ -17,20 +17,24 @@
 
 namespace hdmap
 {
-class Junction : public IView
+class Junction : public IView, public IXML
 {
 public:
     static unsigned int JUNCTION_ID;
-    unsigned int iJunctionId;
-
+    unsigned int mJunctionId;
     std::map<std::pair<unsigned int, unsigned int>, RoadLink> mRoadLinks;
-    std::vector<std::vector<Pose>> vPoses;
+    std::vector<std::vector<Pose>> mPoses;
 
+private:
+    void GenerateAllPose();
+
+public:
     explicit Junction();
 
     void AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pose _from_lane_pose,
                        unsigned int _to_road_id, int _to_lane_idx, Pose _to_lane_pose,
                        double _ctrl_len1, double _ctrl_len2);
+
     std::vector<std::vector<Pose>> GetAllPose();
 
     bool Check(std::pair<unsigned int, unsigned int> links);
@@ -39,14 +43,11 @@ public:
 
     std::vector<Pose> GetPose(unsigned int from_road_id, int from_lane_idx, unsigned int to_road_id, int to_lane_idx);
 
-    void GenerateAllPose();
+    SubRoadLink GetSubRoadLink (int rid1, int dir1, int rid2 = -1, int dir2 = 0);
 
     void Send(Sender &sender) override;
-
-    SubRoadLink GetSubRoadLink (int rid1, int dir1, int rid2 = -1, int dir2 = 0);
+    boost::property_tree::ptree ToXML() override;
+    void FromXML(const pt::ptree &p) override;
 };
 }
-
-
-
 #endif //HDMAP_JUNCTION_H

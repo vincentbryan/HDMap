@@ -3,8 +3,6 @@
 //
 
 #include "Junction.h"
-#include <algorithm>
-#include "../Math/Line.h"
 
 using namespace hdmap;
 
@@ -12,7 +10,7 @@ unsigned int Junction::JUNCTION_ID = 0;
 
 Junction::Junction()
 {
-    iJunctionId = JUNCTION_ID++;
+    mJunctionId = JUNCTION_ID++;
 }
 
 void Junction::AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pose _from_lane_pose,
@@ -38,10 +36,10 @@ void Junction::AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pos
 
 std::vector<std::vector<Pose>> Junction::GetAllPose()
 {
-    if(vPoses.empty())
+    if(mPoses.empty())
         GenerateAllPose();
 
-    return vPoses;
+    return mPoses;
 }
 
 bool Junction::Check(std::pair<unsigned int, unsigned int> links)
@@ -67,10 +65,10 @@ std::vector<Pose> Junction::GetPose(unsigned int from_road_id,
 
 void Junction::Send(Sender &sender)
 {
-    if(vPoses.empty())
+    if(mPoses.empty())
         GenerateAllPose();
 
-    for(auto & x : vPoses)
+    for(auto & x : mPoses)
     {
         auto conn = sender.GetLineStrip(x, 234.0/255, 247.0/255, 134.0/255, 1.0);
         sender.array.markers.emplace_back(conn);
@@ -87,9 +85,9 @@ void Junction::GenerateAllPose()
 {
     for(auto x : mRoadLinks)
     {
-        for(auto y : x.second.vLaneLinks)
+        for(auto y : x.second.mLaneLinks)
         {
-            vPoses.emplace_back(y.mReferLine.GetAllPose(0.1));
+            mPoses.emplace_back(y.mReferLine.GetAllPose(0.1));
         }
     }
 }
@@ -98,5 +96,36 @@ SubRoadLink Junction::GetSubRoadLink (int rid1, int dir1, int rid2, int dir2)
 {
     auto it = mRoadLinks.find(std::pair<unsigned int, unsigned int>(rid1, rid2));
     return it->second(dir1, dir2);
+}
+
+boost::property_tree::ptree Junction::ToXML()
+{
+    pt::ptree p_junc;
+    p_junc.add("<xmlattr>.id", mJunctionId);
+
+    for(auto & r : mRoadLinks)
+    {
+        p_junc.add_child("roadLink", r.second.ToXML());
+    }
+
+    return p_junc;
+}
+
+void Junction::FromXML(const pt::ptree &p)
+{
+    for(auto & n : p.get_child(""))
+    {
+        if(n.first == "<xmlattr>")
+        {
+            mJunctionId = n.second.get<int>("id");
+        }
+
+        if(n.first == "roadLink")
+        {
+            RoadLink r;
+            r.FromXML(n.second);
+            mRoadLinks[{r.mFromRoadId, r.mToRoadId}] = r;
+        }
+    }
 }
 

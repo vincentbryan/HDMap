@@ -12,13 +12,13 @@
 
 namespace hdmap
 {
-class SubRoad: public IView
+class SubRoad: public IView, public IXML
 {
 public:
-    int iRoadId = -1;
-    int direction = 0;
-    int iPrevJid = -1;
-    int iNextJid = -1;
+    int mRoadId = -1;
+    int mDirection = 0;
+    int mPrevJid = -1;
+    int mNextJid = -1;
 
     std::shared_ptr<Road> pBaseRoad;
     std::vector<SecPtr> mSubRoadSecPtrs;
@@ -34,21 +34,24 @@ public:
     std::vector<std::vector<Pose>> GetLanePose();
 
     void Send(Sender &sender) override;
+    boost::property_tree::ptree ToXML() override;
+    void FromXML(const pt::ptree &p) override;
 };
 
 
-class Road : public IView
+class Road : public IView, public IXML
 {
 public:
     static unsigned int ROAD_ID;
-    unsigned int iRoadId;
-    double dLength;
+    unsigned int mRoadId;
+    double mLength;
+    int mDirection;
 
     std::vector<SecPtr> mSecPtrs;
     std::vector<SigPtr> mSigPtrs;
 
-    int iPrevJid;
-    int iNextJid;
+    int mPrevJid;
+    int mNextJid;
 
     Pose mStartPose;
     Pose mEndPose;
@@ -61,19 +64,14 @@ public:
     SecPtr AddSection(const Pose & _end_pose, double _ctrl_len1 = 1.0, double _ctrl_len2 = 1.0);
     void AddSignal(Vector2d v, int dir, std::string _type, std::string _info);
 
-    int GetPrevJid()
-    {
-        return iPrevJid;
-    }
-    int GetNextJid()
-    {
-        return iNextJid;
-    }
+    int GetPrevJid() { return mPrevJid; }
+
+    int GetNextJid() { return mNextJid; }
 
     int AdjacentJid(int direction)
     {
-        if(direction > 0) return iNextJid;
-        else return iPrevJid;
+        if(direction > 0) return mNextJid;
+        else return mPrevJid;
     }
 
     std::vector<Pose> Trajectory(int begin_lane_idx, int end_lane_idx);
@@ -90,6 +88,8 @@ public:
     std::shared_ptr<SubRoad> GetSubRoadPtr(int dir);
 
     void InitSubRoad();
+    boost::property_tree::ptree ToXML() override;
+    void FromXML(const pt::ptree &p) override;
 };
 }
 

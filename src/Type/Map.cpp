@@ -84,14 +84,14 @@ void Map::AddConnection(JuncPtr p, unsigned int from_road, int from_lane_idx,
     );
     
     if(from_lane_idx > 0)
-        mRoadPtrs[from_road]->iNextJid = p->iJunctionId;
+        mRoadPtrs[from_road]->mNextJid = p->mJunctionId;
     else
-        mRoadPtrs[from_road]->iPrevJid = p->iJunctionId;
+        mRoadPtrs[from_road]->mPrevJid = p->mJunctionId;
     
     if(to_lane_idx > 0)
-        mRoadPtrs[to_road]->iPrevJid = p->iJunctionId;
+        mRoadPtrs[to_road]->mPrevJid = p->mJunctionId;
     else
-        mRoadPtrs[to_road]->iNextJid = p->iJunctionId;
+        mRoadPtrs[to_road]->mNextJid = p->mJunctionId;
 }
 
 void Map::CommitRoadInfo()
@@ -99,7 +99,7 @@ void Map::CommitRoadInfo()
     for(auto & p : mRoadPtrs)
     {
         if(!p->mSecPtrs.empty())
-            p->dLength = p->mSecPtrs.back()->s + p->mSecPtrs.back()->mReferLine.Length();
+            p->mLength = p->mSecPtrs.back()->mStartS + p->mSecPtrs.back()->mReferLine.Length();
     }
 }
 
@@ -107,8 +107,7 @@ void Map::Save(const std::string &file_name)
 {
     try
     {
-        pt::ptree tree;
-
+        /*
         pt::ptree p_road;
         for(auto & x : mRoadPtrs)
         {
@@ -150,10 +149,10 @@ void Map::Save(const std::string &file_name)
                     p_lane.add("<xmlattr>.type", "Driving");
                     p_lane.add("offset.<xmlattr>.type", "cubic_function");
                     p_lane.add("offset.<xmlattr>.s", 0);
-                    p_lane.add("offset.x0", k.second.width.x0);
-                    p_lane.add("offset.y0", k.second.width.y0);
-                    p_lane.add("offset.x1", k.second.width.x1);
-                    p_lane.add("offset.y1", k.second.width.y1);
+                    p_lane.add("offset.x0", k.second.offset.x0);
+                    p_lane.add("offset.y0", k.second.offset.y0);
+                    p_lane.add("offset.x1", k.second.offset.x1);
+                    p_lane.add("offset.y1", k.second.offset.y1);
 
                     for(auto & s : k.second.predecessors)
                         p_lane.add("predecessors", s);
@@ -228,7 +227,8 @@ void Map::Save(const std::string &file_name)
             p_junc.clear();
 
         }
-        pt::write_xml(file_name, tree);
+        */
+        pt::write_xml(file_name, ToXML());
     }
     catch (std::exception &e)
     {
@@ -243,15 +243,16 @@ void Map::Load(const std::string &file_name)
     {
         pt::ptree tree;
         pt::read_xml(file_name, tree);
-
+        FromXML(tree);
+        /*
         //region AddRoads
         for(auto road : tree.get_child("hdmap.roads"))
         {
             RoadPtr pRoad(new Road());
-            pRoad->iRoadId = road.second.get<int>("<xmlattr>.id");
-            pRoad->dLength = road.second.get<double>("<xmlattr>.length");
-            pRoad->iPrevJid = road.second.get<int>("<xmlattr>.prev_jid");
-            pRoad->iNextJid = road.second.get<int>("<xmlattr>.next_jid");
+            pRoad->mRoadId = road.second.get<int>("<xmlattr>.id");
+            pRoad->mLength = road.second.get<double>("<xmlattr>.length");
+            pRoad->mPrevJid = road.second.get<int>("<xmlattr>.prev_jid");
+            pRoad->mNextJid = road.second.get<int>("<xmlattr>.next_jid");
 
             for(auto section : road.second.get_child(""))
             {
@@ -264,10 +265,10 @@ void Map::Load(const std::string &file_name)
                     {
                         if(section_child.first == "<xmlattr>")
                         {
-                            pSection->iSectionId = section_child.second.get<int>("id");
-                            pSection->s = section_child.second.get<double>("s");
-                            pSection->most_left_lane_idx = section_child.second.get<int>("left_idx");
-                            pSection->most_right_lane_idx = section_child.second.get<int>("right_idx");
+                            pSection->mSectionId = section_child.second.get<int>("id");
+                            pSection->mStartS = section_child.second.get<double>("s");
+                            pSection->mLeftBoundary = section_child.second.get<int>("left_idx");
+                            pSection->mRightBoundary = section_child.second.get<int>("right_idx");
                         }
 
                         if(section_child.first == "refer_line")
@@ -285,7 +286,6 @@ void Map::Load(const std::string &file_name)
                             auto len2 = section_child.second.get<double>("ctrl_len2");
 
                             pSection->mReferLine = Bezier(start_pose, end_pose, len1, len2);
-
                         }
 
                         if(section_child.first == "offset")
@@ -301,15 +301,12 @@ void Map::Load(const std::string &file_name)
                         {
                             auto lane_idx = section_child.second.get<int>("<xmlattr>.idx");
                             Lane lane;
-                            lane.land_id = section_child.second.get<int>("<xmlattr>.id");
-
-                            //TODO
-//                        lane.type = section_child.second.get<std::string>("<xmlattr>.type");
+                            lane.mLandId = section_child.second.get<int>("<xmlattr>.id");
 
                             auto y0 = section_child.second.get<double>("offset.y0");
                             auto x1 = section_child.second.get<double>("offset.x1");
                             auto y1 = section_child.second.get<double>("offset.y1");
-                            lane.width = CubicFunction(y0, x1, y1);
+                            lane.mOffset = CubicFunction(y0, x1, y1);
 
                             //Add link
                             for(auto link : section_child.second.get_child(""))
@@ -317,12 +314,12 @@ void Map::Load(const std::string &file_name)
                                 if(link.first == "predecessors")
                                 {
                                     int n = atoi(link.second.data().c_str());
-                                    lane.predecessors.emplace_back(n);
+                                    lane.mPredecessors.emplace_back(n);
                                 }
                                 if(link.first == "successors")
                                 {
                                     int n = atoi(link.second.data().c_str());
-                                    lane.successors.emplace_back(n);
+                                    lane.mSuccessors.emplace_back(n);
                                 }
                             }
                             pSection->mLanes.insert({lane_idx, lane});
@@ -336,24 +333,24 @@ void Map::Load(const std::string &file_name)
                 if(section.first == "signals")
                 {
                     SigPtr s(new Signal());
-                    s->direction = section.second.get<int>("direction");
-                    s->position.x = section.second.get<double>("x");
-                    s->position.y = section.second.get<double>("y");
-                    s->type = section.second.get<std::string>("type");
-                    s->info = section.second.get<std::string>("info");
+                    s->mDirection = section.second.get<int>("direction");
+                    s->mPosition.x = section.second.get<double>("x");
+                    s->mPosition.y = section.second.get<double>("y");
+                    s->mType = section.second.get<std::string>("type");
+                    s->mInfo = section.second.get<std::string>("info");
                     pRoad->mSigPtrs.emplace_back(s);
                 }
             }
             mRoadPtrs.emplace_back(pRoad);
         }
-        Road::ROAD_ID = mRoadPtrs.back()->iRoadId + 1;
+        Road::ROAD_ID = mRoadPtrs.back()->mRoadId + 1;
         //endregion
 
         //region AddJunctions
         for(auto junction : tree.get_child("hdmap.junctions"))
         {
             JuncPtr pJunction(new Junction());
-            pJunction->iJunctionId = junction.second.get<int>("<xmlattr>.id");
+            pJunction->mJunctionId = junction.second.get<int>("<xmlattr>.id");
 
             for(auto link : junction.second.get_child(""))
             {
@@ -389,7 +386,7 @@ void Map::Load(const std::string &file_name)
         //endregion
 
         for(auto & r : mRoadPtrs) r->InitSubRoad();
-
+*/
     }
     catch (std::exception &e)
     {
@@ -401,14 +398,14 @@ std::vector<std::shared_ptr<SubRoad>> Map::AdjacentRoadInfo(std::shared_ptr<SubR
 {
     std::vector<std::shared_ptr<SubRoad>> res;
 
-    int jid = pSubRoad->iNextJid;
+    int jid = pSubRoad->mNextJid;
     if(jid == -1) return res;
 
     for(auto const & m : mJuncPtrs[jid]->mRoadLinks)
     {
-        if(m.first.first == pSubRoad->iRoadId)
+        if(m.first.first == pSubRoad->mRoadId)
         {
-            int dir = m.second.vLaneLinks.front().iToIndex > 0 ? 1 : -1;
+            int dir = m.second.mLaneLinks.front().mToLaneIndex > 0 ? 1 : -1;
 
             res.emplace_back(mRoadPtrs[m.first.second]->GetSubRoadPtr(dir));
         }
@@ -688,11 +685,42 @@ std::shared_ptr<SubRoad> Map::Locate(const Vector2d &v)
         if( t < min_dist)
         {
             min_dist = t;
-            road_id = x->iRoadId;
+            road_id = x->mRoadId;
         }
     }
 
     auto p1 = mRoadPtrs[road_id]->Locate(v);
     return mRoadPtrs[road_id]->GetSubRoadPtr(p1.second);
+}
+
+boost::property_tree::ptree Map::ToXML()
+{
+    pt::ptree p_map;
+
+    for(auto & m : mRoadPtrs)
+        p_map.add_child("hdmap.roads.road", m->ToXML());
+
+    for(auto & m : mJuncPtrs)
+        p_map.add_child("hdmap.junctions.junction", m->ToXML());
+
+    return p_map;
+}
+
+void Map::FromXML(const pt::ptree &p)
+{
+    for(auto & r : p.get_child("hdmap.roads"))
+    {
+        RoadPtr pRoad(new Road());
+        pRoad->FromXML(r.second);
+        mRoadPtrs.emplace_back(pRoad);
+    }
+    Road::ROAD_ID = mRoadPtrs.back()->mRoadId + 1;
+
+    for(auto & j : p.get_child("hdmap.junctions"))
+    {
+        JuncPtr pJunc(new Junction());
+        pJunc->FromXML(j.second);
+        mJuncPtrs.emplace_back(pJunc);
+    }
 }
 

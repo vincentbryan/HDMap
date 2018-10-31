@@ -6,24 +6,22 @@
 #define HDMAP_LANELINK_H
 
 #include "../Math/Bezier.h"
+#include "../Interface/IXML.h"
 
 namespace hdmap
 {
-class LaneLink
+class LaneLink : public IXML
 {
 public:
-    int iFromIndex;
-    int iToIndex;
+    int mFromLaneIndex;
+    int mToLaneIndex;
     Bezier mReferLine;
 
-    LaneLink(int from_lane_idx, int to_lane_idx, Bezier bezier)
-    {
-        iFromIndex = from_lane_idx;
-        iToIndex = to_lane_idx;
-        mReferLine = bezier;
-    }
+public:
+    LaneLink(int _from_lane_idx = 0, int _to_lane_idx = 0, Bezier _bezier = Bezier());
+    boost::property_tree::ptree ToXML() override;
+    void FromXML(const pt::ptree &p) override;
 };
-
 }
 
 #endif //HDMAP_LANELINK_H

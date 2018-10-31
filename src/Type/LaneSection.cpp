@@ -9,28 +9,28 @@
 
 using namespace hdmap;
 
-LaneSection::LaneSection(unsigned int section_id, double _s,
-                         Bezier refer_line,
-                         CubicFunction lane_offset)
+LaneSection::LaneSection(unsigned int _section_id, double _s,
+                         Bezier _refer_line,
+                         CubicFunction _lane_offset)
 {
-    iSectionId = section_id;
-    s = _s;
-    mReferLine = refer_line;
-    mLaneOffset = lane_offset;
+    mSectionId = _section_id;
+    mStartS = _s;
+    mReferLine = _refer_line;
+    mLaneOffset = _lane_offset;
 }
 
-void LaneSection::AddLane(int lane_idx, double _start_width, double _end_width, std::vector<int> _pred, std::vector<int> _succ)
+void LaneSection::AddLane(int _lane_idx, double _start_width, double _end_width, std::vector<int> _pred, std::vector<int> _succ)
 {
-    if(lane_idx > 0) most_right_lane_idx = std::max(most_right_lane_idx, lane_idx);
-    if(lane_idx < 0) most_left_lane_idx = std::min(most_left_lane_idx, lane_idx);
+    if(_lane_idx > 0) mRightBoundary = std::max(mRightBoundary, _lane_idx);
+    if(_lane_idx < 0) mLeftBoundary = std::min(mLeftBoundary, _lane_idx);
 
-    int lane_id = iSectionId * 10 + 5 + lane_idx;
+    int lane_id = mSectionId * 10 + 5 + _lane_idx;
     CubicFunction width(_start_width, mReferLine.Length(), _end_width);
     Lane lane(lane_id, width);
-    lane.predecessors = std::move(_pred);
-    lane.successors = std::move(_succ);
+    lane.mPredecessors = std::move(_pred);
+    lane.mSuccessors = std::move(_succ);
 
-    mLanes.insert(std::pair<int, Lane>(lane_idx, lane));
+    mLanes.insert(std::pair<int, Lane>(_lane_idx, lane));
 }
 
 std::vector<Pose> LaneSection::GetReferPose()
@@ -43,9 +43,7 @@ std::vector<Pose> LaneSection::GetReferPose()
 void LaneSection::GenerateAllPose(double ds)
 {
     for(auto x : mLanes)
-    {
         mAllLanePose[x.first] = std::vector<Pose>();
-    }
 
     double s_ = 0;
     double len = mReferLine.Length();
@@ -68,23 +66,23 @@ void LaneSection::AppendPose(double s_)
     mAllLanePose[0].emplace_back(refer_pose);
     double width = 0;
     int idx = 0;
-    for(idx = 1; idx <= most_right_lane_idx; idx++)
+    for(idx = 1; idx <= mRightBoundary; idx++)
     {
 
         Angle angle = refer_pose.GetAngle();
         angle.Rotate(-90.0);
 
-        double w = mLanes[idx].width.Value(s_);
+        double w = mLanes[idx].mOffset.Value(s_);
         Pose t = refer_pose.GetTranslation(w, angle);
         mAllLanePose[idx].emplace_back(t);
     }
 
-    for(idx = -1; idx >= most_left_lane_idx; idx--)
+    for(idx = -1; idx >= mLeftBoundary; idx--)
     {
         Angle angle = refer_pose.GetAngle();
         angle.Rotate(90.0);
 
-        double w = mLanes[idx].width.Value(s_);
+        double w = mLanes[idx].mOffset.Value(s_);
         Pose t = refer_pose.GetTranslation(w, angle);
 
         mAllLanePose[idx].emplace_back(t);
@@ -113,10 +111,6 @@ void LaneSection::Send(Sender &sender)
         {
             auto solid_line = sender.GetLineStrip(x.second, 0.7, 0.7, 0.7, 0.3);
             sender.array.markers.push_back(solid_line);
-//            double w = std::max(mLanes[x.first].width.y0, mLanes[x.first].width.y1);
-//            auto poses = sender.Translate(x.second, w/2, -90.0);
-//            auto solid_line = sender.GetLineStrip(poses, 0.7, 0.7, 0.7, 0.3);
-//            sender.array.markers.push_back(solid_line);
         }
         auto lane_idx = sender.GetText(std::to_string(x.first), x.second[x.second.size()/2].GetPosition());
         sender.array.markers.push_back(lane_idx);
@@ -127,14 +121,14 @@ void LaneSection::Send(Sender &sender)
 SecPtr LaneSection::GetSubSection(int direction)
 {
     SecPtr res(new LaneSection());
-    res->iSectionId = iSectionId;
+    res->mSectionId = mSectionId;
     res->mReferLine = mReferLine;
     res->mLaneOffset = mLaneOffset;
-    res->s = s;
+    res->mStartS = mStartS;
     if(direction > 0)
     {
-        res->most_right_lane_idx = most_right_lane_idx;
-        res->most_left_lane_idx = 0;
+        res->mRightBoundary = mRightBoundary;
+        res->mLeftBoundary = 0;
         for(auto & x : mLanes)
         {
             if(x.first > 0)
@@ -143,8 +137,8 @@ SecPtr LaneSection::GetSubSection(int direction)
     }
     else
     {
-        res->most_left_lane_idx = most_left_lane_idx;
-        res->most_right_lane_idx = 0;
+        res->mLeftBoundary = mLeftBoundary;
+        res->mRightBoundary = 0;
         for(auto & x : mLanes)
         {
             if(x.first < 0)
@@ -152,5 +146,66 @@ SecPtr LaneSection::GetSubSection(int direction)
         }
     }
     return res;
+}
+
+boost::property_tree::ptree LaneSection::ToXML()
+{
+    pt::ptree p_sec;
+    p_sec.add("<xmlattr>.id", mSectionId);
+    p_sec.add("<xmlattr>.s", mStartS);
+    p_sec.add("<xmlattr>.left_idx", mLeftBoundary);
+    p_sec.add("<xmlattr>.right_idx", mRightBoundary);
+
+    for(auto & p : mReferLine.GetParam())
+        p_sec.add("referenceLine.param", p);
+
+    for(auto & m : mLanes)
+        p_sec.add_child("lane", m.second.ToXML());
+
+    return p_sec;
+}
+
+std::vector<Pose> LaneSection::GetLanePoseByIndex(int _index)
+{
+    if(mAllLanePose.empty())
+        GetAllPose();
+    return mAllLanePose[_index];
+}
+
+void LaneSection::FromXML(const pt::ptree &p)
+{
+    for(auto & sec_child : p.get_child(""))
+    {
+        if(sec_child.first == "<xmlattr>")
+        {
+            mSectionId = sec_child.second.get<int>("id");
+            mStartS = sec_child.second.get<double>("s");
+            mLeftBoundary = sec_child.second.get<int>("left_idx");
+            mRightBoundary = sec_child.second.get<int>("right_idx");
+        }
+
+        if(sec_child.first == "referenceLine")
+        {
+            std::vector<double> res;
+            for(auto & t : sec_child.second.get_child(""))
+            {
+                if(t.first == "param")
+                    res.emplace_back(std::atof(t.second.data().c_str()));
+            }
+            assert(res.size() == 8);
+            mReferLine = Bezier(res);
+        }
+
+        if(sec_child.first == "lane")
+        {
+            Lane lane;
+            lane.FromXML(sec_child.second);
+            mLanes.insert({lane.mLaneIndex, lane});
+        }
+    }
+
+
+
+
 }
 

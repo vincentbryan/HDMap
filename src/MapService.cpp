@@ -9,9 +9,6 @@
 #include <queue>
 #include <mutex>
 #include "Type/Map.h"
-#include "Tool/Sender.h"
-#include "Math/Bezier.h"
-#include "Math/CubicFunction.h"
 #include "Tool/Planner.h"
 
 using namespace hdmap;
@@ -33,33 +30,20 @@ int main(int argc, char** argv)
     Map map;
     map.SetSender(p_sender);
     map.Load(argv[1]);
-//    map.Summary();
 
-    ROS_INFO("Input 's' to start");
-//    ros::ServiceServer server = n.advertiseService("local_map", &Map::OnRequest, &map);
-//    ROS_INFO("HDMap is ready...");
-//    ros::spin();
+    ROS_INFO("Input 'r' to start");
 
     Planner planner(map, p_sender);
-
-//    double start_x, start_y, end_x, end_y;
-//    n.getParam("MapService/start_x", start_x);
-//    n.getParam("MapService/start_y", start_y);
-//    n.getParam("MapService/end_x", end_x);
-//    n.getParam("MapService/end_y", end_y);
-//    planner.SetStartPoint({start_x, start_y});
-//    planner.SetEndPoint({end_x, end_y});
-//    ROS_INFO_STREAM("Position: " << start_x << " " << start_y << " " << end_x << " " << end_y);
-
     planner.SetStartPoint({-216.360, 11.736});
     planner.SetEndPoint({-38.530, 70.328});
     planner.GlobalPlanning();
     planner.Send();
-    planner.ToXML("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/planner0_out.xml");
+    planner.ToXML("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/planner02.xml");
+
     char c;
     while (std::cin >> c)
     {
-        if(c == 's')
+        if(c == 'r')
             planner.Send();
         else
             break;

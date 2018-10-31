@@ -7,13 +7,14 @@
 
 #include "../Type/common.h"
 #include <boost/property_tree/ptree.hpp>
-
+namespace pt = boost::property_tree;
 namespace hdmap
 {
 class IXML
 {
 public:
-
+    virtual pt::ptree ToXML() = 0;
+    virtual void FromXML(const pt::ptree & p) = 0;
 };
 }
 #endif //HDMAP_IXML_H

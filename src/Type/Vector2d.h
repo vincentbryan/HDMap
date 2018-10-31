@@ -38,6 +38,12 @@ public:
         return {d*x, d*y};
     }
 
+    Vector2d operator / (double d) const
+    {
+        if(d == 0.0) return {0, 0};
+        else return {x/d, y/d};
+    }
+
     friend Vector2d operator * (double d, const Vector2d & v)
     {
         return v * d;
