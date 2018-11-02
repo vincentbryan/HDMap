@@ -203,9 +203,17 @@ void LaneSection::FromXML(const pt::ptree &p)
             mLanes.insert({lane.mLaneIndex, lane});
         }
     }
+}
 
-
-
-
+double LaneSection::Distance(const Vector2d &v)
+{
+    double min_dist = 1000000;
+    for(auto & p : GetReferPose())
+    {
+        double t = sqrt((p.x - v.x)*(p.x - v.x) + (p.y - v.y)*(p.y - v.y));
+        if(t < min_dist)
+            min_dist = t;
+    }
+    return min_dist;
 }
 

@@ -44,7 +44,7 @@ public:
     std::vector<Pose> GetPose(unsigned int from_road_id, int from_lane_idx, unsigned int to_road_id, int to_lane_idx);
 
     SubRoadLink GetSubRoadLink (int rid1, int dir1, int rid2 = -1, int dir2 = 0);
-
+    double Distance(const Vector2d & v);
     void Send(Sender &sender) override;
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;

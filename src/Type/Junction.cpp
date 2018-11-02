@@ -128,4 +128,18 @@ void Junction::FromXML(const pt::ptree &p)
         }
     }
 }
+double Junction::Distance(const Vector2d &v)
+{
+    double min_dist = 1000000;
+    for(auto & ps : GetAllPose())
+    {
+        for(auto & p : ps)
+        {
+            double t = sqrt((p.x - v.x)*(p.x - v.x) + (p.y - v.y)*(p.y - v.y));
+            if(t < min_dist)
+                min_dist = t;
+        }
+    }
+    return min_dist;
+}
 

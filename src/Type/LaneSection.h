@@ -52,6 +52,7 @@ public:
 
     std::vector<Pose> GetLanePoseByIndex(int _index);
     SecPtr GetSubSection(int direction);
+    double Distance(const Vector2d &v);
 
     void Send(Sender &sender) override;
     boost::property_tree::ptree ToXML() override;

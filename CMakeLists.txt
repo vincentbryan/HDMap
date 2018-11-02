@@ -138,6 +138,18 @@ AUX_SOURCE_DIRECTORY(src/Type TYPES)
 
 AUX_SOURCE_DIRECTORY(src/Math MATH)
 
+add_executable(MapAgent
+		${TYPES}
+		${MATH}
+		src/MapAgent.cpp
+		src/Tool/Sender.cpp
+		src/Tool/Sender.h
+		src/Interface/IView.h
+		src/Interface/IXML.h
+		src/Tool/Routing.h
+		src/Tool/Routing.cpp
+)
+
 add_executable(MapService
 		${TYPES}
 		${MATH}
@@ -178,6 +190,7 @@ add_executable(ViewGPS
 		src/Tool/ViewGPS.cpp
 		src/Tool/Sender.cpp
 		src/Tool/Sender.h)
+
 add_executable(LocalMap
 		src/Tool/LocalMap.cpp
 		src/Tool/Sender.cpp
@@ -217,6 +230,10 @@ ${catkin_LIBRARIES}
 )
 
 target_link_libraries(MapGenerator
+${catkin_LIBRARIES}
+)
+
+target_link_libraries(MapAgent
 ${catkin_LIBRARIES}
 )
 #############

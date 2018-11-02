@@ -43,10 +43,8 @@ int main(int argc, char** argv)
     char c;
     while (std::cin >> c)
     {
-        if(c == 'r')
-            planner.Send();
-        else
-            break;
+        if(c == 'r') planner.Send();
+        else break;
     }
 
     return 0;

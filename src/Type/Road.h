@@ -88,6 +88,9 @@ public:
     std::shared_ptr<SubRoad> GetSubRoadPtr(int dir);
 
     void InitSubRoad();
+
+    double Distance(const Vector2d & v);
+
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
 };

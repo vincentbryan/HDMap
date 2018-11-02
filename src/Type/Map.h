@@ -51,13 +51,16 @@ public:
 
     void Trajectory(std::vector<std::pair<unsigned int, int>> sequences);
 
-//    bool OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response & response);
+    bool OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response & response);
 */
     std::shared_ptr<SubRoad> Locate(const Vector2d & v);
 
     void Send();
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
+
+    RoadPtr GetRoadPtrById(unsigned int _road_id);
+    JuncPtr GetJuncPtrById(unsigned int _junc_id);
 };
 }
 

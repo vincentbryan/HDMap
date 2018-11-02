@@ -34,9 +34,9 @@ int main(int argc, char** argv)
 
     //region Road
     //Road[0]-------------------------------------------------------------
-    auto r0 = map.AddRoad({-221.360, 11.736, 27.150});
+    auto r0 = map.AddRoad({-221.360, 11.736, 27.00});
 
-    auto r0_s0 = r0->AddSection({-80.123, 83.702, 27.03});
+    auto r0_s0 = r0->AddSection({-80.123, 83.702, 27.00});
     r0_s0->AddLane(-2,  7.50,  7.50, {}, {});
     r0_s0->AddLane(-1,  4.00,  4.00, {}, {});
     r0_s0->AddLane( 1,  4.00,  4.00, {}, {});

@@ -15,7 +15,6 @@ public:
     std::vector<std::pair<double, double>> poses;
     int id = 0;
 
-
     void CallBack(const HDMap::Location & msg)
     {
         hdmap::Angle a;

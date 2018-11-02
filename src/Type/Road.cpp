@@ -289,6 +289,18 @@ void Road::FromXML(const pt::ptree &p)
     InitSubRoad();
 }
 
+double Road::Distance(const Vector2d & v)
+{
+    double min_dist = 100000;
+    for(auto & s : mSecPtrs)
+    {
+        double t = s->Distance(v);
+        if(t < min_dist)
+            min_dist = t;
+    }
+    return min_dist;
+}
+
 Pose SubRoad::GetStartPose()
 {
     if(mDirection > 0)
