@@ -118,6 +118,7 @@ void LaneSection::Send(Sender &sender)
     sender.Send();
 }
 
+
 SecPtr LaneSection::GetSubSection(int direction)
 {
     SecPtr res(new LaneSection());
@@ -147,6 +148,7 @@ SecPtr LaneSection::GetSubSection(int direction)
     }
     return res;
 }
+
 
 boost::property_tree::ptree LaneSection::ToXML()
 {

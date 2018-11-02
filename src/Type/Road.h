@@ -12,6 +12,7 @@
 
 namespace hdmap
 {
+
 class SubRoad: public IView, public IXML
 {
 public:
@@ -56,9 +57,10 @@ public:
     Pose mStartPose;
     Pose mEndPose;
 
+    
     SubRoad mForwardRoad;
     SubRoad mBackwardRoad;
-
+    
     explicit Road(Pose _start_pose = Pose());
 
     SecPtr AddSection(const Pose & _end_pose, double _ctrl_len1 = 1.0, double _ctrl_len2 = 1.0);

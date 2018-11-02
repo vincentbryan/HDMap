@@ -222,6 +222,7 @@ void Road::InitSubRoad()
     mBackwardRoad.Init(std::shared_ptr<Road>(this));
 }
 
+
 SecPtr Road::AddSection(const Pose &_end_pose, double _ctrl_len1, double _ctrl_len2)
 {
     unsigned int sec_id_ = mRoadId * 10 + mSecPtrs.size();
@@ -248,19 +249,6 @@ SecPtr Road::AddSection(const Pose &_end_pose, double _ctrl_len1, double _ctrl_l
 void Road::AddSignal(Vector2d v, int dir, std::string _type, std::string _info)
 {
     mSigPtrs.emplace_back(new Signal(v, dir, _type, _info));
-}
-
-void SubRoad::Send(hdmap::Sender &sender)
-{
-    auto ps = GetLanePose();
-    for(auto const & p : ps)
-        sender.SendPoses(p, 0.7, 0.7, 0.7, 0.8, 0.0, 0.38);
-
-    for(auto & s : mSubRoadSecPtrs)
-        sender.SendPoses(s->GetReferPose(), 199.0/255, 166.0/255, 33.0/255, 1.0);
-
-    for(auto & s : mSubRoadSigPtrs)
-        s->Send(sender);
 }
 
 void Road::FromXML(const pt::ptree &p)
@@ -300,6 +288,7 @@ double Road::Distance(const Vector2d & v)
     }
     return min_dist;
 }
+
 
 Pose SubRoad::GetStartPose()
 {
@@ -357,3 +346,17 @@ void SubRoad::FromXML(const pt::ptree &p)
 {
 
 };
+
+
+void SubRoad::Send(hdmap::Sender &sender)
+{
+    auto ps = GetLanePose();
+    for(auto const & p : ps)
+        sender.SendPoses(p, 0.7, 0.7, 0.7, 0.8, 0.0, 0.38);
+
+    for(auto & s : mSubRoadSecPtrs)
+        sender.SendPoses(s->GetReferPose(), 199.0/255, 166.0/255, 33.0/255, 1.0);
+
+    for(auto & s : mSubRoadSigPtrs)
+        s->Send(sender);
+}
