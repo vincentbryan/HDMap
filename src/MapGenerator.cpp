@@ -34,11 +34,9 @@ int main(int argc, char** argv)
 
     //region Road
     //Road[0]-------------------------------------------------------------
-    auto r0 = map.AddRoad({-221.360, 11.736, 27.00});
+    auto r0 = map.AddRoad({-236.715, -108.300, -62.90+90.0});
 
     auto r0_s0 = r0->AddSection({-80.123, 83.702, 27.00});
-    r0_s0->AddLane(-2,  7.50,  7.50, {}, {});
-    r0_s0->AddLane(-1,  4.00,  4.00, {}, {});
     r0_s0->AddLane( 1,  4.00,  4.00, {}, {});
     r0_s0->AddLane( 2,  7.50,  7.50, {}, {});
     r0_s0->AddLane( 3, 10.80, 10.80, {}, {});
@@ -46,6 +44,10 @@ int main(int argc, char** argv)
     r0->AddSignal({-55.123, 92.702}, 1, "SIG", "010");
     r0->AddSignal({-55.123, 90.702}, 1, "SIG", "001");
 
+    auto _r0 = map.AddRoad({});
+    auto _r0_s0 = _r0->AddSection({-238.08, -108.30, 108.40+90.0});
+    _r0_s0->AddLane(1, 4.0, 4.0, {}, {});
+    _r0_s0->AddLane(2, 7.5, 7.5, {}, {});
 
     //Road[1]-------------------------------------------------------------
     auto r1 = map.AddRoad({-42.530, 73.328, 304.10});
@@ -121,6 +123,7 @@ int main(int argc, char** argv)
 
     //region Junction
     //Junc[0]-------------------------------------------------------------
+    /*
     auto junc0 = map.AddJunction();
 
     map.AddConnection(junc0, 0, 1, 4, -1, 10.0, 10.0);
@@ -158,7 +161,7 @@ int main(int argc, char** argv)
     map.AddConnection(junc3, 4, -2, 3, -2, 10.0, 15.0);
     map.AddConnection(junc3, 4, -2, 3, -3, 10.0, 15.0);
     //endregion
-
+    */
     map.Save(argv[1]);
     std::cout << "Map is saved to" << argv[1] << std::endl;
 
