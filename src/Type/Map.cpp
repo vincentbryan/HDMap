@@ -129,20 +129,18 @@ void Map::Load(const std::string &file_name)
     }
 }
 
-std::vector<std::shared_ptr<SubRoad>> Map::AdjacentRoadInfo(std::shared_ptr<SubRoad> pSubRoad)
+std::vector<RoadPtr> Map::AdjacentRoadInfo(RoadPtr p_road)
 {
-    std::vector<std::shared_ptr<SubRoad>> res;
+    std::vector<RoadPtr> res;
 
-    int jid = pSubRoad->mNextJid;
+    int jid = p_road->mNextJid;
     if(jid == -1) return res;
 
     for(auto const & m : mJuncPtrs[jid]->mRoadLinks)
     {
-        if(m.first.first == pSubRoad->mRoadId)
+        if(m.first.first == p_road->mRoadId)
         {
-            int dir = m.second.mLaneLinks.front().mToLaneIndex > 0 ? 1 : -1;
-
-            res.emplace_back(mRoadPtrs[m.first.second]->GetSubRoadPtr(dir));
+            res.emplace_back(GetRoadPtrById(m.first.second));
         }
     }
     return res;
@@ -407,7 +405,7 @@ bool Map::OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response
 }
 */
 
-std::shared_ptr<SubRoad> Map::Locate(const Vector2d &v)
+RoadPtr Map::Locate(const Vector2d &v)
 {
     double min_dist = 100000;
     unsigned int road_id = 0;
@@ -424,8 +422,7 @@ std::shared_ptr<SubRoad> Map::Locate(const Vector2d &v)
         }
     }
 
-    auto p1 = mRoadPtrs[road_id]->Locate(v);
-    return mRoadPtrs[road_id]->GetSubRoadPtr(p1.second);
+    return GetRoadPtrById(road_id);
 }
 
 boost::property_tree::ptree Map::ToXML()

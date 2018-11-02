@@ -12,7 +12,7 @@
 
 namespace hdmap
 {
-
+/*
 class SubRoad: public IView, public IXML
 {
 public:
@@ -38,7 +38,7 @@ public:
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
 };
-
+*/
 
 class Road : public IView, public IXML
 {
@@ -58,8 +58,8 @@ public:
     Pose mEndPose;
 
     
-    SubRoad mForwardRoad;
-    SubRoad mBackwardRoad;
+//    SubRoad mForwardRoad;
+//    SubRoad mBackwardRoad;
     
     explicit Road(Pose _start_pose = Pose());
 
@@ -87,9 +87,9 @@ public:
 
     void Send(Sender &sender) override;
 
-    std::shared_ptr<SubRoad> GetSubRoadPtr(int dir);
+//    std::shared_ptr<SubRoad> GetSubRoadPtr(int dir);
 
-    void InitSubRoad();
+//    void InitSubRoad();
 
     double Distance(const Vector2d & v);
 

@@ -45,7 +45,7 @@ public:
     void Save(const std::string &file_name);
 
 
-    std::vector<std::shared_ptr<SubRoad>>AdjacentRoadInfo(std::shared_ptr<SubRoad> pSubRoad);
+    std::vector<RoadPtr> AdjacentRoadInfo(RoadPtr p_road);
 /*
     void Summary();
 
@@ -53,7 +53,7 @@ public:
 
     bool OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response & response);
 */
-    std::shared_ptr<SubRoad> Locate(const Vector2d & v);
+    RoadPtr Locate(const Vector2d & v);
 
     void Send();
     boost::property_tree::ptree ToXML() override;

@@ -11,29 +11,16 @@ namespace hdmap
 {
 class Planner
 {
-    using SubRoadPtr = std::shared_ptr<SubRoad>;
 private:
     Map mHDMap;
     Vector2d mStartPoint;
     Vector2d mEndPoint;
+    RoadPtr pStart;
+    RoadPtr pEnd;
 
     std::map<unsigned int, bool> is_visited;
-
-    std::vector<SubRoadPtr> mRouting;
-    std::vector<std::vector<SubRoadPtr>> mAllRouting;
-
-    SubRoadPtr pStart;
-    SubRoadPtr pEnd;
-
-    struct
-    {
-        int curr_idx = -1;
-        int curr_rid = -1;
-        int curr_dir =  0;
-        int curr_jid = -1;
-        int next_rid = -1;
-        int next_dir =  0;
-    }mRecord;
+    std::vector<RoadPtr> mRouting;
+    std::vector<std::vector<RoadPtr>> mAllRouting;
 
     std::shared_ptr<Sender> pSender;
 
@@ -56,11 +43,8 @@ public:
     std::string ToXML(const std::string &file_name);
 
 private:
-    void DFS(SubRoadPtr p_curr, std::vector<SubRoadPtr> v);
+    void DFS(RoadPtr p_curr, std::vector<RoadPtr> v);
     void Evaluate();
 };
 }
-
-
-
 #endif //HDMAP_PLANNER_H

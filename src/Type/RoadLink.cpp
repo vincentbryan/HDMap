@@ -4,7 +4,7 @@
 
 #include "RoadLink.h"
 using namespace hdmap;
-
+/*
 void SubRoadLink::Send(Sender &sender)
 {
     for(auto & x : mLaneLinks)
@@ -29,6 +29,7 @@ void SubRoadLink::FromXML(const pt::ptree &p)
 {
 
 }
+*/
 
 RoadLink::RoadLink(unsigned int _from_road_id, unsigned int _to_road_id)
 {
@@ -76,6 +77,7 @@ boost::property_tree::ptree RoadLink::ToXML()
     return p_road_link;
 }
 
+/*
 SubRoadLink RoadLink::operator()(int _form_dir, int _to_dir)
 {
     SubRoadLink slk;
@@ -90,6 +92,7 @@ SubRoadLink RoadLink::operator()(int _form_dir, int _to_dir)
 
     return slk;
 }
+*/
 
 void RoadLink::FromXML(const pt::ptree &p)
 {

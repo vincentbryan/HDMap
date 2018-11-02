@@ -10,6 +10,7 @@
 #include "../Interface/IXML.h"
 namespace hdmap
 {
+/*
 class SubRoadLink : public IView, public IXML
 {
 public:
@@ -22,7 +23,7 @@ public:
     void FromXML(const pt::ptree &p) override;
     boost::property_tree::ptree ToXML() override;
 };
-
+*/
 class RoadLink: public IXML
 {
 public:

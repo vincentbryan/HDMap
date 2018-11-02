@@ -8,7 +8,9 @@ using namespace hdmap;
 
 unsigned int Road::ROAD_ID = 0;
 
-Road::Road(Pose _start_pose) : mForwardRoad(1), mBackwardRoad(-1)
+Road::Road(Pose _start_pose)
+//    :
+//    mForwardRoad(1), mBackwardRoad(-1)
 {
     mRoadId = ROAD_ID++;
     mLength = 0;
@@ -207,7 +209,7 @@ boost::property_tree::ptree Road::ToXML()
     return p_road;
 }
 
-
+/*
 std::shared_ptr<SubRoad> Road::GetSubRoadPtr(int dir)
 {
     if(dir > 0)
@@ -221,7 +223,7 @@ void Road::InitSubRoad()
     mForwardRoad.Init(std::shared_ptr<Road>(this));
     mBackwardRoad.Init(std::shared_ptr<Road>(this));
 }
-
+*/
 
 SecPtr Road::AddSection(const Pose &_end_pose, double _ctrl_len1, double _ctrl_len2)
 {
@@ -289,7 +291,7 @@ double Road::Distance(const Vector2d & v)
     return min_dist;
 }
 
-
+/*
 Pose SubRoad::GetStartPose()
 {
     if(mDirection > 0)
@@ -360,3 +362,4 @@ void SubRoad::Send(hdmap::Sender &sender)
     for(auto & s : mSubRoadSigPtrs)
         s->Send(sender);
 }
+*/
