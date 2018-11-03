@@ -12,34 +12,6 @@
 
 namespace hdmap
 {
-/*
-class SubRoad: public IView, public IXML
-{
-public:
-    int mRoadId = -1;
-    int mDirection = 0;
-    int mPrevJid = -1;
-    int mNextJid = -1;
-
-    std::shared_ptr<Road> pBaseRoad;
-    std::vector<SecPtr> mSubRoadSecPtrs;
-    std::vector<SigPtr> mSubRoadSigPtrs;
-
-public:
-    SubRoad(int direction);
-
-    void Init(std::shared_ptr<Road> p_road);
-
-    Pose GetStartPose();
-
-    std::vector<std::vector<Pose>> GetLanePose();
-
-    void Send(Sender &sender) override;
-    boost::property_tree::ptree ToXML() override;
-    void FromXML(const pt::ptree &p) override;
-};
-*/
-
 class Road : public IView, public IXML
 {
 public:
@@ -57,10 +29,6 @@ public:
     Pose mStartPose;
     Pose mEndPose;
 
-    
-//    SubRoad mForwardRoad;
-//    SubRoad mBackwardRoad;
-    
     explicit Road(Pose _start_pose = Pose());
 
     SecPtr AddSection(const Pose & _end_pose, double _ctrl_len1 = 1.0, double _ctrl_len2 = 1.0);
@@ -86,10 +54,6 @@ public:
     std::vector<std::vector<Pose>> GetLanePosesByDirection(int direction);
 
     void Send(Sender &sender) override;
-
-//    std::shared_ptr<SubRoad> GetSubRoadPtr(int dir);
-
-//    void InitSubRoad();
 
     double Distance(const Vector2d & v);
 

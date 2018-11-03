@@ -9,8 +9,6 @@ using namespace hdmap;
 unsigned int Road::ROAD_ID = 0;
 
 Road::Road(Pose _start_pose)
-//    :
-//    mForwardRoad(1), mBackwardRoad(-1)
 {
     mRoadId = ROAD_ID++;
     mLength = 0;
@@ -83,10 +81,7 @@ Pose Road::GetStartPose(int direction)
     if(mSecPtrs.empty())
         return Pose();
 
-    if(direction > 0)
-        return mSecPtrs.front()->mReferLine.GetStartPose();
-    else
-        return mSecPtrs.back()->mReferLine.GetEndPose();
+    return  mSecPtrs.front()->mReferLine.GetStartPose();
 }
 
 
@@ -185,8 +180,20 @@ std::vector<std::vector<Pose>> Road::GetLanePosesByDirection(int direction)
 void Road::Send(Sender &sender)
 {
     std::string text = "Road[" + std::to_string(mRoadId) + "]: " + std::to_string(mLength);
-    auto m = sender.GetText(text, GetStartPose(1).GetPosition());
-    sender.array.markers.emplace_back(m);
+
+    auto p1 = GetStartPose(1);
+    p1.Rotate(-90);
+    p1.Translate(4.0, p1.GetAngle());
+
+    auto p2 = GetEndPose(1);
+    p2.Rotate(-90);
+    p2.Translate(4.0, p2.GetAngle());
+
+    auto m1 = sender.GetText(text, p1.GetPosition());
+    auto m2 = sender.GetText(text, p2.GetPosition());
+
+    sender.array.markers.emplace_back(m1);
+    sender.array.markers.emplace_back(m2);
     sender.Send();
 
     for(auto & s : mSecPtrs) s->Send(sender);
@@ -209,21 +216,6 @@ boost::property_tree::ptree Road::ToXML()
     return p_road;
 }
 
-/*
-std::shared_ptr<SubRoad> Road::GetSubRoadPtr(int dir)
-{
-    if(dir > 0)
-        return std::make_shared<SubRoad>(mForwardRoad);
-    else
-        return std::make_shared<SubRoad>(mBackwardRoad);
-}
-
-void Road::InitSubRoad()
-{
-    mForwardRoad.Init(std::shared_ptr<Road>(this));
-    mBackwardRoad.Init(std::shared_ptr<Road>(this));
-}
-*/
 
 SecPtr Road::AddSection(const Pose &_end_pose, double _ctrl_len1, double _ctrl_len2)
 {
@@ -276,7 +268,6 @@ void Road::FromXML(const pt::ptree &p)
             mSigPtrs.emplace_back(p_signal);
         }
     }
-    InitSubRoad();
 }
 
 double Road::Distance(const Vector2d & v)
@@ -290,76 +281,3 @@ double Road::Distance(const Vector2d & v)
     }
     return min_dist;
 }
-
-/*
-Pose SubRoad::GetStartPose()
-{
-    if(mDirection > 0)
-        return pBaseRoad->mSecPtrs.front()->mReferLine.GetStartPose();
-    else
-        return pBaseRoad->mSecPtrs.back()->mReferLine.GetEndPose();
-}
-
-std::vector<std::vector<Pose>> SubRoad::GetLanePose()
-{
-    return pBaseRoad->GetLanePosesByDirection(mDirection);
-}
-
-void SubRoad::Init(std::shared_ptr<Road> p_road)
-{
-    pBaseRoad = std::move(p_road);
-    mRoadId = pBaseRoad->mRoadId;
-    mPrevJid = mDirection > 0 ? pBaseRoad->GetPrevJid() : pBaseRoad->GetNextJid();
-    mNextJid = mDirection > 0 ? pBaseRoad->GetNextJid() : pBaseRoad->GetPrevJid();
-
-    for(auto & s : pBaseRoad->mSigPtrs)
-    {
-        if(s->mDirection == mDirection)
-        {
-            this->mSubRoadSigPtrs.emplace_back(s);
-        }
-    }
-
-    for(auto & s : pBaseRoad->mSecPtrs)
-    {
-        this->mSubRoadSecPtrs.emplace_back(s->GetSubSection(mDirection));
-    }
-}
-
-SubRoad::SubRoad(int direction) : mDirection(direction) {}
-
-boost::property_tree::ptree SubRoad::ToXML()
-{
-    pt::ptree p_sub_road;
-
-    p_sub_road.add("<xmlattr>.id", mRoadId);
-    p_sub_road.add("<xmlattr>.direction", mDirection);
-    p_sub_road.add("<xmlattr>.length", pBaseRoad->mLength);
-    p_sub_road.add("<xmlattr>.prev_jid", mPrevJid);
-    p_sub_road.add("<xmlattr>.next_jid", mNextJid);
-
-    for(auto & sec : mSubRoadSecPtrs) p_sub_road.add_child("laneSection", sec->ToXML());
-    for(auto & sig : mSubRoadSigPtrs) p_sub_road.add_child("signal", sig->ToXML());
-
-    return p_sub_road;
-}
-
-void SubRoad::FromXML(const pt::ptree &p)
-{
-
-};
-
-
-void SubRoad::Send(hdmap::Sender &sender)
-{
-    auto ps = GetLanePose();
-    for(auto const & p : ps)
-        sender.SendPoses(p, 0.7, 0.7, 0.7, 0.8, 0.0, 0.38);
-
-    for(auto & s : mSubRoadSecPtrs)
-        sender.SendPoses(s->GetReferPose(), 199.0/255, 166.0/255, 33.0/255, 1.0);
-
-    for(auto & s : mSubRoadSigPtrs)
-        s->Send(sender);
-}
-*/
