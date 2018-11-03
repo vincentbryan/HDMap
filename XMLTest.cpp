@@ -14,6 +14,10 @@ using namespace std;
 
 int main()
 {
+    double x0, y0, x1, y1;
+    while (cin >> x0 >> y0 >> x1 >> y1)
+        std::cout << atan2(y1-y0, x1-x0) / M_PI * 180.0 << std::endl;
+    /*
     try
     {
         pt::ptree tree;
@@ -28,5 +32,6 @@ int main()
     {
         std::cout << "Error: " << e.what() << "\n";
     }
+     */
     return 0;
 }

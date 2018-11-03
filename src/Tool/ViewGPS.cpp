@@ -4,7 +4,7 @@
 
 
 #include <ros/ros.h>
-#include <Location.h>
+#include "nox_location.h"
 #include <visualization_msgs/Marker.h>
 #include "../Type/Angle.h"
 
@@ -15,7 +15,7 @@ public:
     std::vector<std::pair<double, double>> poses;
     int id = 0;
 
-    void CallBack(const HDMap::Location & msg)
+    void CallBack(const nox_msgs::Location & msg)
     {
         hdmap::Angle a;
         a.FromYaw(msg.yaw);
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 
     ViewGPS viewGPS;
     viewGPS.pub = n.advertise<visualization_msgs::Marker>("ViewGPS", 1000);
-    ros::Subscriber sub = n.subscribe("Localization", 1000, &ViewGPS::CallBack, &viewGPS);
+    ros::Subscriber sub = n.subscribe("gps/Localization", 1000, &ViewGPS::CallBack, &viewGPS);
 
     ros::spin();
 

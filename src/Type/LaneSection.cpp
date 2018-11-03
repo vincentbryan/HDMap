@@ -76,17 +76,6 @@ void LaneSection::AppendPose(double s_)
         Pose t = refer_pose.GetTranslation(w, angle);
         mAllLanePose[idx].emplace_back(t);
     }
-
-    for(idx = -1; idx >= mLeftBoundary; idx--)
-    {
-        Angle angle = refer_pose.GetAngle();
-        angle.Rotate(90.0);
-
-        double w = mLanes[idx].mOffset.Value(s_);
-        Pose t = refer_pose.GetTranslation(w, angle);
-
-        mAllLanePose[idx].emplace_back(t);
-    }
 }
 
 std::map<int, std::vector<Pose>> LaneSection::GetAllPose()
@@ -116,36 +105,6 @@ void LaneSection::Send(Sender &sender)
         sender.array.markers.push_back(lane_idx);
     }
     sender.Send();
-}
-
-SecPtr LaneSection::GetSubSection(int direction)
-{
-    SecPtr res(new LaneSection());
-    res->mSectionId = mSectionId;
-    res->mReferLine = mReferLine;
-    res->mLaneOffset = mLaneOffset;
-    res->mStartS = mStartS;
-    if(direction > 0)
-    {
-        res->mRightBoundary = mRightBoundary;
-        res->mLeftBoundary = 0;
-        for(auto & x : mLanes)
-        {
-            if(x.first > 0)
-                res->mLanes.insert(x);
-        }
-    }
-    else
-    {
-        res->mLeftBoundary = mLeftBoundary;
-        res->mRightBoundary = 0;
-        for(auto & x : mLanes)
-        {
-            if(x.first < 0)
-                res->mLanes.insert(x);
-        }
-    }
-    return res;
 }
 
 boost::property_tree::ptree LaneSection::ToXML()

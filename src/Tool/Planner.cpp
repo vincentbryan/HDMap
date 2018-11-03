@@ -21,31 +21,15 @@ void Planner::GlobalPlanning()
     ROS_INFO_STREAM("Start Point: " << pStart->mRoadId << " " << pStart->mDirection);
     ROS_INFO_STREAM("End   Point: " << pEnd->mRoadId << " " << pEnd->mDirection);
 
-    std::vector<SubRoadPtr> v;
+    std::vector<RoadPtr> v;
     v.emplace_back(pStart);
     DFS(pStart, v);
     Evaluate();
-
-    mRecord.curr_idx = 0;
-    mRecord.curr_rid = mRouting.front()->mRoadId;
-    mRecord.curr_dir = mRouting.front()->mDirection;
-
-    if(mRecord.curr_idx + 1 < mRouting.size())
-    {
-        mRecord.next_rid = mRouting[mRecord.curr_idx+1]->mRoadId;
-        mRecord.next_dir = mRouting[mRecord.curr_idx+1]->mDirection;
-        mRecord.curr_jid = mRouting[mRecord.curr_rid]->mNextJid;
-    }
-    else
-    {
-        mRecord.next_rid = -1;
-        mRecord.curr_jid = -1;
-    }
 }
 
-void Planner::DFS(Planner::SubRoadPtr p_curr, std::vector<Planner::SubRoadPtr> v)
+void Planner::DFS(RoadPtr p_curr, std::vector<RoadPtr> v)
 {
-    if(p_curr->mRoadId == pEnd->mRoadId and p_curr->mDirection == pEnd->mDirection)
+    if(p_curr->mRoadId == pEnd->mRoadId)
     {
         mAllRouting.emplace_back(v);
     }
@@ -90,7 +74,7 @@ void Planner::Send()
         if(i + 1 < mRouting.size())
         {
             int jid = mRouting[i]->mNextJid;
-            mHDMap.mJuncPtrs[jid]->GetSubRoadLink(mRouting[i]->mRoadId,
+            mHDMap.GetJuncPtrById(jid)->GetSubRoadLink(mRouting[i]->mRoadId,
                                    mRouting[i]->mDirection,
                                    mRouting[i+1]->mRoadId,
                                    mRouting[i+1]->mDirection).Send(*pSender);

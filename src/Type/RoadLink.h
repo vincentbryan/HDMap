@@ -10,19 +10,6 @@
 #include "../Interface/IXML.h"
 namespace hdmap
 {
-class SubRoadLink : public IView, public IXML
-{
-public:
-    unsigned int mFromRoadId;
-    unsigned int mToRoadId;
-    std::vector<LaneLink> mLaneLinks;
-
-public:
-    void Send(Sender &sender) override;
-    void FromXML(const pt::ptree &p) override;
-    boost::property_tree::ptree ToXML() override;
-};
-
 class RoadLink: public IXML
 {
 public:
@@ -38,8 +25,6 @@ public:
     std::vector<Pose> GetPose(int _from_lane_idx, int _to_lane_idx);
 
     std::vector<std::vector<Pose>> GetAllPose();
-
-    SubRoadLink operator ()(int _form_dir, int _to_dir);
 
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;

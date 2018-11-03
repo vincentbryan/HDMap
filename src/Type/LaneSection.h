@@ -51,7 +51,6 @@ public:
     Lane GetLaneByIndex(int idx) { return mLanes[idx]; }
 
     std::vector<Pose> GetLanePoseByIndex(int _index);
-    SecPtr GetSubSection(int direction);
     double Distance(const Vector2d &v);
 
     void Send(Sender &sender) override;

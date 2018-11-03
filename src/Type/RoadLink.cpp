@@ -5,31 +5,6 @@
 #include "RoadLink.h"
 using namespace hdmap;
 
-void SubRoadLink::Send(Sender &sender)
-{
-    for(auto & x : mLaneLinks)
-    {
-        auto p = x.mReferLine.GetAllPose(0.1);
-        sender.SendPoses(p, 1.0, 156.0/255, 30.0/255, 1.0, 0.0, 0.08);
-    }
-}
-
-boost::property_tree::ptree SubRoadLink::ToXML()
-{
-    pt::ptree p_road_link;
-    p_road_link.add("<xmlattr>.from_road", mFromRoadId);
-    p_road_link.add("<xmlattr>.to_road", mToRoadId);
-
-    for(auto & m : mLaneLinks)
-        p_road_link.add_child("laneLink", m.ToXML());
-
-    return p_road_link;
-}
-void SubRoadLink::FromXML(const pt::ptree &p)
-{
-
-}
-
 RoadLink::RoadLink(unsigned int _from_road_id, unsigned int _to_road_id)
 {
     mFromRoadId = _from_road_id;
@@ -74,21 +49,6 @@ boost::property_tree::ptree RoadLink::ToXML()
         p_road_link.add_child("laneLink", k.ToXML());
 
     return p_road_link;
-}
-
-SubRoadLink RoadLink::operator()(int _form_dir, int _to_dir)
-{
-    SubRoadLink slk;
-    slk.mFromRoadId = mFromRoadId;
-    slk.mToRoadId = mToRoadId;
-
-    for(auto const & x : mLaneLinks)
-    {
-        if(x.mFromLaneIndex * _form_dir > 0 and x.mToLaneIndex * _to_dir > 0)
-            slk.mLaneLinks.emplace_back(x);
-    }
-
-    return slk;
 }
 
 void RoadLink::FromXML(const pt::ptree &p)

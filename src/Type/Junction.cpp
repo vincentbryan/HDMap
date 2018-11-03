@@ -92,10 +92,10 @@ void Junction::GenerateAllPose()
     }
 }
 
-SubRoadLink Junction::GetSubRoadLink (int rid1, int dir1, int rid2, int dir2)
+RoadLink Junction::GetRoadLink (int rid1, int rid2)
 {
     auto it = mRoadLinks.find(std::pair<unsigned int, unsigned int>(rid1, rid2));
-    return it->second(dir1, dir2);
+    return it->second;
 }
 
 boost::property_tree::ptree Junction::ToXML()
