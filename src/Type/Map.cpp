@@ -94,7 +94,7 @@ void Map::AddConnection(JuncPtr p, unsigned int from_road, int from_lane_idx,
         mRoadPtrs[to_road]->mNextJid = p->mJunctionId;
 }
 
-void Map::CommitRoadInfo()
+void Map::  CommitRoadInfo()
 {
     for(auto & p : mRoadPtrs)
     {

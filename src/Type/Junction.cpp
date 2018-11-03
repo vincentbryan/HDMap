@@ -92,7 +92,7 @@ void Junction::GenerateAllPose()
     }
 }
 
-RoadLink Junction::GetSubRoadLink (int rid1, int rid2)
+RoadLink Junction::GetRoadLink (int rid1, int rid2)
 {
     auto it = mRoadLinks.find(std::pair<unsigned int, unsigned int>(rid1, rid2));
     return it->second;
