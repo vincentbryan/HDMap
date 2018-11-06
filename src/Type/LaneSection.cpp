@@ -87,7 +87,7 @@ std::map<int, std::vector<Pose>> LaneSection::GetAllPose()
 
 void LaneSection::Send(Sender &sender)
 {
-    if(mAllLanePose.empty()) GenerateAllPose(0.1);
+    if(mAllLanePose.empty()) GenerateAllPose(1.0);
 
     for(auto & x : mAllLanePose)
     {
@@ -174,5 +174,52 @@ double LaneSection::Distance(const Vector2d &v)
             min_dist = t;
     }
     return min_dist;
+}
+
+bool LaneSection::Cover(const Vector2d &v)
+{
+    if(mAllLanePose.empty()) GenerateAllPose(0.1);
+
+    std::vector<Vector2d> vec;
+    for(auto & x : mReferLine.GetAllPose(0.1))
+    {
+        vec.push_back(x.GetPosition());
+    }
+
+    if(mRightBoundary > 0)
+    {
+        auto ps = mAllLanePose[mRightBoundary];
+        std::reverse(ps.begin(), ps.end());
+        for(auto & x : ps) vec.push_back(x.GetPosition());
+    }
+
+    return IGeometry::Cover(vec, v);
+
+/*
+    bool res = false;
+    if(vec.size() < 3) return res;
+
+    vec.push_back(vec.front());///构成一个循环
+    for(int i = 0; i + 1 < vec.size(); i++)
+    {
+        double slope = 0.0;
+        if(vec[i+1].x - vec[i].x != 0)
+        {
+            slope = (vec[i+1].y - vec[i].y) / (vec[i+1].x - vec[i].x);
+        }
+        else
+        {
+            if(vec[i].x == v.x and (vec[i].y - v.y) * (vec[i+1].y - v.y) < 0)
+                return true;
+        }
+
+        double t1 = (v.x - vec[i].x) * (v.x - vec[i+1].x);
+        double t2 = v.y - (slope * (v.x - vec[i].x) + vec[i].y);
+        if(t1 < 0 and t2 < 0) res = !res;
+    }
+
+    return res;
+*/
+
 }
 

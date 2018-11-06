@@ -34,11 +34,11 @@ int main(int argc, char** argv)
     ROS_INFO("Input 'r' to start");
 
     Planner planner(map, p_sender);
-    planner.SetStartPoint({-216.360, 11.736});
-    planner.SetEndPoint({-38.530, 70.328});
+    planner.SetStartPoint({-200, -100});
+    planner.SetEndPoint({200, -100});
     planner.GlobalPlanning();
     planner.Send();
-    planner.ToXML("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/planner02.xml");
+    //planner.ToXML("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/planner02.xml");
 
     char c;
     while (std::cin >> c)

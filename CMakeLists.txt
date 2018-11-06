@@ -52,6 +52,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    Location.msg Pose2DArray.msg JunctionMSG.msg RoadMSG.msg
    msg_lane.msg msg_section.msg msg_signal.msg msg_road.msg msg_connection.msg msg_junction.msg msg_scene.msg
+		 msg_signal_list.msg
  )
 ## Generate services in the 'srv' folder
  add_service_files(
@@ -135,7 +136,6 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 
 AUX_SOURCE_DIRECTORY(src/Type TYPES)
-
 AUX_SOURCE_DIRECTORY(src/Math MATH)
 
 add_executable(MapAgent
@@ -146,6 +146,7 @@ add_executable(MapAgent
 		src/Tool/Sender.h
 		src/Interface/IView.h
 		src/Interface/IXML.h
+		src/Interface/IGeometry.h
 		src/Tool/Routing.h
 		src/Tool/Routing.cpp
 )
@@ -158,6 +159,7 @@ add_executable(MapService
 		src/Tool/Sender.h
 		src/Interface/IView.h
 		src/Interface/IXML.h
+		src/Interface/IGeometry.h
 		src/Tool/Planner.cpp
 		src/Tool/Planner.h
 )
@@ -169,6 +171,7 @@ add_executable(MapGenerator
 		src/Tool/Sender.h
 		src/Interface/IView.h
 		src/Interface/IXML.h
+		src/Interface/IGeometry.h
 		src/MapGenerator.cpp
 		src/Type/common.h
 )

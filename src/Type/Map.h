@@ -46,13 +46,8 @@ public:
 
 
     std::vector<RoadPtr> AdjacentRoadInfo(RoadPtr p_road);
-/*
-    void Summary();
+//    void Trajectory(std::vector<std::pair<unsigned int, int>> sequences);
 
-    void Trajectory(std::vector<std::pair<unsigned int, int>> sequences);
-
-    bool OnRequest(HDMap::LocalMap::Request &request, HDMap::LocalMap::Response & response);
-*/
     RoadPtr Locate(const Vector2d & v);
 
     void Send();

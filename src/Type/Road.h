@@ -12,7 +12,7 @@
 
 namespace hdmap
 {
-class Road : public IView, public IXML
+class Road : public IView, public IXML, IGeometry
 {
 public:
     static unsigned int ROAD_ID;
@@ -32,7 +32,9 @@ public:
     explicit Road(Pose _start_pose = Pose());
 
     SecPtr AddSection(const Pose & _end_pose, double _ctrl_len1 = 1.0, double _ctrl_len2 = 1.0);
-    void AddSignal(Vector2d v, int dir, std::string _type, std::string _info);
+    void AddSignal(double _x, double _y, double _z, std::string _type, std::string _info);
+
+    std::vector<SigPtr> GetSignals();
 
     int GetPrevJid() { return mPrevJid; }
 
@@ -57,8 +59,10 @@ public:
 
     double Distance(const Vector2d & v);
 
+public:
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
+    bool Cover(const Vector2d &v) override;
 };
 }
 
