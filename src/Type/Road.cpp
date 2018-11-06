@@ -240,9 +240,9 @@ SecPtr Road::AddSection(const Pose &_end_pose, double _ctrl_len1, double _ctrl_l
     return p;
 }
 
-void Road::AddSignal(Vector2d v, int dir, std::string _type, std::string _info)
+void Road::AddSignal(double _x, double _y, double _z, std::string _type, std::string _info)
 {
-    mSigPtrs.emplace_back(new Signal(v, dir, _type, _info));
+    mSigPtrs.emplace_back(new Signal(_x, _y, _z, _type, _info));
 }
 
 void Road::FromXML(const pt::ptree &p)
@@ -281,3 +281,19 @@ double Road::Distance(const Vector2d & v)
     }
     return min_dist;
 }
+
+bool Road::Cover(const Vector2d &v)
+{
+    for(auto & x : mSecPtrs)
+    {
+        if(x->Cover(v))
+            return true;
+    }
+    return false;
+}
+
+std::vector<SigPtr> Road::GetSignals()
+{
+    return mSigPtrs;
+}
+

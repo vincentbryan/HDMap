@@ -22,9 +22,20 @@ int main(int argc, char** argv)
     map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/planner02.xml");
 
     ROS_INFO_STREAM("Map agent is ready...");
-    map.Send();
-    Routing r(map);
-    ros::Subscriber sub = n.subscribe("Localization", 1000, &Routing::CallBack, &r);
+    ROS_INFO_STREAM("Input 'r' to start");
+
+    char c;
+    while (cin >> c)
+    {
+        if(c == 'r')
+        {
+            map.Send();
+            break;
+        }
+    }
+
+    Routing r(n, map);
+    ros::Subscriber sub = n.subscribe("/gps/Localization", 1000, &Routing::CallBack, &r);
 
     ros::spin();
 

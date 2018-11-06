@@ -17,9 +17,10 @@ void Planner::GlobalPlanning()
 {
     pStart = mHDMap.Locate(mStartPoint);
     pEnd = mHDMap.Locate(mEndPoint);
-
-    ROS_INFO_STREAM("Start Point: " << pStart->mRoadId << " " << pStart->mDirection);
-    ROS_INFO_STREAM("End   Point: " << pEnd->mRoadId << " " << pEnd->mDirection);
+    pStart = mHDMap.GetRoadPtrById(0);
+    pEnd = mHDMap.GetRoadPtrById(3);
+    ROS_INFO_STREAM("Start Point: " << pStart->mRoadId);
+    ROS_INFO_STREAM("End   Point: " << pEnd->mRoadId);
 
     std::vector<RoadPtr> v;
     v.emplace_back(pStart);
@@ -56,7 +57,25 @@ void Planner::Evaluate()
         ROS_ERROR("Global planning failed, please reset the start point and end point...");
         return;
     }
-    mRouting = mAllRouting.front();
+
+    int len = 100000;
+    int idx = -1;
+    for(int i = 0; i < mAllRouting.size(); ++i)
+    {
+        if(mAllRouting[i].size() < len)
+        {
+            idx = i;
+            len = mAllRouting[i].size();
+        }
+
+    }
+    if(idx < 0 or idx >= mAllRouting.size())
+    {
+        ROS_ERROR("Global planning failed, please reset the start point and end point...");
+        return;
+    }
+
+    mRouting = mAllRouting[idx];
 }
 
 void Planner::Send()
@@ -74,10 +93,7 @@ void Planner::Send()
         if(i + 1 < mRouting.size())
         {
             int jid = mRouting[i]->mNextJid;
-            mHDMap.GetJuncPtrById(jid)->GetSubRoadLink(mRouting[i]->mRoadId,
-                                   mRouting[i]->mDirection,
-                                   mRouting[i+1]->mRoadId,
-                                   mRouting[i+1]->mDirection).Send(*pSender);
+            mHDMap.GetJuncPtrById(jid)->GetRoadLink(mRouting[i]->mRoadId, mRouting[i+1]->mRoadId).Send(*pSender);
         }
     }
 }
@@ -99,11 +115,22 @@ std::string Planner::ToXML(const std::string &file_name)
             auto junc = mHDMap.mJuncPtrs[jid];
 
             p_junc.add("<xmlattr>.id",junc->mJunctionId);
-            auto sub_road_link =  mHDMap.mJuncPtrs[jid]->GetSubRoadLink(mRouting[i]->mRoadId,
-                                                                        mRouting[i]->mDirection,
-                                                                        mRouting[i+1]->mRoadId,
-                                                                        mRouting[i+1]->mDirection);
-            p_junc.add_child("roadLink", sub_road_link.ToXML());
+
+            if(junc->mVertices.empty())junc->GenerateVertices();
+
+            pt::ptree p_vec;
+            pt::ptree p_v;
+            for(auto & v : junc->mVertices)
+            {
+                p_v.add("<xmlattr>.x", v.x);
+                p_v.add("<xmlattr>.y", v.y);
+                p_vec.add_child("vertex", p_v);
+                p_v.clear();
+            }
+            p_junc.add_child("vertice", p_vec);
+
+            auto road_link =  mHDMap.GetJuncPtrById(jid)->GetRoadLink(mRouting[i]->mRoadId, mRouting[i+1]->mRoadId);
+            p_junc.add_child("roadLink", road_link.ToXML());
             tree.add_child("hdmap.junctions.junction", p_junc);
             p_junc.clear();
         }

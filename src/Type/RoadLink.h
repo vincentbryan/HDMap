@@ -8,9 +8,10 @@
 #include "LaneLink.h"
 #include "../Interface/IView.h"
 #include "../Interface/IXML.h"
+#include "../Interface/IGeometry.h"
 namespace hdmap
 {
-class RoadLink: public IXML
+class RoadLink: public IXML, public IView
 {
 public:
     unsigned int mFromRoadId;
@@ -26,6 +27,7 @@ public:
 
     std::vector<std::vector<Pose>> GetAllPose();
 
+    void Send(Sender &sender) override;
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
 };

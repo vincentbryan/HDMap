@@ -13,10 +13,11 @@
 #include "../Interface/IView.h"
 #include "../Tool/Sender.h"
 #include "common.h"
+#include "../Interface/IGeometry.h"
 
 namespace hdmap
 {
-class LaneSection : public IView, public IXML
+class LaneSection : public IView, public IXML, public IGeometry
 {
 public:
     double mStartS;
@@ -54,6 +55,7 @@ public:
     double Distance(const Vector2d &v);
 
     void Send(Sender &sender) override;
+    bool Cover(const Vector2d &v) override;
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
 };

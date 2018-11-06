@@ -69,3 +69,10 @@ void RoadLink::FromXML(const pt::ptree &p)
         }
     }
 }
+
+void RoadLink::Send(Sender &sender)
+{
+    for(auto & x : mLaneLinks)
+        x.Send(sender);
+}
+

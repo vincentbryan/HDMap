@@ -1,5 +1,10 @@
 Header header
+string type
 float64 x
 float64 y
-string type
-string info
+float64 z
+bool vertical
+string shape
+bool left
+bool forward
+bool right

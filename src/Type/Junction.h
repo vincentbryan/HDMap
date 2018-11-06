@@ -14,19 +14,22 @@
 #include "../Math/Bezier.h"
 #include "RoadLink.h"
 #include "../Interface/IView.h"
+#include "../Interface/IGeometry.h"
 
 namespace hdmap
 {
-class Junction : public IView, public IXML
+class Junction : public IView, public IXML, public IGeometry
 {
 public:
     static unsigned int JUNCTION_ID;
     unsigned int mJunctionId;
     std::map<std::pair<unsigned int, unsigned int>, RoadLink> mRoadLinks;
     std::vector<std::vector<Pose>> mPoses;
+    std::vector<Vector2d> mVertices;
 
 private:
-    void GenerateAllPose();
+    void _GenerateAllPose();
+
 
 public:
     explicit Junction();
@@ -45,10 +48,12 @@ public:
 
     RoadLink GetRoadLink (int rid1, int rid2 = -1);
     double Distance(const Vector2d & v);
+    void GenerateVertices();
 
     void Send(Sender &sender) override;
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
+    bool Cover(const Vector2d &v) override;
 };
 }
 #endif //HDMAP_JUNCTION_H

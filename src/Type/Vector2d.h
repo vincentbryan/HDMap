@@ -48,14 +48,14 @@ public:
     {
         return v * d;
     }
-    bool operator == (Vector2d & v)
+    bool operator == (const Vector2d & v)
     {
-        return x == v.x && y == v.y;
+        return fabs(x - v.x) < 0.000001 && fabs(y - v.y) < 0.000001;
     }
 
-    bool operator != (Vector2d & v)
+    bool operator != (const Vector2d & v)
     {
-        return x != v.x || y != v.y;
+        return fabs(x - v.x) >= 0.000001 || fabs(y - v.y) >= 0.000001;
     }
 
     Vector2d& operator = (const Vector2d& v)

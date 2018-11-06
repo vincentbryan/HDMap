@@ -7,16 +7,17 @@ using namespace hdmap;
 
 void Signal::Send(hdmap::Sender &sender)
 {
-    std::string text = mType + "[" + mInfo + "]";
-    auto m = sender.GetText(text, mPosition, 0, 1.0, 0, 1.0, 0.5, 1.0);
+    std::string text = mInfo;
+    auto m = sender.GetText(text, {x, y}, 0, 1.0, 0, 1.0, 0.5, 1.0);
     sender.array.markers.emplace_back(m);
     sender.Send();
 }
 
-Signal::Signal(Vector2d _v, int _dir, std::string _type, std::string _info)
+Signal::Signal(double _x, double _y, double _z, std::string _type, std::string _info)
 {
-    mPosition = _v;
-    mDirection = _dir;
+    x = _x;
+    y = _y;
+    z = _z;
     mType = _type;
     mInfo = _info;
 }
@@ -24,9 +25,9 @@ Signal::Signal(Vector2d _v, int _dir, std::string _type, std::string _info)
 boost::property_tree::ptree Signal::ToXML()
 {
     pt::ptree p_sig;
-    p_sig.add("x", mPosition.x);
-    p_sig.add("y", mPosition.y);
-    p_sig.add("direction", mDirection);
+    p_sig.add("x", x);
+    p_sig.add("y", y);
+    p_sig.add("z", z);
     p_sig.add("type", mType);
     p_sig.add("info", mInfo);
 
@@ -35,9 +36,9 @@ boost::property_tree::ptree Signal::ToXML()
 
 void Signal::FromXML(const pt::ptree &p)
 {
-    mPosition.x = p.get<double>("x");
-    mPosition.y = p.get<double>("y");
-    mDirection = p.get<int>("direction");
+    x = p.get<double>("x");
+    y = p.get<double>("y");
+    z = p.get<double>("z");
     mType = p.get<std::string>("type");
     mInfo = p.get<std::string>("info");
 }

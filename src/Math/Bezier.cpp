@@ -117,6 +117,7 @@ std::vector<double> Bezier::GetParam()
     Vector2d d = p0;
     return {a.x, b.x, c.x, d.x, a.y, b.y, c.y, d.y};
 }
+
 Bezier::Bezier(std::vector<double> v)
 {
     assert(v.size() == 8);
