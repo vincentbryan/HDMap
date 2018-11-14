@@ -2,7 +2,7 @@
 // Created by vincent on 18-10-16.
 //
 
-#include "LaneLink.h"
+#include "Type/LaneLink.h"
 using namespace hdmap;
 
 LaneLink::LaneLink(int _from_lane_idx, int _to_lane_idx, hdmap::Bezier _bezier)

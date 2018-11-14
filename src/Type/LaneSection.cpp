@@ -2,9 +2,9 @@
 // Created by vincent on 18-10-8.
 //
 
-#include "LaneSection.h"
+#include "Type/LaneSection.h"
 #include <algorithm>
-#include "../Math/Line.h"
+#include "Math/Line.h"
 #include "common.h"
 
 using namespace hdmap;
@@ -24,7 +24,7 @@ void LaneSection::AddLane(int _lane_idx, double _start_width, double _end_width,
     if(_lane_idx > 0) mRightBoundary = std::max(mRightBoundary, _lane_idx);
     if(_lane_idx < 0) mLeftBoundary = std::min(mLeftBoundary, _lane_idx);
 
-    int lane_id = mSectionId * 10 + 5 + _lane_idx;
+    int lane_id = mSectionId * 100 + _lane_idx;
     CubicFunction width(_start_width, mReferLine.Length(), _end_width);
     Lane lane(lane_id, width);
     lane.mPredecessors = std::move(_pred);
@@ -164,17 +164,6 @@ void LaneSection::FromXML(const pt::ptree &p)
     }
 }
 
-double LaneSection::Distance(const Vector2d &v)
-{
-    double min_dist = 1000000;
-    for(auto & p : GetReferPose())
-    {
-        double t = sqrt((p.x - v.x)*(p.x - v.x) + (p.y - v.y)*(p.y - v.y));
-        if(t < min_dist)
-            min_dist = t;
-    }
-    return min_dist;
-}
 
 bool LaneSection::Cover(const Vector2d &v)
 {
@@ -194,32 +183,6 @@ bool LaneSection::Cover(const Vector2d &v)
     }
 
     return IGeometry::Cover(vec, v);
-
-/*
-    bool res = false;
-    if(vec.size() < 3) return res;
-
-    vec.push_back(vec.front());///构成一个循环
-    for(int i = 0; i + 1 < vec.size(); i++)
-    {
-        double slope = 0.0;
-        if(vec[i+1].x - vec[i].x != 0)
-        {
-            slope = (vec[i+1].y - vec[i].y) / (vec[i+1].x - vec[i].x);
-        }
-        else
-        {
-            if(vec[i].x == v.x and (vec[i].y - v.y) * (vec[i+1].y - v.y) < 0)
-                return true;
-        }
-
-        double t1 = (v.x - vec[i].x) * (v.x - vec[i+1].x);
-        double t2 = v.y - (slope * (v.x - vec[i].x) + vec[i].y);
-        if(t1 < 0 and t2 < 0) res = !res;
-    }
-
-    return res;
-*/
 
 }
 

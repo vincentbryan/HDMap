@@ -2,7 +2,7 @@
 // Created by vincent on 18-10-14.
 //
 
-#include "Vector2d.h"
+#include "Type/Vector2d.h"
 double hdmap::Vector2d::SegmentDistance(const hdmap::Vector2d &start,
                                         const hdmap::Vector2d &end,
                                         const hdmap::Vector2d &target)

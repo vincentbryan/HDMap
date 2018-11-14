@@ -2,7 +2,7 @@
 // Created by vincent on 18-10-14.
 //
 
-#include "Bezier.h"
+#include "Math/Bezier.h"
 #include <cassert>
 
 using namespace hdmap;

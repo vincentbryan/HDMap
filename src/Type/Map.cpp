@@ -4,8 +4,11 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <algorithm>
-#include <LocalMapRequest.h>
-#include "Map.h"
+#include "Type/Map.h"
+#include "common.h"
+#include <boost/property_tree/ptree.hpp>
+#include <algorithm>
+#include "Type/Map.h"
 #include "common.h"
 
 using namespace hdmap;
@@ -78,16 +81,16 @@ void Map::AddConnection(JuncPtr p, unsigned int from_road, int from_lane_idx,
 
 
     p->AddConnection(
-         from_road, from_lane_idx, start_pose,
-         to_road, to_lane_idx, end_pose,
-         _ctrl_len1, _ctrl_len2
+        from_road, from_lane_idx, start_pose,
+        to_road, to_lane_idx, end_pose,
+        _ctrl_len1, _ctrl_len2
     );
-    
+
     if(from_lane_idx > 0)
         mRoadPtrs[from_road]->mNextJid = p->mJunctionId;
     else
         mRoadPtrs[from_road]->mPrevJid = p->mJunctionId;
-    
+
     if(to_lane_idx > 0)
         mRoadPtrs[to_road]->mPrevJid = p->mJunctionId;
     else
@@ -151,7 +154,6 @@ void Map::Trajectory(std::vector<std::pair<unsigned int, int>> sequences)
 {
     /*
     std::vector<Pose> res;
-
     for(int i = 0; i < sequences.size()-1; i++)
     {
         std::pair<int, int> k;
@@ -163,30 +165,23 @@ void Map::Trajectory(std::vector<std::pair<unsigned int, int>> sequences)
                 break;
             }
         }
-
         auto road_traj = mRoads[sequences[i].first].Trajectory(sequences[i].second, k.first);
         res.insert(res.end(), road_traj.begin(), road_traj.end());
-
-
     }
-
     std::vector<Pose> res;
     for(auto x : sequences)
     {
         unsigned road_id = x.first;
         int lane_idx = x.second;
-
         for(auto & section : mRoads[road_id].mSections)
         {
             auto lane_pose = section.GetLanePoseByIndex(lane_idx);
             res.insert(res.end(), lane_pose.begin(), lane_pose.end());
-
             auto successors = section.mLanes[lane_idx].successors;
             if(!successors.empty())
                 lane_idx = section.mLanes[lane_idx].successors.front();
         }
     }
-
 }
 */
 
@@ -219,15 +214,18 @@ void Map::FromXML(const pt::ptree &p)
         RoadPtr pRoad(new Road());
         pRoad->FromXML(r.second);
         mRoadPtrs.emplace_back(pRoad);
+        Road::ROAD_ID = std::max((unsigned)0, pRoad->mRoadId);
     }
-    Road::ROAD_ID = mRoadPtrs.back()->mRoadId + 1;
+    Road::ROAD_ID++;
 
     for(auto & j : p.get_child("hdmap.junctions"))
     {
         JuncPtr pJunc(new Junction());
         pJunc->FromXML(j.second);
         mJuncPtrs.emplace_back(pJunc);
+        Junction::JUNCTION_ID = std::max((unsigned)0, pJunc->mJunctionId);
     }
+    Junction::JUNCTION_ID++;
 }
 
 RoadPtr Map::GetRoadPtrById(unsigned int _road_id)
@@ -250,3 +248,10 @@ JuncPtr Map::GetJuncPtrById(unsigned int _junc_id)
     return hdmap::JuncPtr();
 }
 
+void Map::Clear()
+{
+    mRoadPtrs.clear();
+    mJuncPtrs.clear();
+    Road::ROAD_ID = 0;
+    Junction::JUNCTION_ID = 0;
+}
