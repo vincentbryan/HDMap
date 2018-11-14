@@ -1,8 +1,0 @@
-float64 x
-float64 y
-bool has_local_map
----
-bool need_update
-HDMap/RoadMSG curr_road
-HDMap/JunctionMSG junction
-HDMap/RoadMSG next_road

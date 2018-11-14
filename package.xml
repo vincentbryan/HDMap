@@ -44,7 +44,6 @@
         <build_depend>std_msgs</build_depend>
         <build_depend>geometry_msgs</build_depend>
   <!-- Use build_export_depend for packages you need in order to build against this package: -->
-  <!--<build_export_depend>message_generation</build_export_depend> -->
     <build_export_depend>roscpp</build_export_depend>
     <build_export_depend>rospy</build_export_depend>
     <build_export_depend>std_msgs</build_export_depend>

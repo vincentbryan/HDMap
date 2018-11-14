@@ -2,7 +2,7 @@
 // Created by vincent on 18-10-13.
 //
 
-#include "Junction.h"
+#include "Type/Junction.h"
 
 using namespace hdmap;
 
@@ -47,13 +47,11 @@ bool Junction::Check(std::pair<unsigned int, unsigned int> links)
     return mRoadLinks.find(links) != mRoadLinks.end();
 }
 
-
 std::pair<int, int> Junction::GetLink(std::pair<unsigned int, unsigned int> RoadPair)
 {
     auto it = mRoadLinks.find(RoadPair);
     return  it->first;
 }
-
 
 std::vector<Pose> Junction::GetPose(unsigned int from_road_id,
                                     int from_lane_idx,
@@ -66,6 +64,23 @@ std::vector<Pose> Junction::GetPose(unsigned int from_road_id,
 void Junction::Send(Sender &sender)
 {
     if(mVertices.empty()) GenerateVertices();
+
+    std::string text = "Junction[" + std::to_string(mJunctionId) + "]";
+    Vector2d v;
+
+    for(auto & x : mVertices)
+    {
+        v.x += x.x;
+        v.y += x.y;
+    }
+    if(!mVertices.empty())
+    {
+        v.x /= mVertices.size();
+        v.y /= mVertices.size();
+    }
+
+    sender.array.markers.emplace_back(sender.GetText(text, v));
+    sender.Send();
 
     std::vector<Pose> ps;
     for(auto & x : mVertices)

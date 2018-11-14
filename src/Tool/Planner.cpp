@@ -3,7 +3,7 @@
 //
 
 #include <boost/property_tree/ptree.hpp>
-#include "Planner.h"
+#include "Tool/Planner.h"
 
 using namespace hdmap;
 namespace pt = boost::property_tree;
@@ -15,12 +15,10 @@ Planner::Planner(const Map & map, std::shared_ptr<Sender> _sender) :
 
 void Planner::GlobalPlanning()
 {
-    pStart = mHDMap.Locate(mStartPoint);
-    pEnd = mHDMap.Locate(mEndPoint);
-    pStart = mHDMap.GetRoadPtrById(0);
-    pEnd = mHDMap.GetRoadPtrById(3);
-    ROS_INFO_STREAM("Start Point: " << pStart->mRoadId);
-    ROS_INFO_STREAM("End   Point: " << pEnd->mRoadId);
+//    pStart = mHDMap.Locate(mStartPoint);
+//    pEnd = mHDMap.Locate(mEndPoint)
+    mAllRouting.clear();
+    mRouting.clear();
 
     std::vector<RoadPtr> v;
     v.emplace_back(pStart);
@@ -98,7 +96,7 @@ void Planner::Send()
     }
 }
 
-std::string Planner::ToXML(const std::string &file_name)
+void Planner::ToXML(std::string &str)
 {
     try
     {
@@ -134,10 +132,36 @@ std::string Planner::ToXML(const std::string &file_name)
             tree.add_child("hdmap.junctions.junction", p_junc);
             p_junc.clear();
         }
-        pt::write_xml(file_name, tree);
+        std::stringstream ss;
+        pt::write_xml(ss, tree);
+        str = ss.str();
     }
     catch (std::exception &e)
     {
         std::cout << "Error: " << e.what() << std::endl;
     }
+}
+
+bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Response &res)
+{
+    pStart = mHDMap.GetRoadPtrById(req.start_rid);
+    pEnd = mHDMap.GetRoadPtrById(req.end_rid);
+
+    ROS_INFO("Request: road[%d] --> road[%d]", req.start_rid, req.end_rid);
+    GlobalPlanning();
+
+    if(mRouting.empty())
+    {
+        ROS_ERROR_STREAM("Result: Failed!!!");
+        return false;
+    }
+
+    ROS_INFO_STREAM("Result:");
+    for(auto & x : mRouting)
+    {
+        ROS_INFO_STREAM("\t" << x->mRoadId);
+    }
+    ToXML(res.route);
+    Send();
+    return true;
 }

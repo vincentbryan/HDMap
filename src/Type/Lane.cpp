@@ -2,14 +2,14 @@
 // Created by vincent on 18-10-8.
 //
 
-#include "Lane.h"
+#include "Type/Lane.h"
 
 using namespace hdmap;
 
 Lane::Lane(int _lane_id, CubicFunction _offset, LANE_TYPE _type)
 {
     mLandId = _lane_id;
-    mLaneIndex = int(mLandId) % 10 - 5;
+    mLaneIndex = int(mLandId) % 10;
     mOffset = _offset;
     mType = _type;
 }

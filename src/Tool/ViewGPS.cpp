@@ -6,7 +6,7 @@
 #include <ros/ros.h>
 #include "nox_location.h"
 #include <visualization_msgs/Marker.h>
-#include "../Type/Angle.h"
+#include "Type/Angle.h"
 
 class ViewGPS
 {

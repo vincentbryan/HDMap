@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(HDMap)
 set(CMAKE_CXX_STANDARD 11)
 ## Compile as C++11, supported in ROS Kinetic and newer
- add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -50,13 +50,11 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   Location.msg Pose2DArray.msg JunctionMSG.msg RoadMSG.msg
-   msg_lane.msg msg_section.msg msg_signal.msg msg_road.msg msg_connection.msg msg_junction.msg msg_scene.msg
-		 msg_signal_list.msg
+   msg_signal.msg msg_signal_list.msg msg_map_cmd.msg
  )
 ## Generate services in the 'srv' folder
  add_service_files(
-   FILES LocalMap.srv
+   FILES srv_route.srv srv_map_cmd.srv
 #   Service1.srv
 #   Service2.srv
  )
@@ -104,7 +102,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   	INCLUDE_DIRS include
-	CATKIN_DEPENDS	message_runtime
+	CATKIN_DEPENDS message_runtime
 #  LIBRARIES Map
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
@@ -143,12 +141,12 @@ add_executable(MapAgent
 		${MATH}
 		src/MapAgent.cpp
 		src/Tool/Sender.cpp
-		src/Tool/Sender.h
-		src/Interface/IView.h
-		src/Interface/IXML.h
-		src/Interface/IGeometry.h
-		src/Tool/Routing.h
-		src/Tool/Routing.cpp
+		include/Tool/Sender.h
+		include/Interface/IView.h
+		include/Interface/IXML.h
+		include/Interface/IGeometry.h
+		include/Tool/Route.h
+		src/Tool/Route.cpp
 )
 
 add_executable(MapService
@@ -156,50 +154,54 @@ add_executable(MapService
 		${MATH}
 		src/MapService.cpp
 		src/Tool/Sender.cpp
-		src/Tool/Sender.h
-		src/Interface/IView.h
-		src/Interface/IXML.h
-		src/Interface/IGeometry.h
+		include/Tool/Sender.h
+		include/Interface/IView.h
+		include/Interface/IXML.h
+		include/Interface/IGeometry.h
 		src/Tool/Planner.cpp
-		src/Tool/Planner.h
+		include/Tool/Planner.h
 )
 
 add_executable(MapGenerator
 		${TYPES}
 		${MATH}
 		src/Tool/Sender.cpp
-		src/Tool/Sender.h
-		src/Interface/IView.h
-		src/Interface/IXML.h
-		src/Interface/IGeometry.h
+		include/Tool/Sender.h
+		include/Interface/IView.h
+		include/Interface/IXML.h
+		include/Interface/IGeometry.h
 		src/MapGenerator.cpp
 		src/Type/common.h
 )
 
-add_executable(talker talker.cpp)
-
-add_executable(XMLTest XMLTest.cpp)
-
-add_executable(DataProcess
+add_executable(MapCommand
 		${TYPES}
 		${MATH}
-		src/Tool/DataProcess.cpp
+		src/MapCommand.cpp
 		src/Tool/Sender.cpp
-		src/Tool/Sender.h)
+		include/Tool/Sender.h
+		include/Interface/IView.h
+		include/Interface/IXML.h
+		include/Interface/IGeometry.h
+)
 
 add_executable(ViewGPS
 		${TYPES}
 		${MATH}
 		src/Tool/ViewGPS.cpp
 		src/Tool/Sender.cpp
-		src/Tool/Sender.h)
+		include/Tool/Sender.h)
 
-add_executable(LocalMap
-		src/Tool/LocalMap.cpp
-		src/Tool/Sender.cpp
-		src/Tool/Sender.h
+add_executable(MapViewer
 		${TYPES}
 		${MATH}
+		src/MapViewer.cpp
+		src/Tool/Sender.cpp
+		include/Tool/Sender.h
+		include/Interface/IView.h
+		include/Interface/IXML.h
+		include/Interface/IGeometry.h
+		src/Type/common.h
 )
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -216,19 +218,8 @@ add_executable(LocalMap
 target_link_libraries(MapService
 ${catkin_LIBRARIES}
 )
-target_link_libraries(talker
-${catkin_LIBRARIES}
-)
-
-target_link_libraries(DataProcess
-${catkin_LIBRARIES}
-)
 
 target_link_libraries(ViewGPS
-${catkin_LIBRARIES}
-)
-
-target_link_libraries(LocalMap
 ${catkin_LIBRARIES}
 )
 
@@ -237,6 +228,14 @@ ${catkin_LIBRARIES}
 )
 
 target_link_libraries(MapAgent
+${catkin_LIBRARIES}
+)
+
+target_link_libraries(MapCommand
+${catkin_LIBRARIES}
+)
+
+target_link_libraries(MapViewer
 ${catkin_LIBRARIES}
 )
 #############

@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "map_service");
     if(argc != 2)
     {
-        std::cout << "Usage: ./MapService file_name" << std::endl;
+        std::cout << "Usage: ./MapService input_map" << std::endl;
         return 1;
     }
 
@@ -30,22 +30,13 @@ int main(int argc, char** argv)
     Map map;
     map.SetSender(p_sender);
     map.Load(argv[1]);
-
-    ROS_INFO("Input 'r' to start");
-
     Planner planner(map, p_sender);
-    planner.SetStartPoint({-200, -100});
-    planner.SetEndPoint({200, -100});
-    planner.GlobalPlanning();
-    planner.Send();
-    //planner.ToXML("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/planner02.xml");
 
-    char c;
-    while (std::cin >> c)
-    {
-        if(c == 'r') planner.Send();
-        else break;
-    }
+    ros::ServiceServer server = n.advertiseService("map_service", &Planner::OnRequest, &planner);
+
+    ROS_INFO("MapService is ready...");
+
+    ros::spin();
 
     return 0;
 }

@@ -4,7 +4,7 @@
 
 #include <ros/ros.h>
 #include "Type/Map.h"
-#include "Tool/Routing.h"
+#include "Tool/Route.h"
 
 using namespace hdmap;
 using namespace std;
@@ -14,30 +14,17 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "map_agent");
     ros::NodeHandle n;
 
-    ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 1000);
-    shared_ptr<Sender> p_sender(new Sender(pub));
-
-    Map map;
-    map.SetSender(p_sender);
-    map.Load("/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/data/planner02.xml");
-
     ROS_INFO_STREAM("Map agent is ready...");
-    ROS_INFO_STREAM("Input 'r' to start");
 
-    char c;
-    while (cin >> c)
+    Route r(n);
+
+    ros::Rate rate(5);
+
+    while(ros::ok())
     {
-        if(c == 'r')
-        {
-            map.Send();
-            break;
-        }
+        r.Process();
+        rate.sleep();
+        ros::spinOnce();
     }
-
-    Routing r(n, map);
-    ros::Subscriber sub = n.subscribe("/gps/Localization", 1000, &Routing::CallBack, &r);
-
-    ros::spin();
-
     return 0;
 }
