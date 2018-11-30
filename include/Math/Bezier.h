@@ -31,7 +31,8 @@ public:
     Pose GetPose(double s);
     Pose GetStartPose();
     Pose GetEndPose();
-    std::vector<Pose> GetAllPose(double ds);
+
+    std::vector<Pose> GetPoses(double ds, double start = 0.0, double end = 1.0);
     std::vector<double> GetParam();
     static double DEFAULT_LENGTH;
 };

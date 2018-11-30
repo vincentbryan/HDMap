@@ -23,7 +23,7 @@ std::vector<Pose> RoadLink::GetPose(int _from_lane_idx, int _to_lane_idx)
     {
         if(x.mFromLaneIndex == _from_lane_idx && x.mToLaneIndex == _to_lane_idx)
         {
-            return x.mReferLine.GetAllPose(0.1);
+            return x.mReferLine.GetPoses(0.5);
         }
     }
 }
@@ -34,7 +34,7 @@ std::vector<std::vector<Pose>> RoadLink::GetAllPose()
 
     for(auto & x : mLaneLinks)
     {
-        res.emplace_back(x.mReferLine.GetAllPose(0.1));
+        res.emplace_back(x.mReferLine.GetPoses(0.5));
     }
 
     return res;

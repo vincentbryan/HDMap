@@ -3,9 +3,6 @@
 //
 
 #include "Type/LaneSection.h"
-#include <algorithm>
-#include "Math/Line.h"
-#include "common.h"
 
 using namespace hdmap;
 
@@ -36,7 +33,7 @@ void LaneSection::AddLane(int _lane_idx, double _start_width, double _end_width,
 std::vector<Pose> LaneSection::GetReferPose()
 {
     if(mAllLanePose.empty())
-        GenerateAllPose(0.1);
+        GenerateAllPose(0.5);
     return mAllLanePose[0];
 }
 
@@ -45,14 +42,14 @@ void LaneSection::GenerateAllPose(double ds)
     for(auto x : mLanes)
         mAllLanePose[x.first] = std::vector<Pose>();
 
-    double s_ = 0;
+    double _s = 0;
     double len = mReferLine.Length();
 
     while (true)
     {
-        AppendPose(s_);
-        s_ += ds;
-        if(s_ >= len)
+        AppendPose(_s);
+        _s += ds;
+        if(_s >= len)
         {
             AppendPose(len);
             break;
@@ -81,7 +78,7 @@ void LaneSection::AppendPose(double s_)
 std::map<int, std::vector<Pose>> LaneSection::GetAllPose()
 {
     if(mAllLanePose.empty())
-        GenerateAllPose(0.1);
+        GenerateAllPose(0.5);
     return mAllLanePose;
 }
 
@@ -131,6 +128,7 @@ std::vector<Pose> LaneSection::GetLanePoseByIndex(int _index)
     return mAllLanePose[_index];
 }
 
+
 void LaneSection::FromXML(const pt::ptree &p)
 {
     for(auto & sec_child : p.get_child(""))
@@ -167,10 +165,11 @@ void LaneSection::FromXML(const pt::ptree &p)
 
 bool LaneSection::Cover(const Vector2d &v)
 {
-    if(mAllLanePose.empty()) GenerateAllPose(0.1);
+    if(mAllLanePose.empty()) GenerateAllPose(0.5);
 
     std::vector<Vector2d> vec;
-    for(auto & x : mReferLine.GetAllPose(0.1))
+
+    for(auto & x : mReferLine.GetPoses(0.5))
     {
         vec.push_back(x.GetPosition());
     }
@@ -182,7 +181,8 @@ bool LaneSection::Cover(const Vector2d &v)
         for(auto & x : ps) vec.push_back(x.GetPosition());
     }
 
-    return IGeometry::Cover(vec, v);
+    return IGeometry::Cover(vec, {v});
 
 }
+
 

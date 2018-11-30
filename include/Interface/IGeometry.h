@@ -4,7 +4,11 @@
 
 #ifndef HDMAP_IGEOMETRY_H
 #define HDMAP_IGEOMETRY_H
+
 #include "Type/Vector2d.h"
+#include <vector>
+#include <array>
+#include <algorithm>
 
 namespace hdmap
 {
@@ -14,10 +18,12 @@ public:
     virtual bool Cover(const Vector2d & v) = 0;
 
 protected:
-    bool Cover(std::vector<Vector2d> _vertices, const Vector2d &v)
+    bool Cover(std::vector<Vector2d> _vertices, const std::vector<Vector2d> &vp)
     {
-        bool res = false;
-        if(_vertices.size() < 3) return res;
+
+        if (_vertices.size() < 3) return false;
+
+        std::vector<bool> res(vp.size(), false);
 
         _vertices.emplace_back(_vertices.front());
         for(int i = 0; i + 1 < _vertices.size(); ++i)
@@ -29,15 +35,19 @@ protected:
             }
             else
             {
-                if(_vertices[i].x == v.x and (_vertices[i].y - v.y) * (_vertices[i+1].y - v.y) < 0)
-                    return true;
+                for (const auto &v:vp) {
+                    if (_vertices[i].x == v.x and (_vertices[i].y - v.y) * (_vertices[i + 1].y - v.y) < 0)
+                        return true;
+                }
             }
-
-            double t1 = (v.x - _vertices[i].x) * (v.x - _vertices[i+1].x);
-            double t2 = v.y - (slope * (v.x - _vertices[i].x) + _vertices[i].y);
-            if(t1 < 0 and t2 < 0) res = !res;
+            for (int j = 0; j < vp.size(); ++j) {
+                auto &v = vp[j];
+                double t1 = (v.x - _vertices[i].x) * (v.x - _vertices[i + 1].x);
+                double t2 = v.y - (slope * (v.x - _vertices[i].x) + _vertices[i].y);
+                if (t1 < 0 and t2 < 0) res[j] = !res[j];
+            }
         }
-        return res;
+        return std::all_of(res.begin(), res.end(), [](bool v) { return v; });
     }
 };
 

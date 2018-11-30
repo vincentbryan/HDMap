@@ -21,19 +21,29 @@ namespace hdmap
 class Sender;
 class Map : public IXML
 {
+
+    std::unordered_map<unsigned int, RoadPtr> mRoadIdToPtr;
+    std::unordered_map<unsigned int, JuncPtr> mJuncIdToPtr;
+
 public:
     std::vector<RoadPtr> mRoadPtrs;
     std::vector<JuncPtr> mJuncPtrs;
     std::shared_ptr<Sender> pSender;
 
-public:
     Map();
-    void SetSender(std::shared_ptr<Sender> _sender);
 
-    RoadPtr AddRoad(const Pose & _start_pose);
+    void SetSender(std::shared_ptr<Sender> sender);
+
+    RoadPtr AddRoad(const Pose &start_pose);
+
+    unsigned long GetRoadSize();
+
+    unsigned long GetJunctionSize();
+
     void CommitRoadInfo();
 
     JuncPtr AddJunction();
+
     void AddConnection(JuncPtr p,
                        unsigned int from_road_id, int from_lane_idx,
                        unsigned int to_road_id, int to_lane_idx,
@@ -49,6 +59,7 @@ public:
     void Clear();
 
     std::vector<RoadPtr> AdjacentRoadInfo(RoadPtr p_road);
+
 //    void Trajectory(std::vector<std::pair<unsigned int, int>> sequences);
 
     RoadPtr Locate(const Vector2d & v);
@@ -57,8 +68,9 @@ public:
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
 
-    RoadPtr GetRoadPtrById(unsigned int _road_id);
-    JuncPtr GetJuncPtrById(unsigned int _junc_id);
+        RoadPtr GetRoadPtrById(unsigned int road_id);
+
+        JuncPtr GetJuncPtrById(unsigned int junc_id);
 };
 }
 

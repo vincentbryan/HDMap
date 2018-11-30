@@ -6,56 +6,72 @@
 #include <ros/ros.h>
 #include "nox_location.h"
 #include <visualization_msgs/Marker.h>
-#include "Type/Angle.h"
+#include <visualization_msgs/MarkerArray.h>
 
 class ViewGPS
 {
 public:
+
+
+
     ros::Publisher pub;
-    std::vector<std::pair<double, double>> poses;
-    int id = 0;
+
+
+    void  renderCar(ros::Publisher& MarkerPublisher, double x, double y, double radius){
+
+        visualization_msgs::Marker carmarker;
+        carmarker.header.frame_id = "hdmap";
+        carmarker.header.stamp = ros::Time();
+        carmarker.ns = "map_test";
+        carmarker.id = 0;
+        carmarker.type = visualization_msgs::Marker::MESH_RESOURCE;
+        carmarker.action = visualization_msgs::Marker::ADD;
+        carmarker.pose.position.x = x;
+        carmarker.pose.position.y = y;
+        carmarker.pose.position.z = 0.7;
+        carmarker.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(TFSIMD_HALF_PI,0,TFSIMD_PI+radius);
+        carmarker.scale.x = 1;
+        carmarker.scale.y = 1;
+        carmarker.scale.z = 1;
+        carmarker.mesh_resource = "package://HDMap/res/car2/car.dae";
+        carmarker.mesh_use_embedded_materials = 1;
+
+        visualization_msgs::Marker textmarker;
+
+        char _buf[32];
+        sprintf(_buf,"(%3.2f, %3.2f, %3.1f)",x,y,radius*180.0/TFSIMD_PI);
+        textmarker.text= _buf;
+
+        textmarker.header.frame_id = "hdmap";
+        textmarker.header.stamp = ros::Time();
+        textmarker.ns = "map_test";
+        textmarker.id = 1;
+        textmarker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+        textmarker.action = visualization_msgs::Marker::ADD;
+        textmarker.pose.position.x = x;
+        textmarker.pose.position.y = y;
+        textmarker.pose.position.z = 5;
+        textmarker.scale.x = 1;
+        textmarker.scale.y = 1;
+        textmarker.scale.z = 1;
+        textmarker.color.a = 1;
+        textmarker.color.b = 1;
+        textmarker.color.g = 1;
+        textmarker.color.r = 1;
+
+        visualization_msgs::MarkerArray array;
+        array.markers.emplace_back(carmarker);
+        array.markers.emplace_back(textmarker);
+        MarkerPublisher.publish(array);
+    }
+
+
 
     void CallBack(const nox_msgs::Location & msg)
     {
-        hdmap::Angle a;
-        a.FromYaw(msg.yaw);
-        ROS_INFO("[%6.3f %6.3f %6.3f]", msg.x, msg.y, a.Value());
-
-        std::pair<double, double> p(msg.x, msg.y);
-        poses.emplace_back(p);
-
-        if(poses.size() > 5)
-        {
-            visualization_msgs::Marker points;
-            points.header.frame_id = "/hdmap";
-            points.header.stamp = ros::Time::now();
-            points.action = visualization_msgs::Marker::ADD;
-
-            points.pose.orientation.w = 0;
-            points.id = id++;
-            points.type = visualization_msgs::Marker::POINTS;
-
-            points.scale.x = 0.08;
-            points.scale.y = 0.08;
-            points.color.g = 1.0f;
-            points.color.a = 1.0;
-
-            geometry_msgs::Point p1;
-            p1.x = poses.front().first;
-            p1.y = poses.front().second;
-            p1.z = 0;
-            points.points.push_back(p1);
-
-            geometry_msgs::Point p2;
-            p2.x = poses.back().first;
-            p2.y = poses.back().second;
-            p2.z = 0;
-            points.points.push_back(p2);
-
-            pub.publish(points);
-            poses.clear();
-        }
+        renderCar(this->pub,msg.x,msg.y,msg.yaw*TFSIMD_PI/180.0);
     }
+
 };
 
 int main(int argc, char **argv)
@@ -64,8 +80,9 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     ViewGPS viewGPS;
-    viewGPS.pub = n.advertise<visualization_msgs::Marker>("ViewGPS", 1000);
-    ros::Subscriber sub = n.subscribe("gps/Localization", 1000, &ViewGPS::CallBack, &viewGPS);
+    viewGPS.pub = n.advertise<visualization_msgs::MarkerArray>("ViewGPS", 0);
+
+    ros::Subscriber sub = n.subscribe("Localization", 1000, &ViewGPS::CallBack, &viewGPS);
 
     ros::spin();
 

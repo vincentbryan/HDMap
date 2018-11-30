@@ -28,6 +28,26 @@ public:
         return {x+v.x, y+v.y};
     }
 
+    Vector2d& operator +=(const Vector2d & v)
+    {
+        x+=v.x;
+        y+=v.y;
+        return *this;
+    }
+
+    Vector2d& operator *=(const double & v)
+    {
+        x*=v;
+        y*=v;
+        return *this;
+    }
+
+    Vector2d& operator /=(const double & v)
+    {
+        (*this)*=(1/v);
+        return *this;
+    }
+
     Vector2d operator - (const Vector2d & v) const
     {
         return {x-v.x, y-v.y};
@@ -74,6 +94,8 @@ public:
     {
         return std::sqrt(x*x + y*y);
     }
+    
+    static double Distance(const Vector2d& a, const Vector2d& b);
 
     static double SegmentDistance(const Vector2d & start, const Vector2d & end, const Vector2d & target);
 };

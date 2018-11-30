@@ -15,7 +15,7 @@ namespace hdmap
 class Planner
 {
 private:
-    Map mHDMap;
+    std::shared_ptr<Map> mHDMapPtr;
     Vector2d mStartPoint;
     Vector2d mEndPoint;
     RoadPtr pStart;
@@ -25,24 +25,11 @@ private:
     std::vector<RoadPtr> mRouting;
     std::vector<std::vector<RoadPtr>> mAllRouting;
 
-    std::shared_ptr<Sender> pSender;
+    std::shared_ptr<Sender> mSenderPtr;
 
 public:
-    explicit Planner(const Map & map, std::shared_ptr<Sender> _sender);
-
-    void SetStartPoint(const Vector2d & p)
-    {
-        mStartPoint = p;
-    }
-    void SetEndPoint(const Vector2d & p)
-    {
-        mEndPoint = p;
-    }
-    Vector2d GetStartPoint() const {return mStartPoint; }
-    Vector2d GetEndPoint() const {return mEndPoint; }
-
+    explicit Planner(std::shared_ptr<Map> _map, std::shared_ptr<Sender> _sender);
     void PlanUsingSearch();
-    void PlanUsingSequence(std::vector<int> vec);
     void Send();
     void ToXML(std::string &str);
 
@@ -50,6 +37,8 @@ public:
 
 private:
     void DFS(RoadPtr p_curr, std::vector<RoadPtr> v);
+
+    void BFS(RoadPtr p_start, RoadPtr p_end, std::vector<RoadPtr> &trace);
     void Evaluate();
 };
 }

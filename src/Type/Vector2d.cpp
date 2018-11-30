@@ -2,7 +2,8 @@
 // Created by vincent on 18-10-14.
 //
 
-#include "Type/Vector2d.h"
+#include <Type/Vector2d.h>
+
 double hdmap::Vector2d::SegmentDistance(const hdmap::Vector2d &start,
                                         const hdmap::Vector2d &end,
                                         const hdmap::Vector2d &target)
@@ -25,4 +26,9 @@ double hdmap::Vector2d::SegmentDistance(const hdmap::Vector2d &start,
         r *= start_to_end.norm();
         return sqrt(start_to_target.norm() * start_to_target.norm() - r*r);
     }
+}
+
+double hdmap::Vector2d::Distance(const hdmap::Vector2d &a, const hdmap::Vector2d &b) {
+    return sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));   
+    return 0;
 }

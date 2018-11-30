@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
 		geometry_msgs
 		message_generation
 )
+
+FIND_PACKAGE( PCL REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -50,13 +52,11 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   msg_signal.msg msg_signal_list.msg msg_map_cmd.msg
+   msg_signal.msg msg_signal_list.msg msg_map_cmd.msg msg_route_region.msg
  )
 ## Generate services in the 'srv' folder
  add_service_files(
-   FILES srv_route.srv srv_map_cmd.srv
-#   Service1.srv
-#   Service2.srv
+   FILES srv_route.srv srv_map_cmd.srv srv_map_data.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -117,6 +117,7 @@ catkin_package(
 include_directories(
 	include
 	${catkin_INCLUDE_DIRS}
+	${PCL_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -145,8 +146,8 @@ add_executable(MapAgent
 		include/Interface/IView.h
 		include/Interface/IXML.h
 		include/Interface/IGeometry.h
-		include/Tool/Route.h
-		src/Tool/Route.cpp
+		include/Tool/Client.h
+		src/Tool/Client.cpp
 )
 
 add_executable(MapService
@@ -159,6 +160,7 @@ add_executable(MapService
 		include/Interface/IXML.h
 		include/Interface/IGeometry.h
 		src/Tool/Planner.cpp
+		src/Tool/Resource.cpp
 		include/Tool/Planner.h
 )
 
@@ -203,6 +205,32 @@ add_executable(MapViewer
 		include/Interface/IGeometry.h
 		include/common.h
 )
+
+add_executable(MapTest
+		${TYPES}
+		${MATH}
+		src/MapTest.cpp
+		src/Tool/Sender.cpp
+		include/Tool/Sender.h
+		include/Interface/IView.h
+		include/Interface/IXML.h
+		include/Interface/IGeometry.h
+		include/common.h
+)
+
+add_executable(ViewDetectRegion
+		${TYPES}
+		${MATH}
+		src/Tool/ViewDetectRegion.cpp
+		src/Tool/Sender.cpp
+		include/Tool/Sender.h
+		include/Interface/IView.h
+		include/Interface/IXML.h
+		include/Interface/IGeometry.h
+		include/common.h
+)
+
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -238,6 +266,16 @@ ${catkin_LIBRARIES}
 target_link_libraries(MapViewer
 ${catkin_LIBRARIES}
 )
+
+target_link_libraries(MapTest
+${catkin_LIBRARIES}
+)
+
+target_link_libraries(ViewDetectRegion
+${catkin_LIBRARIES}
+${PCL_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############

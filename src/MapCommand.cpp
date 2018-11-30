@@ -14,20 +14,19 @@ static std::string brief =
         "  r33 r32          r2 r3           r7 r6           r10 r11\n"
         "   |  |            |  |            |  |             |  |  \n"
         "   (j9) <---r27--- (j1) <---r5---- (j2) <---r13---- (j4)  \n"
-        "        ----r26-->      ----r4--->      ----r12--->       \n"
+        "   |    ----r26-->      ----r4--->      ----r12--->       \n"
         "   |  |            |  |            |  |             |  |  \n"
-        "   | r36          r24 r25         r15 r14          r16 r17\n"
+        "   | r35          r24 r25         r15 r14          r16 r17\n"
         "   |  |            |  |            |  |             |  |  \n"
         "   |(j8)<---r23--- (j7) <---r21--- (j6) <---r19---- (j5)  \n"
-        "  r35   ----r22-->      ----r20-->      ----r18--->       \n"
+        "  r36   ----r22-->      ----r20-->      ----r18--->       \n"
         "   |  |            |  |            |  |                   \n"
         "   | r34          r28 r29         r31 r30     r41         \n"
         "   |  |            |  |            |  |                   \n"
-        "  (j11) ----r38--> (j12)----r40--> (j13)                  \n"
-        "        <---r37---      <---r39---                        \n"
+        "  (j11) <---r38--- (j12)<---r40--- (j13)                  \n"
+        "        ----r37-->      ----r39-->                        \n"
         "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n"
-        "\e[1;32m[start rid rid]: start a route                    \n"
-        "[ seq rid ... ]: start a route with a road sequence       \n"
+        "\e[1;32m[start rid ...]: start a route                    \n"
         "[     end     ]: finish a route                           \n"
         "[   exit / q  ]: exit\e[0m                                \n";
 
@@ -84,33 +83,15 @@ int main(int argc, char** argv)
         if(vec.front() == "start")
         {
             HDMap::srv_map_cmd srv;
-            if(vec.size() != 3)
+            if(vec.size() < 3)
             {
                 std::cout << "invalid input\n";
                 continue;
             }
 
             srv.request.cmd = "start";
-            srv.request.argv.emplace_back(atoi(vec[1].c_str()));
-            srv.request.argv.emplace_back(atoi(vec[2].c_str()));
 
-            if(client.call(srv))
-            {
-                v = srv.response.route;
-            }
-        }
-        else if(vec.front() == "seq")
-        {
-            HDMap::srv_map_cmd srv;
-            if(vec.size() <= 1)
-            {
-                std::cout << "invalid input\n";
-                continue;
-            }
-
-            srv.request.cmd = "seq";
-            for(int i = 1; i < vec.size(); i++)
-            {
+            for(int i = 1; i < vec.size(); ++i){
                 srv.request.argv.emplace_back(atoi(vec[i].c_str()));
             }
 
@@ -118,7 +99,6 @@ int main(int argc, char** argv)
             {
                 v = srv.response.route;
             }
-
         }
         else if(vec.front() == "end")
         {

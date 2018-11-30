@@ -28,10 +28,12 @@ public:
 
     Pose mStartPose;
     Pose mEndPose;
+    std::vector<Vector2d> mRegionVertices;
 
     explicit Road(Pose _start_pose = Pose());
 
     SecPtr AddSection(const Pose & _end_pose, double _ctrl_len1 = 1.0, double _ctrl_len2 = 1.0);
+
     void AddSignal(double _x, double _y, double _z, Angle dir, std::string _type, std::string _info);
 
     std::vector<SigPtr> GetSignals();
@@ -48,14 +50,20 @@ public:
 
     std::vector<Pose> Trajectory(int begin_lane_idx, int end_lane_idx);
 
-    Pose GetStartPose(int direction);
-    Pose GetEndPose(int direction);
+    std::vector<Pose> GetReferenceLinePoses();
+
+    std::vector<Pose> GetRightmostLinePoses();
+
+    double Distance(const Vector2d &v);
+
+    void GenerateRegionVertics();
 
     std::pair<unsigned int, int> Locate(const Vector2d & v);
 
     std::vector<std::vector<Pose>> GetLanePosesByDirection(int direction);
 
     void Send(Sender &sender) override;
+
 
 public:
     boost::property_tree::ptree ToXML() override;

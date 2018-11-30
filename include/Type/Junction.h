@@ -26,6 +26,7 @@ public:
     std::map<std::pair<unsigned int, unsigned int>, RoadLink> mRoadLinks;
     std::vector<std::vector<Pose>> mPoses;
     std::vector<Vector2d> mVertices;
+    std::vector<Vector2d> mRegionVertices;
 
 private:
     void _GenerateAllPose();
@@ -50,6 +51,7 @@ public:
     double Distance(const Vector2d & v);
     void GenerateVertices();
 
+    void GenerateRegionVertics(hdmap::Map *mapPtr);
     void Send(Sender &sender) override;
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;

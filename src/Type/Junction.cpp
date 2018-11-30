@@ -3,6 +3,7 @@
 //
 
 #include "Type/Junction.h"
+#include "Type/Map.h"
 
 using namespace hdmap;
 
@@ -78,20 +79,27 @@ void Junction::Send(Sender &sender)
         v.x /= mVertices.size();
         v.y /= mVertices.size();
     }
-
     sender.array.markers.emplace_back(sender.GetText(text, v));
     sender.Send();
 
-    std::vector<Pose> ps;
-    for(auto & x : mVertices)
-    {
-        ps.emplace_back(x, Angle(0));
-    }
-    ps.emplace_back(mVertices.front(), Angle(0));
 
-    auto m = sender.GetLineStrip(ps, 76.0/255.0, 180.0/255.0, 231.0/255.0, 1.0, 0, 0.15);
+    std::vector<Pose> roadlinkRegionPs;
+    for(auto & x : mVertices) roadlinkRegionPs.emplace_back(x, Angle(0));
+    roadlinkRegionPs.emplace_back(mVertices.front(), Angle(0));
+
+    auto m = sender.GetLineStrip(roadlinkRegionPs, 180.0/255.0, 76.0/255.0, 231.0/255.0, 1.0, 0, 0.15);
     sender.array.markers.emplace_back(m);
     sender.Send();
+
+
+    std::vector<Pose> junctionRegionPs;
+    for(auto & x : mRegionVertices) junctionRegionPs.emplace_back(x, Angle(0));
+    junctionRegionPs.emplace_back(mRegionVertices.front(), Angle(0));
+
+    m = sender.GetLineStrip(junctionRegionPs,76.0/255.0, 180.0/255.0, 231.0/255.0 , 1.0, 0, 0.15);
+    sender.array.markers.emplace_back(m);
+    sender.Send();
+
 
     for(auto & x : mRoadLinks)
     {
@@ -105,7 +113,7 @@ void Junction::_GenerateAllPose()
     {
         for(auto y : x.second.mLaneLinks)
         {
-            mPoses.emplace_back(y.mReferLine.GetAllPose(0.1));
+            mPoses.emplace_back(y.mReferLine.GetPoses(0.5));
         }
     }
 }
@@ -121,9 +129,14 @@ boost::property_tree::ptree Junction::ToXML()
     pt::ptree p_junc;
     p_junc.add("<xmlattr>.id", mJunctionId);
 
-    if(mVertices.empty())GenerateVertices();
+    if (mVertices.empty()) GenerateVertices();
+
+    /// 受到数据限制， Region数据由road和junction一起提供
+    /// GenerateRegionVertics 将在外部进行调用
+
     pt::ptree p_vec;
     pt::ptree p_v;
+
     for(auto & v : mVertices)
     {
         p_v.add("<xmlattr>.x", v.x);
@@ -131,7 +144,18 @@ boost::property_tree::ptree Junction::ToXML()
         p_vec.add_child("vertex", p_v);
         p_v.clear();
     }
-    p_junc.add_child("vertice", p_vec);
+    p_junc.add_child("vertices", p_vec);
+
+    p_vec.clear();
+    for(auto & v : mRegionVertices)
+    {
+        p_v.add("<xmlattr>.x", v.x);
+        p_v.add("<xmlattr>.y", v.y);
+        p_vec.add_child("vertex", p_v);
+        p_v.clear();
+    }
+    p_junc.add_child("regionVertices", p_vec);
+
 
     for(auto & r : mRoadLinks)
     {
@@ -143,6 +167,7 @@ boost::property_tree::ptree Junction::ToXML()
 
 void Junction::FromXML(const pt::ptree &p)
 {
+
     for(auto & n : p.get_child(""))
     {
         if(n.first == "<xmlattr>")
@@ -157,7 +182,7 @@ void Junction::FromXML(const pt::ptree &p)
             mRoadLinks[{r.mFromRoadId, r.mToRoadId}] = r;
         }
 
-        if(n.first == "vertice")
+        if(n.first == "vertices")
         {
             pt::ptree p_vec = n.second;
 
@@ -168,6 +193,20 @@ void Junction::FromXML(const pt::ptree &p)
                     auto x = t.second.get<double>("<xmlattr>.x");
                     auto y = t.second.get<double>("<xmlattr>.y");
                     mVertices.emplace_back(x, y);
+                }
+            }
+        }
+
+        if (n.first == "regionVertices"){
+            pt::ptree p_vec = n.second;
+
+            for(auto & t : p_vec.get_child(""))
+            {
+                if(t.first == "vertex")
+                {
+                    auto x = t.second.get<double>("<xmlattr>.x");
+                    auto y = t.second.get<double>("<xmlattr>.y");
+                    mRegionVertices.emplace_back(x, y);
                 }
             }
         }
@@ -197,8 +236,8 @@ void Junction::GenerateVertices()
     /// 获取每一条道路最右侧的Pose
     for(auto & x : mRoadLinks)
     {
-        auto from_rid = x.second.mFromRoadId;
-        auto to_rid = x.second.mToRoadId;
+        auto& from_rid = x.second.mFromRoadId;
+        auto& to_rid = x.second.mToRoadId;
 
         for(auto & y : x.second.mLaneLinks)
         {
@@ -270,7 +309,46 @@ void Junction::GenerateVertices()
     }
 }
 
+void Junction::GenerateRegionVertics(hdmap::Map* mapPtr){
+
+    if (!mRegionVertices.empty()) return;
+
+    std::set<int> to_road_id,from_road_id;
+
+    Vector2d center_point;
+
+    for(auto & x : mRoadLinks){
+        if (to_road_id.count(x.second.mToRoadId)==0)
+        {
+            to_road_id.insert(x.second.mToRoadId);
+            RoadPtr to_road_ptr =  mapPtr->GetRoadPtrById(x.second.mToRoadId);
+            auto _front_sec = to_road_ptr->mSecPtrs.front();
+            Pose _lane_start_pose = _front_sec->GetLanePoseByIndex(_front_sec->mRightBoundary).front();
+            mRegionVertices.emplace_back(_lane_start_pose.GetPosition());
+            center_point += _lane_start_pose.GetPosition();
+        }
+        if (to_road_id.count(x.second.mFromRoadId)==0)
+        {
+            to_road_id.insert(x.second.mFromRoadId);
+            RoadPtr from_road_ptr =  mapPtr->GetRoadPtrById(x.second.mFromRoadId);
+            auto _end_sec = from_road_ptr->mSecPtrs.back();
+            Pose _lane_end_pose = _end_sec->GetLanePoseByIndex(_end_sec->mRightBoundary).back();
+            mRegionVertices.emplace_back(_lane_end_pose.GetPosition());
+            center_point += _lane_end_pose.GetPosition();
+        }
+    }
+
+    center_point /= mRegionVertices.size();
+    auto cmp = [center_point,this](Vector2d& va, Vector2d& vb) -> bool {
+        Angle aa (va-center_point);
+        Angle ab (vb-center_point);
+        return aa.Value() < ab.Value();
+    };
+    sort(mRegionVertices.begin(),mRegionVertices.end(),cmp);
+
+}
+
 bool Junction::Cover(const Vector2d &v)
 {
-    return IGeometry::Cover(mVertices, v);
+    return IGeometry::Cover(mVertices, {v});
 }

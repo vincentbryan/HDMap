@@ -2,7 +2,7 @@
 // Created by vincent on 18-10-8.
 //
 
-#include "Type/Road.h"
+#include <Type/Road.h>
 
 using namespace hdmap;
 
@@ -73,27 +73,6 @@ std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
         res.insert(res.end(), p.begin(), p.end());
     }
     return res;
-}
-
-
-Pose Road::GetStartPose(int direction)
-{
-    if(mSecPtrs.empty())
-        return Pose();
-
-    return  mSecPtrs.front()->mReferLine.GetStartPose();
-}
-
-
-Pose Road::GetEndPose(int direction)
-{
-    if(mSecPtrs.empty())
-        return Pose();
-
-    if(direction > 0)
-        return mSecPtrs.back()->mReferLine.GetEndPose();
-    else
-        return mSecPtrs.front()->mReferLine.GetStartPose();
 }
 
 
@@ -181,19 +160,29 @@ void Road::Send(Sender &sender)
 {
     std::string text = "Road[" + std::to_string(mRoadId) + "]: " + std::to_string(mLength);
 
-    auto p1 = GetStartPose(1);
+    auto p1 = GetReferenceLinePoses().front();
     p1.Rotate(-90);
     p1.Translate(4.0, p1.GetAngle());
 
-    auto p2 = GetEndPose(1);
+    auto p2 = GetReferenceLinePoses().back();
     p2.Rotate(-90);
     p2.Translate(4.0, p2.GetAngle());
 
     auto m1 = sender.GetText(text, p1.GetPosition());
     auto m2 = sender.GetText(text, p2.GetPosition());
+    
+    /* 
+    GenerateRegionVertics();
+    std::vector<Pose> roadRegionPs;
+    for(auto & x : mRegionVertices) roadRegionPs.emplace_back(x, Angle(0));
+    roadRegionPs.emplace_back(mRegionVertices.front(), Angle(0));
 
+    auto m3 = sender.GetLineStrip(roadRegionPs, 76.0/255.0, 180.0/255.0, 231.0/255.0, 1.0, 0, 0.15);
+    */
+    
     sender.array.markers.emplace_back(m1);
     sender.array.markers.emplace_back(m2);
+    // sender.array.markers.emplace_back(m3);
     sender.Send();
 
     for(auto & s : mSecPtrs) s->Send(sender);
@@ -283,5 +272,50 @@ bool Road::Cover(const Vector2d &v)
 std::vector<SigPtr> Road::GetSignals()
 {
     return mSigPtrs;
+}
+
+void Road::GenerateRegionVertics() {
+    if (mRegionVertices.empty()){
+        auto left_poses= GetReferenceLinePoses();
+        auto right_poses = GetRightmostLinePoses();
+        std::vector<Vector2d> _tmp;
+        for(auto&p:left_poses)_tmp.emplace_back(p.GetPosition());
+        mRegionVertices.insert(mRegionVertices.begin(),_tmp.rbegin(),_tmp.rend());
+        std::vector<Vector2d>().swap(_tmp);
+        for(auto&p:right_poses)_tmp.emplace_back(p.GetPosition());
+        mRegionVertices.insert(mRegionVertices.begin(),_tmp.begin(),_tmp.end());
+    };
+}
+
+std::vector<Pose> Road::GetReferenceLinePoses() {
+    std::vector<Pose> poses;
+    for(const auto& sp: mSecPtrs){
+        auto sec_poses = sp->GetReferPose();
+        poses.insert(poses.end(),sec_poses.begin(),sec_poses.end());
+    }
+    return poses;
+}
+
+std::vector<Pose> Road::GetRightmostLinePoses() {
+    std::vector<Pose> poses;
+    for(const auto &sp: mSecPtrs){
+        auto sp_pose = sp->GetLanePoseByIndex(sp->mRightBoundary);
+        poses.insert(poses.end(),sp_pose.begin(),sp_pose.end());
+    }
+    return poses;
+}
+
+double Road::Distance(const Vector2d& v) {
+    if(mRegionVertices.empty()){
+        GenerateRegionVertics();
+    }
+    double dis = std::numeric_limits<double >::max();
+    for(auto rv: mRegionVertices){
+        double _dis = sqrt((rv.x-v.x)*(rv.x-v.x)+(rv.y-v.y)*(rv.y-v.y));
+        if (_dis < dis){
+            dis = _dis;
+        }
+    }
+    return dis;
 }
 

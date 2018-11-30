@@ -1,15 +1,11 @@
+#include <utility>
+
 //
 // Created by vincent on 18-10-9.
 //
 
 #include <boost/property_tree/ptree.hpp>
-#include <algorithm>
 #include "Type/Map.h"
-#include "common.h"
-#include <boost/property_tree/ptree.hpp>
-#include <algorithm>
-#include "Type/Map.h"
-#include "common.h"
 
 using namespace hdmap;
 namespace pt = boost::property_tree;
@@ -17,9 +13,9 @@ namespace pt = boost::property_tree;
 Map::Map()
 {}
 
-void Map::SetSender(std::shared_ptr<Sender> _sender)
+void Map::SetSender(std::shared_ptr<Sender> sender)
 {
-    pSender = _sender;
+    pSender = std::move(sender);
 }
 
 
@@ -197,23 +193,33 @@ RoadPtr Map::Locate(const Vector2d &v)
 boost::property_tree::ptree Map::ToXML()
 {
     pt::ptree p_map;
+    for(auto & road : mRoadPtrs)
+    {
+        p_map.add_child("hdmap.roads.road", road->ToXML());
+        mRoadIdToPtr[road->mRoadId] = road;
+    }
 
-    for(auto & m : mRoadPtrs)
-        p_map.add_child("hdmap.roads.road", m->ToXML());
 
-    for(auto & m : mJuncPtrs)
-        p_map.add_child("hdmap.junctions.junction", m->ToXML());
-
+    for(auto & junc : mJuncPtrs){
+        junc->GenerateRegionVertics(this);
+        p_map.add_child("hdmap.junctions.junction", junc->ToXML());
+        mJuncIdToPtr[junc->mJunctionId] = junc;
+    }
     return p_map;
 }
 
 void Map::FromXML(const pt::ptree &p)
 {
+
+    mRoadPtrs.clear();
+    mJuncPtrs.clear();
+
     for(auto & r : p.get_child("hdmap.roads"))
     {
         RoadPtr pRoad(new Road());
         pRoad->FromXML(r.second);
         mRoadPtrs.emplace_back(pRoad);
+        mRoadIdToPtr[pRoad->mRoadId] = pRoad;
         Road::ROAD_ID = std::max((unsigned)0, pRoad->mRoadId);
     }
     Road::ROAD_ID++;
@@ -225,7 +231,9 @@ void Map::FromXML(const pt::ptree &p)
         {
             JuncPtr pJunc(new Junction());
             pJunc->FromXML(j.second);
+            pJunc->GenerateRegionVertics(this);
             mJuncPtrs.emplace_back(pJunc);
+            mJuncIdToPtr[pJunc->mJunctionId] = pJunc;
             Junction::JUNCTION_ID = std::max((unsigned)0, pJunc->mJunctionId);
         }
         Junction::JUNCTION_ID++;
@@ -237,24 +245,22 @@ void Map::FromXML(const pt::ptree &p)
 
 }
 
-RoadPtr Map::GetRoadPtrById(unsigned int _road_id)
+RoadPtr Map::GetRoadPtrById(unsigned int road_id)
 {
-    for(auto & x : mRoadPtrs)
+    if(mRoadIdToPtr.count(road_id))
     {
-        if(x->mRoadId == _road_id)
-            return x;
+        return mRoadIdToPtr[road_id];
     }
-    return hdmap::RoadPtr();
+    return nullptr;
 }
 
-JuncPtr Map::GetJuncPtrById(unsigned int _junc_id)
+JuncPtr Map::GetJuncPtrById(unsigned int junc_id)
 {
-    for(auto & x : mJuncPtrs)
+    if(mJuncIdToPtr.count(junc_id))
     {
-        if(x->mJunctionId == _junc_id)
-            return x;
+        return mJuncIdToPtr[junc_id];
     }
-    return hdmap::JuncPtr();
+    return nullptr;
 }
 
 void Map::Clear()
@@ -296,4 +302,12 @@ void Map::AddRoadLink(JuncPtr p,
     
     mRoadPtrs[_from_road_id]->mNextJid = p->mJunctionId;
     mRoadPtrs[_to_road_id]->mPrevJid = p->mJunctionId;
+}
+
+unsigned long Map::GetRoadSize() {
+    return mRoadPtrs.size();
+}
+
+unsigned long Map::GetJunctionSize() {
+    return mJuncPtrs.size();
 }

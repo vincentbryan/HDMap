@@ -3,7 +3,7 @@
 //
 
 #include "Math/Bezier.h"
-#include <cassert>
+
 
 using namespace hdmap;
 
@@ -82,20 +82,19 @@ Pose Bezier::GetPose(double s)
         return _GetPose(s / length);
 }
 
-std::vector<Pose> Bezier::GetAllPose(double ds)
+std::vector<Pose> Bezier::GetPoses(double ds, double start, double end)
 {
     std::vector<Pose> res;
-    double s = 0;
-    while (s < length)
-    {
-        res.emplace_back(GetPose(s));
-        s += ds;
-        if(s >= length)
-        {
-            res.emplace_back(GetPose(length));
+    if (start<=0.0) start = 0;
+    if (end  >=1.0) end = 1;
+    double p = start*length, _e = end*length;
+    while(p<_e){
+        res.emplace_back(GetPose(p));
+        p += ds;
+        if (p>=_e) {
+            res.emplace_back(GetPose(_e));
         }
     }
-
     return res;
 }
 
@@ -145,3 +144,4 @@ Bezier::Bezier(std::vector<double> v)
         t += step;
     }
 }
+

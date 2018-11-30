@@ -4,13 +4,8 @@
 
 #include <ros/ros.h>
 #include <thread>
-#include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <geometry_msgs/Pose2D.h>
-#include <queue>
-#include <mutex>
 #include "Type/Map.h"
-#include "Tool/Sender.h"
 
 using namespace hdmap;
 using namespace std;
@@ -200,18 +195,18 @@ int main(int argc, char** argv)
 
     auto r11 = map.AddRoad({472.03, 74.04, 145.5145});
 
-    auto r11_s0 = r11->AddSection({385.41, 133.54, 145.5145});
+    auto r11_s0 = r11->AddSection({385.41, 133.545, 145.5145});
     r11_s0->AddLane(1, 4.5, 4.5, {}, {1});
 
     auto r11_s1 = r11->AddSection({264.32, 138.16, -152.291}, 40, 60);
-    r11_s1->AddLane(1, 4.5, 4.5, {1}, {1});
+    r11_s1->AddLane(1, 4.5, 4.0, {1}, {1});
 
     auto r11_s2 = r11->AddSection({246.70, 128.85, -152.291});
-    r11_s2->AddLane(1, 4.5, 4.5, {1}, {1, 2});
+    r11_s2->AddLane(1, 4.0, 4.0, {1}, {1, 2});
 
     auto r11_s3 = r11->AddSection({219.60, 113.03, -152.291}, 18.0, 18.0);
-    r11_s3->AddLane(1, 4.5, 3.0, {1}, {1});
-    r11_s3->AddLane(2, 4.5, 6.0, {1}, {2});
+    r11_s3->AddLane(1, 4.0, 3.0, {1}, {1});
+    r11_s3->AddLane(2, 4.0, 6.0, {1}, {2});
 
     auto r11_s4 = r11->AddSection({191.44, 98.24, -152.291});
     r11_s4->AddLane(1, 3.0, 3.0, {1}, {});
@@ -846,6 +841,8 @@ int main(int argc, char** argv)
 
     map.AddRoadLink(junc8, 34, 35, "forward", {make_tuple(1, 1, 10.0, 10.0), make_tuple(2, 2, 10.0, 10.0)});
 
+    map.AddRoadLink(junc8, 34, 22, "right", {make_tuple(3, 1, 15.0, 15.0)});
+
     //Junc[9]-------------------------------------------------------------
     auto junc9 = map.AddJunction();
     map.AddRoadLink(junc9, 35, 32, "forward", {make_tuple(1, 1, 10.0, 10.0), make_tuple(2, 2, 10.0, 10.0)});
@@ -853,6 +850,8 @@ int main(int argc, char** argv)
     map.AddRoadLink(junc9, 33, 36, "forward", {make_tuple(1, 1, 10.0, 10.0)});
 
     map.AddRoadLink(junc9, 27, 32, "right", {make_tuple(2, 2, 15.0, 15.0)});
+
+    map.AddRoadLink(junc9, 35, 26, "right", {make_tuple(3, 1, 60.0, 20.0)});
 
 
     //Junc[10]-------------------------------------------------------------

@@ -3,13 +3,10 @@
 //
 #include <ros/ros.h>
 #include <thread>
-#include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <geometry_msgs/Pose2D.h>
-#include <queue>
-#include <mutex>
 #include "Type/Map.h"
 #include "Tool/Planner.h"
+#include "Tool/Resource.h"
 
 using namespace hdmap;
 using namespace std;
@@ -27,13 +24,13 @@ int main(int argc, char** argv)
     ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 1000);
     shared_ptr<Sender> p_sender(new Sender(pub));
 
-    Map map;
-    map.SetSender(p_sender);
-    map.Load(argv[1]);
-    Planner planner(map, p_sender);
+    Resource resource(argv[1]);
+    resource.SetSender(p_sender);
 
-    ros::ServiceServer server = n.advertiseService("map_service", &Planner::OnRequest, &planner);
+    Planner planner(resource.GetMap(), p_sender);
 
+    ros::ServiceServer plan_server = n.advertiseService("map_plan_service", &Planner::OnRequest, &planner);
+    ros::ServiceServer data_server = n.advertiseService("map_data_service", &Resource::OnRequest, &resource);
     ROS_INFO("MapService is ready...");
 
     ros::spin();

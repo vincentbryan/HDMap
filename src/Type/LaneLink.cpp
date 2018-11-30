@@ -46,7 +46,7 @@ void LaneLink::FromXML(const pt::ptree &p)
 
 void LaneLink::Send(Sender &sender)
 {
-    auto x = mReferLine.GetAllPose(1.0);
+    auto x = mReferLine.GetPoses(1.0);
     
     auto m = sender.GetLineStrip(x, 234.0/255, 247.0/255, 134.0/255, 1.0);
     sender.array.markers.emplace_back(m);

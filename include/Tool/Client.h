@@ -12,17 +12,19 @@
 
 namespace hdmap
 {
-class Route
+    class Client
 {
 private:
-    Map mHDMap;
+        Map mCurPlanMap;
 
+        ros::Publisher mPubRouteRegion;
     ros::Publisher mPubTrafficLight;
     ros::Publisher mPubPlanner;
     ros::Publisher mPubVIZ;
     ros::Subscriber mSubGPS;
     ros::ServiceServer mServer;
-    ros::ServiceClient mClient;
+        ros::ServiceClient mPlanClient;
+        ros::ServiceClient mDataClient;
 
     std::mutex mLock;
     Vector2d mCurrentPosition;
@@ -48,9 +50,10 @@ private:
     }mRecord;
 
 public:
-    Route(ros::NodeHandle & n);
+        Client(ros::NodeHandle &n);
 
     void LocationCallBack(const nox_msgs::Location &msg);
+
     bool OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res);
 
     void SendMap();
@@ -58,6 +61,8 @@ public:
     void SendGPS(const Vector2d &v);
 
     void SendTrafficInfo(const Vector2d &v);
+
+        void SendNearPolygonRegion(const Vector2d &v, double radius = 100);
 
     void Process();
 };

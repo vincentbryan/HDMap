@@ -3,8 +3,7 @@
 //
 
 #include <ros/ros.h>
-#include "Type/Map.h"
-#include "Tool/Route.h"
+#include "Tool/Client.h"
 
 using namespace hdmap;
 using namespace std;
@@ -16,7 +15,7 @@ int main(int argc, char** argv)
 
     ROS_INFO_STREAM("Map agent is ready...");
 
-    Route r(n);
+    Client r(n);
 
     ros::Rate rate(5);
 
