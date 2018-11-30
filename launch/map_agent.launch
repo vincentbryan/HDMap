@@ -1,0 +1,4 @@
+<launch>
+  <node name="MapAgent" pkg="HDMap" type="MapAgent" output="screen" cwd="node">
+  </node>
+</launch>

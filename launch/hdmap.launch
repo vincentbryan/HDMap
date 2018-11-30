@@ -1,0 +1,6 @@
+<launch>
+	<group name="hdmap">
+		<include file="$(find HDMap)/launch/map_service.launch"/>
+		<include file="$(find HDMap)/launch/map_agent.launch"/>
+	</group>
+</launch>

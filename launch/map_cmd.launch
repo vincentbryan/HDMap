@@ -1,0 +1,4 @@
+<launch>
+  <node name="MapCommand" pkg="HDMap" type="MapCommand" output="screen" cwd="node">
+  </node>
+</launch>

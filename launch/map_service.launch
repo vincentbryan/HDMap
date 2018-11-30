@@ -1,0 +1,4 @@
+<launch>
+  <node name="MapService" pkg="HDMap" args="../../../src/HDMap/map/map.xml" type="MapService" output="screen" cwd="node">
+  </node>
+</launch>
