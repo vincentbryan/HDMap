@@ -12,7 +12,7 @@
 #include "Math/Bezier.h"
 #include "Interface/IView.h"
 #include "Tool/Sender.h"
-#include "../../src/Type/common.h"
+#include "common.h"
 #include "Interface/IGeometry.h"
 
 namespace hdmap

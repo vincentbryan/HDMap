@@ -41,7 +41,8 @@ public:
     Vector2d GetStartPoint() const {return mStartPoint; }
     Vector2d GetEndPoint() const {return mEndPoint; }
 
-    void GlobalPlanning();
+    void PlanUsingSearch();
+    void PlanUsingSequence(std::vector<int> vec);
     void Send();
     void ToXML(std::string &str);
 

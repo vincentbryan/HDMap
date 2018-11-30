@@ -21,7 +21,7 @@ public:
     std::vector<LaneLink> mLaneLinks;
 
 public:
-    explicit RoadLink(unsigned int _from_road_id = 0, unsigned int _to_road_id = 0);
+    explicit RoadLink(unsigned int _from_road_id = 0, unsigned int _to_road_id = 0, std::string _direction="");
 
     void AddLaneLink(int _from_lane_idx, int _to_lane_idx, Bezier _bezier);
 

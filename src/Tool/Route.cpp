@@ -38,22 +38,25 @@ void Route::LocationCallBack(const nox_msgs::Location &msg)
 
 bool Route::OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res)
 {
-    if(req.cmd == "start")
+    if(req.cmd == "start" || req.cmd == "seq")
     {
         HDMap::srv_route srv;
-        srv.request.start_rid = req.argv1;
-        srv.request.end_rid = req.argv2;
+        srv.request.method = req.cmd;
+        srv.request.argv = req.argv;
         if(mClient.call(srv))
         {
             mHDMap.Clear();
             mRecord.Reset();
-
+            srv.request.method = req.cmd;
+            srv.request.argv = req.argv;
             std::stringstream ss;
             ss << srv.response.route;
             std::cout << ss.str() << std::endl;
             try
             {
                 pt::ptree tree;
+                srv.request.method = req.cmd;
+                srv.request.argv = req.argv;
                 pt::read_xml(ss, tree);
                 mHDMap.FromXML(tree);
 
@@ -122,7 +125,7 @@ void Route::SendTrafficInfo(const Vector2d &v)
         for(auto & s : signals)
         {
             double t = sqrt((v.x-s->x)*(v.x-s->x) + (v.y-s->y)*(v.y-s->y));
-            if(t < 100) cnt++;
+            if(t < 135) cnt++;
         }
 
         HDMap::msg_signal_list ss;

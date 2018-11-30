@@ -1,5 +1,4 @@
 string cmd
-int32 argv1
-int32 argv2
+int32[] argv
 ---
 int32[] route

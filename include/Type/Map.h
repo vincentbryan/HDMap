@@ -13,7 +13,7 @@
 #include "Road.h"
 #include "Junction.h"
 #include "Tool/Sender.h"
-#include "../../src/Type/common.h"
+#include "common.h"
 
 namespace hdmap
 {
@@ -39,7 +39,11 @@ public:
                        unsigned int to_road_id, int to_lane_idx,
                        double _ctrl_len1 = Bezier::DEFAULT_LENGTH,
                        double _ctrl_len2 = Bezier::DEFAULT_LENGTH);
-
+    void AddRoadLink(JuncPtr p,
+                     unsigned _from_road_id,
+                     unsigned _to_road_id,
+                     std::string _direction,
+                     std::vector<std::tuple<int, int, double, double>>_lane_links);
     void Load(const std::string &file_name);
     void Save(const std::string &file_name);
     void Clear();
