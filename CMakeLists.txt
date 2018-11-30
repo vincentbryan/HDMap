@@ -171,7 +171,7 @@ add_executable(MapGenerator
 		include/Interface/IXML.h
 		include/Interface/IGeometry.h
 		src/MapGenerator.cpp
-		src/Type/common.h
+		include/common.h
 )
 
 add_executable(MapCommand
@@ -201,7 +201,7 @@ add_executable(MapViewer
 		include/Interface/IView.h
 		include/Interface/IXML.h
 		include/Interface/IGeometry.h
-		src/Type/common.h
+		include/common.h
 )
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

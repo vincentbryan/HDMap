@@ -13,7 +13,7 @@ Planner::Planner(const Map & map, std::shared_ptr<Sender> _sender) :
     pSender(std::move(_sender))
 {}
 
-void Planner::GlobalPlanning()
+void Planner::PlanUsingSearch()
 {
 //    pStart = mHDMap.Locate(mStartPoint);
 //    pEnd = mHDMap.Locate(mEndPoint)
@@ -144,11 +144,35 @@ void Planner::ToXML(std::string &str)
 
 bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Response &res)
 {
-    pStart = mHDMap.GetRoadPtrById(req.start_rid);
-    pEnd = mHDMap.GetRoadPtrById(req.end_rid);
+    if(req.method == "start")
+    {
+        if(req.argv.size() == 2)
+        {
+            pStart = mHDMap.GetRoadPtrById(req.argv.front());
+            pEnd = mHDMap.GetRoadPtrById(req.argv.back());
+            ROS_INFO("Request: road[%d] --> road[%d] method: %s", req.argv.front(), req.argv.back(), req.method.c_str());
+            PlanUsingSearch();
 
-    ROS_INFO("Request: road[%d] --> road[%d]", req.start_rid, req.end_rid);
-    GlobalPlanning();
+        }
+        else
+        {
+            ROS_ERROR_STREAM("Invalid request: argv.size() != 2");
+            return false;
+        }
+    }
+    if(req.method == "seq")
+    {
+        if(!req.argv.empty())
+        {
+            ROS_INFO("Request: road[%d] --> road[%d] method: %s", req.argv.front(), req.argv.back(), req.method);
+            PlanUsingSequence(req.argv);
+        }
+        else
+        {
+            ROS_ERROR_STREAM("Invalid request: argv.size() == 0");
+            return false;
+        }
+    }
 
     if(mRouting.empty())
     {
@@ -164,4 +188,35 @@ bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Respon
     ToXML(res.route);
     Send();
     return true;
+}
+
+void Planner::PlanUsingSequence(std::vector<int> vec)
+{
+    mAllRouting.clear();
+    mRouting.clear();
+
+    for(int i = 0; i + 1 < vec.size(); ++i)
+    {
+        bool flag = false;
+        auto r1 = mHDMap.GetRoadPtrById(vec[i]);
+        for(auto const & x : mHDMap.AdjacentRoadInfo(r1))
+        {
+            if(x->mRoadId == vec[i+1])
+            {
+                flag = true;
+                break;
+            }
+        }
+        if(!flag)
+        {
+            ROS_ERROR("Invalid request: road[%d] and road[%d] is not adjacent!!!", vec[i], vec[i+1]);
+            return;
+        }
+    }
+
+    for(auto const & x : vec)
+    {
+        mRouting.emplace_back(mHDMap.GetRoadPtrById(x));
+    }
+
 }

@@ -5,7 +5,7 @@
 #ifndef HDMAP_IXML_H
 #define HDMAP_IXML_H
 
-#include "../../src/Type/common.h"
+#include "common.h"
 #include <boost/property_tree/ptree.hpp>
 namespace pt = boost::property_tree;
 namespace hdmap

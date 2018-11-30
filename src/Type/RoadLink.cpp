@@ -5,10 +5,11 @@
 #include "Type/RoadLink.h"
 using namespace hdmap;
 
-RoadLink::RoadLink(unsigned int _from_road_id, unsigned int _to_road_id)
+RoadLink::RoadLink(unsigned int _from_road_id, unsigned int _to_road_id, std::string _direction)
 {
     mFromRoadId = _from_road_id;
     mToRoadId = _to_road_id;
+    mDirection = _direction;
 }
 
 void RoadLink::AddLaneLink(int _from_lane_idx, int _to_lane_idx, Bezier _bezier)
@@ -44,6 +45,7 @@ boost::property_tree::ptree RoadLink::ToXML()
     pt::ptree p_road_link;
     p_road_link.add("<xmlattr>.from_road", mFromRoadId);
     p_road_link.add("<xmlattr>.to_road", mToRoadId);
+    p_road_link.add("<xmlattr>.direction", mDirection);
 
     for(auto & k : mLaneLinks)
         p_road_link.add_child("laneLink", k.ToXML());
@@ -59,6 +61,7 @@ void RoadLink::FromXML(const pt::ptree &p)
         {
             mFromRoadId = r.second.get<int>("from_road");
             mToRoadId = r.second.get<int>("to_road");
+            mDirection = r.second.get<std::string>("direction");
         }
 
         if(r.first == "laneLink")

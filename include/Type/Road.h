@@ -7,7 +7,7 @@
 
 #include "LaneSection.h"
 #include "Signal.h"
-#include "../../src/Type/common.h"
+#include "common.h"
 #include <algorithm>
 
 namespace hdmap

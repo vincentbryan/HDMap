@@ -218,14 +218,23 @@ void Map::FromXML(const pt::ptree &p)
     }
     Road::ROAD_ID++;
 
-    for(auto & j : p.get_child("hdmap.junctions"))
+
+    try
     {
-        JuncPtr pJunc(new Junction());
-        pJunc->FromXML(j.second);
-        mJuncPtrs.emplace_back(pJunc);
-        Junction::JUNCTION_ID = std::max((unsigned)0, pJunc->mJunctionId);
+        for(auto & j : p.get_child("hdmap.junctions"))
+        {
+            JuncPtr pJunc(new Junction());
+            pJunc->FromXML(j.second);
+            mJuncPtrs.emplace_back(pJunc);
+            Junction::JUNCTION_ID = std::max((unsigned)0, pJunc->mJunctionId);
+        }
+        Junction::JUNCTION_ID++;
     }
-    Junction::JUNCTION_ID++;
+    catch (std::exception & e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
+
 }
 
 RoadPtr Map::GetRoadPtrById(unsigned int _road_id)
@@ -254,4 +263,37 @@ void Map::Clear()
     mJuncPtrs.clear();
     Road::ROAD_ID = 0;
     Junction::JUNCTION_ID = 0;
+}
+
+void Map::AddRoadLink(JuncPtr p,
+                      unsigned _from_road_id,
+                      unsigned _to_road_id,
+                      std::string _direction,
+                      std::vector<std::tuple<int, int, double, double>>_lane_links)
+{
+    RoadLink road_link(_from_road_id, _to_road_id, _direction);
+
+    for(auto & k : _lane_links)
+    {
+        auto from_lane_idx = std::get<0>(k);
+        auto to_lane_idx = std::get<1>(k);
+        auto ctrl_len1 = std::get<2>(k);
+        auto ctrl_len2 = std::get<3>(k);
+        Pose p1, p2;
+
+        p1 = mRoadPtrs[_from_road_id]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx).back();
+        p2 = mRoadPtrs[_from_road_id]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx-1).back();
+        Pose start_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
+
+        p1 = mRoadPtrs[_to_road_id]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx).front();
+        p2 = mRoadPtrs[_to_road_id]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx-1).front();
+        Pose end_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
+
+        road_link.AddLaneLink(from_lane_idx, to_lane_idx, Bezier(start_pose, end_pose, ctrl_len1, ctrl_len2));
+    }
+    std::pair<unsigned int, unsigned int> m(_from_road_id, _to_road_id);
+    p->mRoadLinks[m] = road_link;
+    
+    mRoadPtrs[_from_road_id]->mNextJid = p->mJunctionId;
+    mRoadPtrs[_to_road_id]->mPrevJid = p->mJunctionId;
 }
