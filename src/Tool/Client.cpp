@@ -230,6 +230,10 @@ void Client::Process()
                 {
                     mRecord.curr_jid = -1;
                 }
+                else
+                {
+                    mRecord.curr_jid = mCurPlanMap.mRoadPtrs[i]->mNextJid;
+                }
                 if(i + 1 < mCurPlanMap.mRoadPtrs.size())
                 {
                     mRecord.next_rid = mCurPlanMap.mRoadPtrs[i+1]->mRoadId;

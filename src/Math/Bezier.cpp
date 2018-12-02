@@ -3,7 +3,7 @@
 //
 
 #include "Math/Bezier.h"
-
+#include <assert.h>
 
 using namespace hdmap;
 

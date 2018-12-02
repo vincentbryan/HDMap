@@ -7,6 +7,7 @@
 #include "nox_location.h"
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <tf/transform_datatypes.h>
 
 class ViewGPS
 {
@@ -30,9 +31,9 @@ public:
         carmarker.pose.position.y = y;
         carmarker.pose.position.z = 0.7;
         carmarker.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(TFSIMD_HALF_PI,0,TFSIMD_PI+radius);
-        carmarker.scale.x = 1;
-        carmarker.scale.y = 1;
-        carmarker.scale.z = 1;
+        carmarker.scale.x = 0.009;
+        carmarker.scale.y = 0.009;
+        carmarker.scale.z = 0.009;
         carmarker.mesh_resource = "package://HDMap/res/car2/car.dae";
         carmarker.mesh_use_embedded_materials = 1;
 

@@ -1,9 +1,7 @@
-#include <utility>
-
 //
 // Created by iceytan on 18-11-26.
 //
-
+#include <utility>
 #include <ros/ros.h>
 #include "nox_location.h"
 #include <visualization_msgs/Marker.h>
@@ -17,6 +15,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/transforms.h>
 #include <pcl/kdtree/kdtree_flann.h>
+#include <tf/transform_datatypes.h>
 
 class ViewDetectRegion
 {
@@ -147,7 +146,6 @@ public:
         mCurX = msg.x;
         mCurY = msg.y;
         mCurYaw = msg.yaw;
-        ROS_INFO("Current Post: (%8.3f, %8.3f, %8.3f)",mCurX,mCurY,mCurYaw);
         RenderCarInfo();
         RenderRegionPoint();
     }
@@ -230,25 +228,27 @@ private:
 };
 
 
-int getch()
-{
-    static struct termios oldt, newt;
-    tcgetattr( STDIN_FILENO, &oldt);           // save old settings
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON);                 // disable buffering
-    tcsetattr( STDIN_FILENO, TCSANOW, &newt);  // apply new settings
-
-    int c = getchar();  // read character (non-blocking)
-    tcsetattr( STDIN_FILENO, TCSANOW, &oldt);  // restore old settings
-    return c;
-}
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "ViewDetectRegion");
     ros::NodeHandle n;
     ViewDetectRegion viewDetectRegion(n);
-    viewDetectRegion.SetMode(ViewDetectRegion::RELATIVE);
+
+    if (argc==1 || (argc == 2 && strcmp(argv[1],"RELATIVE" )==0))
+    {
+        viewDetectRegion.SetMode(ViewDetectRegion::RELATIVE);
+        ROS_INFO("ViewDetectRegion mode: RELATIVE");
+    }
+    else if (argc == 2 && strcmp(argv[1],"ABSOLUTE" )==0)
+    {
+        viewDetectRegion.SetMode(ViewDetectRegion::ABSOLUTE);
+        ROS_INFO("ViewDetectRegion mode: ABSOLUTE");
+    }
+    else
+    {
+        ROS_ERROR("Invalid input: %s",argv[1]);
+    }
+
     ros::spin();
 
     return 0;
