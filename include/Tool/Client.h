@@ -27,7 +27,7 @@ private:
         ros::ServiceClient mDataClient;
 
     std::mutex mLock;
-    Vector2d mCurrentPosition;
+        Coor mCurrentPosition;
 
     class Record
     {
@@ -58,11 +58,11 @@ public:
 
     void SendMap();
 
-    void SendGPS(const Vector2d &v);
+        void SendGPS(const Coor &v);
 
-    void SendTrafficInfo(const Vector2d &v);
+        void SendTrafficInfo(const Coor &v);
 
-        void SendNearPolygonRegion(const Vector2d &v, double radius = 100);
+        void SendNearPolygonRegion(const Coor &v, double radius = 100);
 
     void Process();
 };

@@ -170,7 +170,7 @@ void Planner::ToXML(std::string &str)
 
             pt::ptree p_region_vec;
             p_v.clear();
-            for(auto & v : junc->mRegionVertices)
+            for (auto &v : junc->mRegionPoses)
             {
                 p_v.add("<xmlattr>.x", v.x);
                 p_v.add("<xmlattr>.y", v.y);

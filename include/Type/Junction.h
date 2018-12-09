@@ -25,8 +25,9 @@ public:
     unsigned int mJunctionId;
     std::map<std::pair<unsigned int, unsigned int>, RoadLink> mRoadLinks;
     std::vector<std::vector<Pose>> mPoses;
-    std::vector<Vector2d> mVertices;
-    std::vector<Vector2d> mRegionVertices;
+    std::vector<Coor> mVertices;
+
+    std::vector<Pose> mRegionPoses;
 
 private:
     void _GenerateAllPose();
@@ -48,14 +49,16 @@ public:
     std::vector<Pose> GetPose(unsigned int from_road_id, int from_lane_idx, unsigned int to_road_id, int to_lane_idx);
 
     RoadLink GetRoadLink (int rid1, int rid2 = -1);
-    double Distance(const Vector2d & v);
+
+    double Distance(const Coor &v);
     void GenerateVertices();
 
-    void GenerateRegionVertics(hdmap::Map *mapPtr);
+    void GenerateRegionPoses(hdmap::Map *mapPtr);
     void Send(Sender &sender) override;
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
-    bool Cover(const Vector2d &v) override;
+
+    bool Cover(const Coor &v) override;
 };
 }
 #endif //HDMAP_JUNCTION_H

@@ -67,7 +67,7 @@ void Junction::Send(Sender &sender)
     if(mVertices.empty()) GenerateVertices();
 
     std::string text = "Junction[" + std::to_string(mJunctionId) + "]";
-    Vector2d v;
+    Coor v;
 
     for(auto & x : mVertices)
     {
@@ -92,9 +92,8 @@ void Junction::Send(Sender &sender)
     sender.Send();
 
 
-    std::vector<Pose> junctionRegionPs;
-    for(auto & x : mRegionVertices) junctionRegionPs.emplace_back(x, Angle(0));
-    junctionRegionPs.emplace_back(mRegionVertices.front(), Angle(0));
+    std::vector<Pose> junctionRegionPs(mRegionPoses.begin(), mRegionPoses.end());
+    junctionRegionPs.emplace_back(mRegionPoses.front());
 
     m = sender.GetLineStrip(junctionRegionPs,76.0/255.0, 180.0/255.0, 231.0/255.0 , 1.0, 0, 0.15);
     sender.array.markers.emplace_back(m);
@@ -132,7 +131,7 @@ boost::property_tree::ptree Junction::ToXML()
     if (mVertices.empty()) GenerateVertices();
 
     /// 受到数据限制， Region数据由road和junction一起提供
-    /// GenerateRegionVertics 将在外部进行调用
+    /// GenerateRegionPoses 将在外部进行调用
 
     pt::ptree p_vec;
     pt::ptree p_v;
@@ -147,7 +146,7 @@ boost::property_tree::ptree Junction::ToXML()
     p_junc.add_child("vertices", p_vec);
 
     p_vec.clear();
-    for(auto & v : mRegionVertices)
+    for (auto &v : mRegionPoses)
     {
         p_v.add("<xmlattr>.x", v.x);
         p_v.add("<xmlattr>.y", v.y);
@@ -206,14 +205,14 @@ void Junction::FromXML(const pt::ptree &p)
                 {
                     auto x = t.second.get<double>("<xmlattr>.x");
                     auto y = t.second.get<double>("<xmlattr>.y");
-                    mRegionVertices.emplace_back(x, y);
+                    mRegionPoses.emplace_back(x, y, 0);
                 }
             }
         }
     }
 }
 
-double Junction::Distance(const Vector2d &v)
+double Junction::Distance(const Coor &v)
 {
     double min_dist = 1000000;
     for(auto & ps : GetAllPose())
@@ -257,7 +256,7 @@ void Junction::GenerateVertices()
         }
     }
 
-    std::vector<Vector2d> vec;
+    std::vector<Coor> vec;
     for(auto & x : road_pose) ///将最右侧的Pose再向右移动3.0米
     {
         auto p = x.second;
@@ -267,7 +266,7 @@ void Junction::GenerateVertices()
     }
 
 
-    auto test = [&vec, this](const Vector2d & s, const Vector2d & e) -> bool
+    auto test = [&vec, this](const Coor &s, const Coor &e) -> bool
     {
         for(auto & t : mVertices)
             if(t == e) return false;
@@ -309,13 +308,13 @@ void Junction::GenerateVertices()
     }
 }
 
-void Junction::GenerateRegionVertics(hdmap::Map* mapPtr){
+void Junction::GenerateRegionPoses(hdmap::Map *mapPtr) {
 
-    if (!mRegionVertices.empty()) return;
+    if (!mRegionPoses.empty()) return;
 
     std::set<int> to_road_id,from_road_id;
 
-    Vector2d center_point;
+    Coor center_point;
 
     for(auto & x : mRoadLinks){
         if (to_road_id.count(x.second.mToRoadId)==0)
@@ -324,7 +323,7 @@ void Junction::GenerateRegionVertics(hdmap::Map* mapPtr){
             RoadPtr to_road_ptr =  mapPtr->GetRoadPtrById(x.second.mToRoadId);
             auto _front_sec = to_road_ptr->mSecPtrs.front();
             Pose _lane_start_pose = _front_sec->GetLanePoseByIndex(_front_sec->mRightBoundary).front();
-            mRegionVertices.emplace_back(_lane_start_pose.GetPosition());
+            mRegionPoses.emplace_back(_lane_start_pose);
             center_point += _lane_start_pose.GetPosition();
         }
         if (to_road_id.count(x.second.mFromRoadId)==0)
@@ -333,22 +332,22 @@ void Junction::GenerateRegionVertics(hdmap::Map* mapPtr){
             RoadPtr from_road_ptr =  mapPtr->GetRoadPtrById(x.second.mFromRoadId);
             auto _end_sec = from_road_ptr->mSecPtrs.back();
             Pose _lane_end_pose = _end_sec->GetLanePoseByIndex(_end_sec->mRightBoundary).back();
-            mRegionVertices.emplace_back(_lane_end_pose.GetPosition());
+            mRegionPoses.emplace_back(_lane_end_pose);
             center_point += _lane_end_pose.GetPosition();
         }
     }
 
-    center_point /= mRegionVertices.size();
-    auto cmp = [center_point,this](Vector2d& va, Vector2d& vb) -> bool {
-        Angle aa (va-center_point);
-        Angle ab (vb-center_point);
+    center_point /= mRegionPoses.size();
+    auto cmp = [center_point, this](Pose &va, Pose &vb) -> bool {
+        Angle aa(va.GetPosition() - center_point);
+        Angle ab(vb.GetPosition() - center_point);
         return aa.Value() < ab.Value();
     };
-    sort(mRegionVertices.begin(),mRegionVertices.end(),cmp);
+    sort(mRegionPoses.begin(), mRegionPoses.end(), cmp);
 
 }
 
-bool Junction::Cover(const Vector2d &v)
+bool Junction::Cover(const Coor &v)
 {
     return IGeometry::Cover(mVertices, {v});
 }

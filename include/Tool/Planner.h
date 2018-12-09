@@ -16,8 +16,8 @@ class Planner
 {
 private:
     std::shared_ptr<Map> mHDMapPtr;
-    Vector2d mStartPoint;
-    Vector2d mEndPoint;
+    Coor mStartPoint;
+    Coor mEndPoint;
     RoadPtr pStart;
     RoadPtr pEnd;
 

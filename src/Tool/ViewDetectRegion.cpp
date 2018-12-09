@@ -153,7 +153,7 @@ public:
     {
         mLock.lock();
         mRegionPoints->points.clear();
-        std::vector<hdmap::Vector2d> _effect_points;
+        std::vector<hdmap::Coor> _effect_points;
         for(auto& polygon: msg.polygons)
         {
             if(polygon.points.size() < 10)

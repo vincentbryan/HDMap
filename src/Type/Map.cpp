@@ -181,7 +181,7 @@ void Map::Trajectory(std::vector<std::pair<unsigned int, int>> sequences)
 }
 */
 
-RoadPtr Map::Locate(const Vector2d &v)
+RoadPtr Map::Locate(const Coor &v)
 {
     for(auto & x : mRoadPtrs)
     {
@@ -201,7 +201,7 @@ boost::property_tree::ptree Map::ToXML()
 
 
     for(auto & junc : mJuncPtrs){
-        junc->GenerateRegionVertics(this);
+        junc->GenerateRegionPoses(this);
         p_map.add_child("hdmap.junctions.junction", junc->ToXML());
         mJuncIdToPtr[junc->mJunctionId] = junc;
     }
@@ -231,7 +231,7 @@ void Map::FromXML(const pt::ptree &p)
         {
             JuncPtr pJunc(new Junction());
             pJunc->FromXML(j.second);
-            pJunc->GenerateRegionVertics(this);
+            pJunc->GenerateRegionPoses(this);
             mJuncPtrs.emplace_back(pJunc);
             mJuncIdToPtr[pJunc->mJunctionId] = pJunc;
             Junction::JUNCTION_ID = std::max((unsigned)0, pJunc->mJunctionId);

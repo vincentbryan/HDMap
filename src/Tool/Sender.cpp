@@ -49,7 +49,8 @@ visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double 
     return line_strip;
 }
 
-visualization_msgs::Marker Sender::GetText(const std::string &content, Vector2d p, double r, double g, double b, double a, double z, double scale)
+visualization_msgs::Marker
+Sender::GetText(const std::string &content, Coor p, double r, double g, double b, double a, double z, double scale)
 {
     visualization_msgs::Marker marker;
     marker.header.frame_id = "/hdmap";
@@ -76,7 +77,7 @@ visualization_msgs::Marker Sender::GetText(const std::string &content, Vector2d 
     return marker;
 }
 
-visualization_msgs::Marker Sender::GetCone(const Vector2d &v, double r, double g, double b, double a, double scale) const
+visualization_msgs::Marker Sender::GetCone(const Coor &v, double r, double g, double b, double a, double scale) const
 {
     visualization_msgs::Marker marker;
     marker.header.frame_id = "/hdmap";
@@ -188,13 +189,13 @@ std::vector<Pose> Sender::Translate(std::vector<Pose> poses, double length, doub
     return res;
 }
 
-void Sender::AddStartPoint(const Vector2d &v)
+void Sender::AddStartPoint(const Coor &v)
 {
     visualization_msgs::Marker m = GetCone(v, 1.0, 1.0, 1.0, 1.0, 3.0);
     array.markers.emplace_back(m);
 }
 
-void Sender::AddEndPoint(const Vector2d &v)
+void Sender::AddEndPoint(const Coor &v)
 {
     visualization_msgs::Marker m = GetCone(v, 0, 255.0 / 255, 128.0 / 255, 1.0, 3.0);
     array.markers.emplace_back(m);

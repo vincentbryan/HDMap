@@ -29,7 +29,7 @@ Client::Client(ros::NodeHandle & n)
     mSubGPS = n.subscribe("Localization", 1, &Client::LocationCallBack, this);
     mServer = n.advertiseService("map_command", &Client::OnCommandRequest, this);
 
-    mCurrentPosition = Vector2d();
+    mCurrentPosition = Coor();
 }
 
 void Client::LocationCallBack(const nox_msgs::Location &msg)
@@ -117,7 +117,7 @@ void Client::SendMap()
     mPubPlanner.publish(s);
 }
 
-void Client::SendTrafficInfo(const Vector2d &v)
+void Client::SendTrafficInfo(const Coor &v)
 {
     if(mRecord.curr_rid != -1)
     {
@@ -164,7 +164,7 @@ void Client::SendTrafficInfo(const Vector2d &v)
     }
 }
 
-void Client::SendGPS(const Vector2d &v)
+void Client::SendGPS(const Coor &v)
 {
     visualization_msgs::Marker marker;
     marker.header.frame_id = "/hdmap";
@@ -204,7 +204,7 @@ void Client::SendGPS(const Vector2d &v)
 void Client::Process()
 {
     mLock.lock();
-    Vector2d curr_pos = mCurrentPosition;
+    Coor curr_pos = mCurrentPosition;
     mLock.unlock();
 
     SendGPS(curr_pos);
@@ -305,10 +305,10 @@ void Client::Process()
     ROS_ERROR("(%8.3f, %8.3f): Current position is out the routing!!!" , curr_pos.x, curr_pos.y);
 }
 
-void Client::SendNearPolygonRegion(const Vector2d &v, double radius) {
+void Client::SendNearPolygonRegion(const Coor &v, double radius) {
     assert(radius>=3 && radius<=500);
-    
-    static Vector2d last_v(-1,-1);
+
+    static Coor last_v(-1, -1);
     static std::unordered_set<int> last_road_ids{};
     static std::unordered_set<int> last_junc_ids{};
     static int _subscribe_num;
@@ -325,7 +325,7 @@ void Client::SendNearPolygonRegion(const Vector2d &v, double radius) {
     std::unordered_set<int> cur_junc_ids{};
     
     const double distance_tolerence = 1;
-    if (!must_recalu && (last_v!=Vector2d(-1,-1) && Vector2d::Distance(v,last_v)<distance_tolerence))
+    if (!must_recalu && (last_v != Coor(-1, -1) && Coor::Distance(v, last_v) < distance_tolerence))
     {
         ROS_INFO("Detected Roads and Junctions are same with last time, region message would not be sent.");
         return;
@@ -419,13 +419,13 @@ void Client::SendNearPolygonRegion(const Vector2d &v, double radius) {
     for(auto &rptr: near_roads)
     {
         geometry_msgs::Polygon pg;
-        rptr->GenerateRegionVertics();
-        for(auto &rv: rptr->mRegionVertices)
+        rptr->GenerateRegionPoses();
+        for (auto &rv: rptr->mRegionPoses)
         {
             geometry_msgs::Point32 p;
             p.x = static_cast<float>(rv.x);
             p.y = static_cast<float>(rv.y);
-            p.z = 0;
+            p.z = static_cast<float>(rv.GetAngle().Value());
             pg.points.push_back(p);
         }
         mrr.polygons.emplace_back(pg);
@@ -433,18 +433,16 @@ void Client::SendNearPolygonRegion(const Vector2d &v, double radius) {
     for(auto &jptr: near_juncs)
     {
         geometry_msgs::Polygon pg;
-        for(auto& jv: jptr->mRegionVertices)
+        for (auto &jv: jptr->mRegionPoses)
         {
             geometry_msgs::Point32 p;
             p.x = static_cast<float>(jv.x);
             p.y = static_cast<float>(jv.y);
-            p.z = 0;
+            p.z = static_cast<float>(jv.GetAngle().Value());
             pg.points.push_back(p);
         }
         mrr.polygons.emplace_back(pg);
     }
 
-
     mPubRouteRegion.publish(mrr);
-
 }

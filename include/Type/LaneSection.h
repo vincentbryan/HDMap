@@ -54,7 +54,8 @@ public:
     std::vector<Pose> GetLanePoseByIndex(int _index);
 
     void Send(Sender &sender) override;
-    bool Cover(const Vector2d &v) override;
+
+    bool Cover(const Coor &v) override;
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
 };

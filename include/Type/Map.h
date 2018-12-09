@@ -62,7 +62,7 @@ public:
 
 //    void Trajectory(std::vector<std::pair<unsigned int, int>> sequences);
 
-    RoadPtr Locate(const Vector2d & v);
+        RoadPtr Locate(const Coor &v);
 
     void Send();
     boost::property_tree::ptree ToXML() override;

@@ -6,8 +6,9 @@
 #define HDMAP_POSE_H
 
 #include <cmath>
-#include "Vector2d.h"
+#include "Coor.h"
 #include "Angle.h"
+
 namespace hdmap
 {
 struct Pose
@@ -30,7 +31,7 @@ struct Pose
         direction = Angle(_theta);
     }
 
-    Pose(Vector2d v, Angle angle)
+    Pose(Coor v, Angle angle)
     {
         x = v.x;
         y = v.y;
@@ -58,18 +59,18 @@ struct Pose
     ///angle is relative to x-y axis
     void Translate(double length, Angle angle)
     {
-        Vector2d v = angle.ToVector();
+        Coor v = angle.ToVector();
         x += length * v.x;
         y += length * v.y;
     }
 
     Pose GetTranslation(double length, Angle angle) const
     {
-        Vector2d v = angle.ToVector();
+        Coor v = angle.ToVector();
         return  {x + length * v.x, y + length * v.y, direction.Value()};
     }
 
-    Vector2d GetPosition() const
+    Coor GetPosition() const
     {
         return {x, y};
     }
@@ -79,7 +80,7 @@ struct Pose
         return direction;
     }
 
-    void SetPosition(Vector2d v)
+    void SetPosition(Coor v)
     {
         x = v.x;
         y = v.y;

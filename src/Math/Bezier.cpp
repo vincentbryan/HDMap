@@ -55,14 +55,14 @@ Bezier::Bezier(Pose _start_pose, Pose _end_pose, double _ctrl_len1, double _ctrl
 Pose Bezier::_GetPose(double t)
 {
     assert(0 <= t && t <= 1);
-    Vector2d m1 = p0 + t * (p1 - p0);
-    Vector2d m2 = p1 + t * (p2 - p1);
-    Vector2d m3 = p2 + t * (p3 - p2);
+    Coor m1 = p0 + t * (p1 - p0);
+    Coor m2 = p1 + t * (p2 - p1);
+    Coor m3 = p2 + t * (p3 - p2);
 
-    Vector2d mm1 = m1 + t * (m2 - m1);
-    Vector2d mm2 = m2 + t * (m3 - m2);
+    Coor mm1 = m1 + t * (m2 - m1);
+    Coor mm2 = m2 + t * (m3 - m2);
 
-    Vector2d m = mm1 + t * (mm2 - mm1);
+    Coor m = mm1 + t * (mm2 - mm1);
     Angle a(mm2 - mm1);
 
     return {m, a};
@@ -110,10 +110,10 @@ Pose Bezier::GetEndPose()
 
 std::vector<double> Bezier::GetParam()
 {
-    Vector2d a = -1 * p0 + 3 * p1 +  (-3) * p2 + p3;
-    Vector2d b = 3 * p0 + (-6) * p1 + 3 * p2;
-    Vector2d c = (-3) * p0 + 3 * p1;
-    Vector2d d = p0;
+    Coor a = -1 * p0 + 3 * p1 + (-3) * p2 + p3;
+    Coor b = 3 * p0 + (-6) * p1 + 3 * p2;
+    Coor c = (-3) * p0 + 3 * p1;
+    Coor d = p0;
     return {a.x, b.x, c.x, d.x, a.y, b.y, c.y, d.y};
 }
 
@@ -121,10 +121,10 @@ Bezier::Bezier(std::vector<double> v)
 {
     assert(v.size() == 8);
 
-    Vector2d a = {v[0], v[4]};
-    Vector2d b = {v[1], v[5]};
-    Vector2d c = {v[2], v[6]};
-    Vector2d d = {v[3], v[7]};
+    Coor a = {v[0], v[4]};
+    Coor b = {v[1], v[5]};
+    Coor c = {v[2], v[6]};
+    Coor d = {v[3], v[7]};
 
     p0 = d;
     p1 = (c + 3 * p0) / 3.0;

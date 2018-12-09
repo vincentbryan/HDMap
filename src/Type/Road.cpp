@@ -76,16 +76,16 @@ std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
 }
 
 
-std::pair<unsigned int, int> Road::Locate(const Vector2d &v)
+std::pair<unsigned int, int> Road::Locate(const Coor &v)
 {
     double min_dist = 100000;
     int min_sec_idx = 0;
 
     for(int i = 0; i < mSecPtrs.size(); i++)
     {
-        double t = Vector2d::SegmentDistance(mSecPtrs[i]->GetReferPose().front().GetPosition(),
-                                             mSecPtrs[i]->GetReferPose().back().GetPosition(),
-                                             v);
+        double t = Coor::SegmentDistance(mSecPtrs[i]->GetReferPose().front().GetPosition(),
+                                         mSecPtrs[i]->GetReferPose().back().GetPosition(),
+                                         v);
         if(t < min_dist)
         {
             min_dist = t;
@@ -98,9 +98,9 @@ std::pair<unsigned int, int> Road::Locate(const Vector2d &v)
     for(auto x : mSecPtrs[min_sec_idx]->mLanes)
     {
         auto p = mSecPtrs[min_sec_idx]->GetLanePoseByIndex(x.first);
-        double t = Vector2d::SegmentDistance(p.front().GetPosition(),
-                                             p.back().GetPosition(),
-                                             v);
+        double t = Coor::SegmentDistance(p.front().GetPosition(),
+                                         p.back().GetPosition(),
+                                         v);
         if(t < min_dist)
         {
             min_dist = t;
@@ -170,9 +170,9 @@ void Road::Send(Sender &sender)
 
     auto m1 = sender.GetText(text, p1.GetPosition());
     auto m2 = sender.GetText(text, p2.GetPosition());
-    
+
     /* 
-    GenerateRegionVertics();
+    GenerateRegionPoses();
     std::vector<Pose> roadRegionPs;
     for(auto & x : mRegionVertices) roadRegionPs.emplace_back(x, Angle(0));
     roadRegionPs.emplace_back(mRegionVertices.front(), Angle(0));
@@ -259,7 +259,7 @@ void Road::FromXML(const pt::ptree &p)
     }
 }
 
-bool Road::Cover(const Vector2d &v)
+bool Road::Cover(const Coor &v)
 {
     for(auto & x : mSecPtrs)
     {
@@ -274,16 +274,20 @@ std::vector<SigPtr> Road::GetSignals()
     return mSigPtrs;
 }
 
-void Road::GenerateRegionVertics() {
-    if (mRegionVertices.empty()){
+void Road::GenerateRegionPoses() {
+    if (mRegionPoses.empty()) {
         auto left_poses= GetReferenceLinePoses();
         auto right_poses = GetRightmostLinePoses();
-        std::vector<Vector2d> _tmp;
-        for(auto&p:left_poses)_tmp.emplace_back(p.GetPosition());
-        mRegionVertices.insert(mRegionVertices.begin(),_tmp.rbegin(),_tmp.rend());
-        std::vector<Vector2d>().swap(_tmp);
-        for(auto&p:right_poses)_tmp.emplace_back(p.GetPosition());
-        mRegionVertices.insert(mRegionVertices.begin(),_tmp.begin(),_tmp.end());
+        mRegionPoses.insert(mRegionPoses.end(), left_poses.rbegin(), left_poses.rend());
+        mRegionPoses.insert(mRegionPoses.end(), right_poses.begin(), right_poses.end());
+
+        // store kdtree catch for distance search
+        _tmp_data.clear();
+        for (auto &p: mRegionPoses) {
+            std::vector<double> _tmp{p.x, p.y};
+            _tmp_data.emplace_back(_tmp);
+        }
+        _kdtree_cache.SetData(_tmp_data, kt::VARIANCE);
     };
 }
 
@@ -305,11 +309,20 @@ std::vector<Pose> Road::GetRightmostLinePoses() {
     return poses;
 }
 
-double Road::Distance(const Vector2d& v) {
-    if(mRegionVertices.empty()){
-        GenerateRegionVertics();
+double Road::Distance(const Coor &v) {
+    if (mRegionPoses.empty()) {
+        GenerateRegionPoses();
+
     }
+
+    std::vector<int> indices;
+    std::vector<double> distances;
+    _kdtree_cache.NearestSearch({v.x, v.y}, indices, distances, 1);
+    return distances[0];
+
+    /*
     double dis = std::numeric_limits<double >::max();
+
     for(auto rv: mRegionVertices){
         double _dis = sqrt((rv.x-v.x)*(rv.x-v.x)+(rv.y-v.y)*(rv.y-v.y));
         if (_dis < dis){
@@ -317,5 +330,6 @@ double Road::Distance(const Vector2d& v) {
         }
     }
     return dis;
+    */
 }
 

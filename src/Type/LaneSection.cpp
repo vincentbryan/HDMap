@@ -163,11 +163,11 @@ void LaneSection::FromXML(const pt::ptree &p)
 }
 
 
-bool LaneSection::Cover(const Vector2d &v)
+bool LaneSection::Cover(const Coor &v)
 {
     if(mAllLanePose.empty()) GenerateAllPose(0.5);
 
-    std::vector<Vector2d> vec;
+    std::vector<Coor> vec;
 
     for(auto & x : mReferLine.GetPoses(0.5))
     {

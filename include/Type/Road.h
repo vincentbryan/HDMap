@@ -8,12 +8,16 @@
 #include "LaneSection.h"
 #include "Signal.h"
 #include "common.h"
+#include "kdtree.hpp"
 #include <algorithm>
 
 namespace hdmap
 {
 class Road : public IView, public IXML, IGeometry
 {
+    kt::kdtree<double> _kdtree_cache;
+    std::vector<std::vector<double>> _tmp_data;
+
 public:
     static unsigned int ROAD_ID;
     unsigned int mRoadId;
@@ -28,7 +32,9 @@ public:
 
     Pose mStartPose;
     Pose mEndPose;
-    std::vector<Vector2d> mRegionVertices;
+
+
+    std::vector<Pose> mRegionPoses;
 
     explicit Road(Pose _start_pose = Pose());
 
@@ -54,11 +60,11 @@ public:
 
     std::vector<Pose> GetRightmostLinePoses();
 
-    double Distance(const Vector2d &v);
+    double Distance(const Coor &v);
 
-    void GenerateRegionVertics();
+    void GenerateRegionPoses();
 
-    std::pair<unsigned int, int> Locate(const Vector2d & v);
+    std::pair<unsigned int, int> Locate(const Coor &v);
 
     std::vector<std::vector<Pose>> GetLanePosesByDirection(int direction);
 
@@ -68,7 +74,8 @@ public:
 public:
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
-    bool Cover(const Vector2d &v) override;
+
+    bool Cover(const Coor &v) override;
 };
 }
 

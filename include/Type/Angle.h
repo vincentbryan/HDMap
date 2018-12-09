@@ -8,7 +8,7 @@
 #include <cmath>
 #include <istream>
 #include <iostream>
-#include "Vector2d.h"
+#include "Coor.h"
 
 namespace hdmap
 {
@@ -25,7 +25,8 @@ private:
 
 public:
     explicit Angle(double _m = 0) : m(_m){};
-    explicit Angle(const Vector2d & v)
+
+    explicit Angle(const Coor &v)
     {
         m = atan2(v.y, v.x) / M_PI * 180.0;
         m = Warp(m);
@@ -41,12 +42,12 @@ public:
         m = Warp(y + 90);
     }
 
-    Vector2d ToVector()
+    Coor ToVector()
     {
         return {cos(m / 180.0 * M_PI), sin(m / 180.0 * M_PI)};
     }
 
-    void FromVector(const Vector2d & v)
+    void FromVector(const Coor &v)
     {
         m = atan(v.y / v.x) / M_PI * 180.0;
     }

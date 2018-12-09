@@ -2,14 +2,13 @@
 // Created by vincent on 18-10-14.
 //
 
-#include <Type/Vector2d.h>
+#include <Type/Coor.h>
 
-double hdmap::Vector2d::SegmentDistance(const hdmap::Vector2d &start,
-                                        const hdmap::Vector2d &end,
-                                        const hdmap::Vector2d &target)
-{
-    Vector2d start_to_end = end - start;
-    Vector2d start_to_target = target - start;
+double hdmap::Coor::SegmentDistance(const hdmap::Coor &start,
+                                    const hdmap::Coor &end,
+                                    const hdmap::Coor &target) {
+    Coor start_to_end = end - start;
+    Coor start_to_target = target - start;
 
     double r = start_to_end.cross(start_to_target) / (start_to_end.norm() * start_to_end.norm());
 
@@ -28,7 +27,7 @@ double hdmap::Vector2d::SegmentDistance(const hdmap::Vector2d &start,
     }
 }
 
-double hdmap::Vector2d::Distance(const hdmap::Vector2d &a, const hdmap::Vector2d &b) {
+double hdmap::Coor::Distance(const hdmap::Coor &a, const hdmap::Coor &b) {
     return sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));   
     return 0;
 }

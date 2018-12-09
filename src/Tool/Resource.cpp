@@ -6,6 +6,7 @@
 
 #include <Tool/Resource.h>
 #include <unordered_set>
+
 hdmap::Resource::Resource(const std::string& res_path) {
     mMap.Load(res_path);
 }
@@ -127,41 +128,49 @@ bool hdmap::Resource::OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_ma
                         _road_id_pair_set.insert(std::make_pair(rl.first.second&~1,rl.first.second|1));
                     }
                 }
+
+                std::vector<std::pair<double, RoadPtr>> _tmp; // save for sort by distance.
+
                 for(auto &rp: _road_id_pair_set)
                 {
                     auto r1_ptr  = mMap.GetRoadPtrById(rp.first);
                     auto r2_ptr  = mMap.GetRoadPtrById(rp.second);
 
-                    if (r1_ptr!= nullptr  && r1_ptr->Distance({cur_x,cur_y})<=dis){
+                    if (r1_ptr != nullptr) {
+                        double r1_dis = r1_ptr->Distance({cur_x, cur_y});
+                        if (r1_dis > dis) continue;
                         _info += std::to_string(r1_ptr->mRoadId)+" ";
-                        roads.emplace_back(r1_ptr);
+                        _tmp.emplace_back(r1_dis, r1_ptr);
                         if (r2_ptr!=nullptr)
                         {
                             _info += std::to_string(r2_ptr->mRoadId)+" ";
-                            roads.emplace_back(r2_ptr);
+                            _tmp.emplace_back(r1_dis, r2_ptr);
                         }
                         continue;
                     }
-                    if (r2_ptr!= nullptr  && r2_ptr->Distance({cur_x,cur_y})<=dis){
+                    if (r2_ptr != nullptr) {
+                        double r2_dis = r2_ptr->Distance({cur_x, cur_y});
+                        if (r2_dis > dis) continue;
                         _info += std::to_string(r2_ptr->mRoadId)+" ";
-                        roads.emplace_back(r2_ptr);
+                        _tmp.emplace_back(r2_dis, r2_ptr);
                         if (r1_ptr!=nullptr)
                         {
                             _info += std::to_string(r1_ptr->mRoadId)+" ";
-                            roads.emplace_back(r1_ptr);
+                            _tmp.emplace_back(r2_dis, r1_ptr);
                         }
                         continue;
                     }
+                }
+                std::sort(_tmp.begin(), _tmp.end());
 
+                for (auto &p: _tmp) {
+                    roads.emplace_back(p.second);
                 }
                 _catch_roads = roads;
             }
-
             last_x = cur_x;
             last_y = cur_y;
-
         }
-
 
         auto obj_name = req.type=="RoadByPos"? "Road":"Junction";
         ROS_INFO("%s requests %s { %s} successfully",req.type.c_str(), obj_name, _info.c_str());
