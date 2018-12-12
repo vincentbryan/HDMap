@@ -5,7 +5,7 @@
 //
 
 #include <boost/property_tree/ptree.hpp>
-#include "Type/Map.h"
+#include <Type/Map.h>
 
 using namespace hdmap;
 namespace pt = boost::property_tree;
@@ -28,7 +28,7 @@ RoadPtr Map::AddRoad(const Pose &_start_pose)
 
 JuncPtr Map::AddJunction()
 {
-    JuncPtr p(new Junction());
+    JuncPtr p(new Junction(MapPtr(this)));
     mJuncPtrs.emplace_back(p);
     return p;
 }
@@ -83,22 +83,22 @@ void Map::AddConnection(JuncPtr p, unsigned int from_road, int from_lane_idx,
     );
 
     if(from_lane_idx > 0)
-        mRoadPtrs[from_road]->mNextJid = p->mJunctionId;
+        mRoadPtrs[from_road]->mNextJid = p->ID;
     else
-        mRoadPtrs[from_road]->mPrevJid = p->mJunctionId;
+        mRoadPtrs[from_road]->mPrevJid = p->ID;
 
     if(to_lane_idx > 0)
-        mRoadPtrs[to_road]->mPrevJid = p->mJunctionId;
+        mRoadPtrs[to_road]->mPrevJid = p->ID;
     else
-        mRoadPtrs[to_road]->mNextJid = p->mJunctionId;
+        mRoadPtrs[to_road]->mNextJid = p->ID;
 }
 
-void Map::  CommitRoadInfo()
+void Map::CommitRoadInfo()
 {
     for(auto & p : mRoadPtrs)
     {
         if(!p->mSecPtrs.empty())
-            p->mLength = p->mSecPtrs.back()->mStartS + p->mSecPtrs.back()->mReferLine.Length();
+            p->Lenght = p->mSecPtrs.back()->mStartS + p->mSecPtrs.back()->mReferLine.Length();
     }
 }
 
@@ -135,9 +135,9 @@ std::vector<RoadPtr> Map::AdjacentRoadInfo(RoadPtr p_road)
     int jid = p_road->mNextJid;
     if(jid == -1) return res;
 
-    for(auto const & m : mJuncPtrs[jid]->mRoadLinks)
+    for (auto const &m : mJuncPtrs[jid]->RoadLinks)
     {
-        if(m.first.first == p_road->mRoadId)
+        if (m.first.first == p_road->ID)
         {
             res.emplace_back(GetRoadPtrById(m.first.second));
         }
@@ -145,50 +145,6 @@ std::vector<RoadPtr> Map::AdjacentRoadInfo(RoadPtr p_road)
     return res;
 }
 
-/*
-void Map::Trajectory(std::vector<std::pair<unsigned int, int>> sequences)
-{
-    /*
-    std::vector<Pose> res;
-    for(int i = 0; i < sequences.size()-1; i++)
-    {
-        std::pair<int, int> k;
-        for(auto & j : mJunctions)
-        {
-            if(j.Check({sequences[i].first, sequences[i+1].first}))
-            {
-                k = j.GetLink({sequences[i].first, sequences[i+1].first});
-                break;
-            }
-        }
-        auto road_traj = mRoads[sequences[i].first].Trajectory(sequences[i].second, k.first);
-        res.insert(res.end(), road_traj.begin(), road_traj.end());
-    }
-    std::vector<Pose> res;
-    for(auto x : sequences)
-    {
-        unsigned road_id = x.first;
-        int lane_idx = x.second;
-        for(auto & section : mRoads[road_id].mSections)
-        {
-            auto lane_pose = section.GetLanePoseByIndex(lane_idx);
-            res.insert(res.end(), lane_pose.begin(), lane_pose.end());
-            auto successors = section.mLanes[lane_idx].successors;
-            if(!successors.empty())
-                lane_idx = section.mLanes[lane_idx].successors.front();
-        }
-    }
-}
-*/
-
-RoadPtr Map::Locate(const Coor &v)
-{
-    for(auto & x : mRoadPtrs)
-    {
-        if(x->Cover(v))
-            return x;
-    }
-}
 
 boost::property_tree::ptree Map::ToXML()
 {
@@ -196,14 +152,13 @@ boost::property_tree::ptree Map::ToXML()
     for(auto & road : mRoadPtrs)
     {
         p_map.add_child("hdmap.roads.road", road->ToXML());
-        mRoadIdToPtr[road->mRoadId] = road;
+        mRoadIdToPtr[road->ID] = road;
     }
 
 
     for(auto & junc : mJuncPtrs){
-        junc->GenerateRegionPoses(this);
         p_map.add_child("hdmap.junctions.junction", junc->ToXML());
-        mJuncIdToPtr[junc->mJunctionId] = junc;
+        mJuncIdToPtr[junc->ID] = junc;
     }
     return p_map;
 }
@@ -219,22 +174,20 @@ void Map::FromXML(const pt::ptree &p)
         RoadPtr pRoad(new Road());
         pRoad->FromXML(r.second);
         mRoadPtrs.emplace_back(pRoad);
-        mRoadIdToPtr[pRoad->mRoadId] = pRoad;
-        Road::ROAD_ID = std::max((unsigned)0, pRoad->mRoadId);
+        mRoadIdToPtr[pRoad->ID] = pRoad;
+        Road::ROAD_ID = std::max((unsigned) 0, pRoad->ID);
     }
     Road::ROAD_ID++;
-
 
     try
     {
         for(auto & j : p.get_child("hdmap.junctions"))
         {
-            JuncPtr pJunc(new Junction());
+            JuncPtr pJunc(new Junction(MapPtr(this)));
             pJunc->FromXML(j.second);
-            pJunc->GenerateRegionPoses(this);
             mJuncPtrs.emplace_back(pJunc);
-            mJuncIdToPtr[pJunc->mJunctionId] = pJunc;
-            Junction::JUNCTION_ID = std::max((unsigned)0, pJunc->mJunctionId);
+            mJuncIdToPtr[pJunc->ID] = pJunc;
+            Junction::JUNCTION_ID = std::max((unsigned) 0, pJunc->ID);
         }
         Junction::JUNCTION_ID++;
     }
@@ -251,6 +204,7 @@ RoadPtr Map::GetRoadPtrById(unsigned int road_id)
     {
         return mRoadIdToPtr[road_id];
     }
+    printf("No Found Road %d, Maybe initialization dose not finish.\n", road_id);
     return nullptr;
 }
 
@@ -260,6 +214,7 @@ JuncPtr Map::GetJuncPtrById(unsigned int junc_id)
     {
         return mJuncIdToPtr[junc_id];
     }
+    printf("No Found Junction %d, Maybe initialization dose not finish.\n", junc_id);
     return nullptr;
 }
 
@@ -298,10 +253,10 @@ void Map::AddRoadLink(JuncPtr p,
         road_link.AddLaneLink(from_lane_idx, to_lane_idx, Bezier(start_pose, end_pose, ctrl_len1, ctrl_len2));
     }
     std::pair<unsigned int, unsigned int> m(_from_road_id, _to_road_id);
-    p->mRoadLinks[m] = road_link;
-    
-    mRoadPtrs[_from_road_id]->mNextJid = p->mJunctionId;
-    mRoadPtrs[_to_road_id]->mPrevJid = p->mJunctionId;
+    p->RoadLinks[m] = road_link;
+
+    mRoadPtrs[_from_road_id]->mNextJid = p->ID;
+    mRoadPtrs[_to_road_id]->mPrevJid = p->ID;
 }
 
 unsigned long Map::GetRoadSize() {
@@ -310,4 +265,16 @@ unsigned long Map::GetRoadSize() {
 
 unsigned long Map::GetJunctionSize() {
     return mJuncPtrs.size();
+}
+
+RoadPtr Map::GetRoadNeighbor(RoadPtr ptr) {
+    const double _MIN_DIS_NEIGHBOR = 8.0;
+    Coor _tmp_coor = ptr->GetReferenceLinePoses()[0].GetPosition();
+    for (auto &road: mRoadPtrs) {
+        double dis = road->GetDistanceFromCoor(_tmp_coor);
+        if (dis < _MIN_DIS_NEIGHBOR && ptr->ID != road->ID) {
+            return road;
+        }
+    }
+    return nullptr;
 }

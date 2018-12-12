@@ -6,7 +6,6 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <Tool/Planner.h>
-#include <queue>
 
 using namespace hdmap;
 namespace pt = boost::property_tree;
@@ -46,34 +45,34 @@ void Planner::BFS(RoadPtr p_start, RoadPtr p_end, std::vector<RoadPtr> &trace) {
         RoadPtr p_curr = road_queue.front();
         road_queue.pop();
 
-        if (p_curr->mRoadId == p_end->mRoadId){
+        if (p_curr->ID == p_end->ID) {
             break;
         }
 
         for(auto& x: mHDMapPtr->AdjacentRoadInfo(p_curr))
         {
-            if (!_is_visit[x->mRoadId])
+            if (!_is_visit[x->ID])
             {
-                road_pre[x->mRoadId] = p_curr;
-                _is_visit[x->mRoadId] = true;
+                road_pre[x->ID] = p_curr;
+                _is_visit[x->ID] = true;
                 road_queue.push(x);
             }
         }
     }
-    if (road_pre[p_end->mRoadId] == nullptr){
+    if (road_pre[p_end->ID] == nullptr) {
         return;
     }
     // back trace
     trace.push_back(p_end);
-    while(trace.back()->mRoadId!=p_start->mRoadId){
-        trace.push_back(road_pre[trace.back()->mRoadId]);
+    while (trace.back()->ID != p_start->ID) {
+        trace.push_back(road_pre[trace.back()->ID]);
     }
     std::reverse(trace.begin(),trace.end());
 }
 
 void Planner::DFS(RoadPtr p_curr, std::vector<RoadPtr> v)
 {
-    if(p_curr->mRoadId == pEnd->mRoadId)
+    if (p_curr->ID == pEnd->ID)
     {
         mAllRouting.emplace_back(v);
     }
@@ -81,13 +80,13 @@ void Planner::DFS(RoadPtr p_curr, std::vector<RoadPtr> v)
     {
         for(auto & x : mHDMapPtr->AdjacentRoadInfo(p_curr))
         {
-            if(!is_visited[x->mRoadId])
+            if (!is_visited[x->ID])
             {
-                is_visited[x->mRoadId] = true;
+                is_visited[x->ID] = true;
                 v.emplace_back(x);
                 DFS(x, v);
                 v.pop_back();
-                is_visited[x->mRoadId] = false;
+                is_visited[x->ID] = false;
             }
         }
     }
@@ -136,7 +135,7 @@ void Planner::Send()
         if(i + 1 < mRouting.size())
         {
             int jid = mRouting[i]->mNextJid;
-            mHDMapPtr->GetJuncPtrById(jid)->GetRoadLink(mRouting[i]->mRoadId, mRouting[i+1]->mRoadId).Send(*mSenderPtr);
+            mHDMapPtr->GetJuncPtrById(jid)->GetRoadLink(mRouting[i]->ID, mRouting[i + 1]->ID).Send(*mSenderPtr);
         }
     }
 }
@@ -156,32 +155,21 @@ void Planner::ToXML(std::string &str)
             int jid = mRouting[i]->mNextJid;
             assert(jid != -1);
             auto junc = mHDMapPtr->mJuncPtrs[jid];
-            p_junc.add("<xmlattr>.id",junc->mJunctionId);
-            if(junc->mVertices.empty())junc->GenerateVertices();
+            p_junc.add("<xmlattr>.id", junc->ID);
+
             pt::ptree p_vec;
             pt::ptree p_v;
-            for(auto & v : junc->mVertices)
+
+            for (auto &bezier: junc->GetBoundaryCurves())
             {
-                p_v.add("<xmlattr>.x", v.x);
-                p_v.add("<xmlattr>.y", v.y);
-                p_vec.add_child("vertex", p_v);
+                for (auto &p : bezier.GetParam())
+                    p_v.add("param", p);
+                p_vec.add_child("bezier", p_v);
                 p_v.clear();
             }
+            p_junc.add_child("regionBoundary", p_vec);
 
-            pt::ptree p_region_vec;
-            p_v.clear();
-            for (auto &v : junc->mRegionPoses)
-            {
-                p_v.add("<xmlattr>.x", v.x);
-                p_v.add("<xmlattr>.y", v.y);
-                p_region_vec.add_child("vertex", p_v);
-                p_v.clear();
-            }
-
-            p_junc.add_child("vertice", p_vec);
-            p_junc.add_child("regionVertices", p_region_vec);
-
-            auto road_link =  mHDMapPtr->GetJuncPtrById(jid)->GetRoadLink(mRouting[i]->mRoadId, mRouting[i+1]->mRoadId);
+            auto road_link = mHDMapPtr->GetJuncPtrById(jid)->GetRoadLink(mRouting[i]->ID, mRouting[i + 1]->ID);
             p_junc.add_child("roadLink", road_link.ToXML());
             tree.add_child("hdmap.junctions.junction", p_junc);
             p_junc.clear();
@@ -224,7 +212,7 @@ bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Respon
                         mRouting.pop_back();
                     }
                     for(auto&x:trace){
-                        is_visited[x->mRoadId] = true;
+                        is_visited[x->ID] = true;
                         mRouting.emplace_back(x);
                     }
                 }
@@ -247,7 +235,7 @@ bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Respon
     ROS_INFO_STREAM("Result:");
     for(auto & x : mRouting)
     {
-        ROS_INFO_STREAM("\t" << x->mRoadId);
+        ROS_INFO_STREAM("\t" << x->ID);
     }
     ToXML(res.route);
     Send();

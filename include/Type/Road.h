@@ -15,14 +15,27 @@ namespace hdmap
 {
 class Road : public IView, public IXML, IGeometry
 {
-    kt::kdtree<double> _kdtree_cache;
-    std::vector<std::vector<double>> _tmp_data;
 
 public:
+
     static unsigned int ROAD_ID;
-    unsigned int mRoadId;
-    double mLength;
-    int mDirection;
+
+    unsigned int ID;
+
+    double Lenght;
+
+    int Direction;
+
+private:
+
+    kt::kdtree<double> mKdtree;
+
+    std::vector<std::vector<double>> mKdtreeData;
+
+    std::vector<Pose> mRegionPoses;
+
+
+public:
 
     std::vector<SecPtr> mSecPtrs;
     std::vector<SigPtr> mSigPtrs;
@@ -32,9 +45,6 @@ public:
 
     Pose mStartPose;
     Pose mEndPose;
-
-
-    std::vector<Pose> mRegionPoses;
 
     explicit Road(Pose _start_pose = Pose());
 
@@ -60,19 +70,16 @@ public:
 
     std::vector<Pose> GetRightmostLinePoses();
 
-    double Distance(const Coor &v);
+    double GetDistanceFromCoor(const Coor &v);
 
     void GenerateRegionPoses();
 
-    std::pair<unsigned int, int> Locate(const Coor &v);
-
-    std::vector<std::vector<Pose>> GetLanePosesByDirection(int direction);
+    std::vector<Pose> GetRegionPoses();
 
     void Send(Sender &sender) override;
 
-
-public:
     boost::property_tree::ptree ToXML() override;
+
     void FromXML(const pt::ptree &p) override;
 
     bool Cover(const Coor &v) override;

@@ -75,6 +75,10 @@ struct Pose
         return {x, y};
     }
 
+    Angle &GetAngle() {
+        return direction;
+    }
+
     Angle GetAngle() const
     {
         return direction;

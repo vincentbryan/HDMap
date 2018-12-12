@@ -125,6 +125,11 @@ std::vector<Pose> LaneSection::GetLanePoseByIndex(int _index)
 {
     if(mAllLanePose.empty())
         GetAllPose();
+    if (_index < 0) {
+        _index = mRightBoundary + 1 + _index;
+    }
+    assert(_index >= 0 && _index <= mRightBoundary);
+
     return mAllLanePose[_index];
 }
 

@@ -795,7 +795,7 @@ int main(int argc, char** argv)
 
     //Junc[5]-------------------------------------------------------------
     auto junc5 = map.AddJunction();
-    map.AddRoadLink(junc5, 16, 19, "right", {make_tuple(1, 1, 15.0, 15.0)});
+    map.AddRoadLink(junc5, 16, 19, "right", {make_tuple(1, 1, 10.0, 10.0)});
 
     map.AddRoadLink(junc5, 18, 17, "left", {make_tuple(1, 1, 15.0, 15.0)});
 

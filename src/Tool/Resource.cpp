@@ -76,13 +76,13 @@ bool hdmap::Resource::OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_ma
             if (req.type == "RoadByPos")
             {
                 for(auto &r: roads)
-                    _info += std::to_string(r->mRoadId)+" ";
+                    _info += std::to_string(r->ID) + " ";
                 _info = _info.empty()? "[none] ":"[catch] "+_info;
             }
             else
             {
                 for(auto &j: junctions)
-                    _info += std::to_string(j->mJunctionId)+" ";
+                    _info += std::to_string(j->ID) + " ";
                 _info = _info.empty()? "[none] ":"[catch] "+_info;
             }
         }
@@ -93,17 +93,17 @@ bool hdmap::Resource::OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_ma
             double _nearest_dis = std::numeric_limits<double >::max();
             for(auto& j: mMap.mJuncPtrs)
             {
-                auto dis_to_j =  j->Distance({cur_x,cur_y});
+                auto dis_to_j = j->GetDistanceFromCoor({cur_x, cur_y});
                 if(dis_to_j<=dis)
                 {
 
-                    _info += std::to_string(j->mJunctionId)+" ";
+                    _info += std::to_string(j->ID) + " ";
                     junctions.emplace_back(j);
                 }
                 if(dis_to_j < _nearest_dis)
                 {
                     _nearest_dis = dis_to_j;
-                    _nearest_jid = j->mJunctionId;
+                    _nearest_jid = j->ID;
                 }
             }
 
@@ -119,46 +119,33 @@ bool hdmap::Resource::OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_ma
                     junctions.emplace_back(mMap.GetJuncPtrById(_nearest_jid));
                 }
 
-                std::set<std::pair<uint,uint> > _road_id_pair_set;
+                std::set<uint> _road_id_set;
                 // get all adjacent roads from junction
                 for(auto& jptr: junctions){
-                    for(auto& rl: jptr->mRoadLinks)
+                    for (auto &rl: jptr->RoadLinks)
                     {
-                        _road_id_pair_set.insert(std::make_pair(rl.first.first&~1,rl.first.first|1));
-                        _road_id_pair_set.insert(std::make_pair(rl.first.second&~1,rl.first.second|1));
+                        uint r1 = rl.first.first;
+                        uint r2 = rl.first.second;
+
+                        _road_id_set.insert(r1);
+                        _road_id_set.insert(r2);
+
+                        _road_id_set.insert(mMap.GetRoadNeighbor(mMap.GetRoadPtrById(r1))->ID);
+                        _road_id_set.insert(mMap.GetRoadNeighbor(mMap.GetRoadPtrById(r2))->ID);
                     }
                 }
 
                 std::vector<std::pair<double, RoadPtr>> _tmp; // save for sort by distance.
 
-                for(auto &rp: _road_id_pair_set)
+                for (auto &rp: _road_id_set)
                 {
-                    auto r1_ptr  = mMap.GetRoadPtrById(rp.first);
-                    auto r2_ptr  = mMap.GetRoadPtrById(rp.second);
+                    auto r_ptr = mMap.GetRoadPtrById(rp);
 
-                    if (r1_ptr != nullptr) {
-                        double r1_dis = r1_ptr->Distance({cur_x, cur_y});
+                    if (r_ptr != nullptr) {
+                        double r1_dis = r_ptr->GetDistanceFromCoor({cur_x, cur_y});
                         if (r1_dis > dis) continue;
-                        _info += std::to_string(r1_ptr->mRoadId)+" ";
-                        _tmp.emplace_back(r1_dis, r1_ptr);
-                        if (r2_ptr!=nullptr)
-                        {
-                            _info += std::to_string(r2_ptr->mRoadId)+" ";
-                            _tmp.emplace_back(r1_dis, r2_ptr);
-                        }
-                        continue;
-                    }
-                    if (r2_ptr != nullptr) {
-                        double r2_dis = r2_ptr->Distance({cur_x, cur_y});
-                        if (r2_dis > dis) continue;
-                        _info += std::to_string(r2_ptr->mRoadId)+" ";
-                        _tmp.emplace_back(r2_dis, r2_ptr);
-                        if (r1_ptr!=nullptr)
-                        {
-                            _info += std::to_string(r1_ptr->mRoadId)+" ";
-                            _tmp.emplace_back(r2_dis, r1_ptr);
-                        }
-                        continue;
+                        _info += std::to_string(r_ptr->ID) + " ";
+                        _tmp.emplace_back(r1_dis, r_ptr);
                     }
                 }
                 std::sort(_tmp.begin(), _tmp.end());

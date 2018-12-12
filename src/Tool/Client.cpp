@@ -63,7 +63,7 @@ bool Client::OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_c
                 mCurPlanMap.FromXML(tree);
 
                 for(auto & x : mCurPlanMap.mRoadPtrs)
-                    res.route.emplace_back(x->mRoadId);
+                    res.route.emplace_back(x->ID);
 
                 return true;
             }
@@ -160,7 +160,8 @@ void Client::SendTrafficInfo(const Coor &v)
             }
         }
         mPubTrafficLight.publish(ss);
-        ROS_INFO("(%8.3f, %8.3f): In road[%d] with [%d] signals, detection state: [%d]", v.x, v.y, mRecord.curr_rid, signals.size(), detected);
+        ROS_INFO("(%8.3f, %8.3f): In road[%d] with [%d] signals, detection state: [%d]",
+                 v.x, v.y, mRecord.curr_rid, signals.size(), detected);
     }
 }
 
@@ -223,9 +224,8 @@ void Client::Process()
         {
             if(mCurPlanMap.mRoadPtrs[i]->Cover(curr_pos))
             {
-                mRecord.curr_rid = mCurPlanMap.mRoadPtrs[i]->mRoadId;
+                mRecord.curr_rid = mCurPlanMap.mRoadPtrs[i]->ID;
                 mRecord.curr_idx = i;
-                //mRecord.curr_jid = mCurPlanMap.mRoadPtrs[i]->mNextJid;
                 if(mRecord.curr_rid+1 == mCurPlanMap.mRoadPtrs.size())
                 {
                     mRecord.curr_jid = -1;
@@ -236,7 +236,7 @@ void Client::Process()
                 }
                 if(i + 1 < mCurPlanMap.mRoadPtrs.size())
                 {
-                    mRecord.next_rid = mCurPlanMap.mRoadPtrs[i+1]->mRoadId;
+                    mRecord.next_rid = mCurPlanMap.mRoadPtrs[i + 1]->ID;
                 }
                 mRecord.is_init = true;
                 break;
@@ -265,12 +265,13 @@ void Client::Process()
     {
         for(auto & j : mCurPlanMap.mJuncPtrs)
         {
-            if(j->mJunctionId == mRecord.curr_jid)
+            if (j->ID == mRecord.curr_jid)
             {
                 if(j->Cover(curr_pos))
                 {
-                    ROS_INFO("(%8.3f, %8.3f): In junction[%d]", curr_pos.x, curr_pos.y, j->mJunctionId);
+                    ROS_INFO("(%8.3f, %8.3f): In junction[%d]", curr_pos.x, curr_pos.y, j->ID);
                     SendMap();
+                    SendTrafficInfo(curr_pos);
                     return;
                 }
             }
@@ -286,19 +287,20 @@ void Client::Process()
             if(mRecord.curr_idx + 1 < mCurPlanMap.mRoadPtrs.size())
             {
                 mRecord.curr_idx++;
-                mRecord.curr_rid = mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->mRoadId;
+                mRecord.curr_rid = mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->ID;
 
 
                 if(mRecord.curr_idx + 1 < mCurPlanMap.mRoadPtrs.size())
                 {
                     mRecord.curr_jid = mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->mNextJid;
-                    mRecord.next_rid = mCurPlanMap.mRoadPtrs[mRecord.curr_idx+1]->mRoadId;
+                    mRecord.next_rid = mCurPlanMap.mRoadPtrs[mRecord.curr_idx + 1]->ID;
                 }
                 else
                     mRecord.curr_jid = mRecord.next_rid = -1;
             }
             ROS_INFO("(%8.3f, %8.3f): Record updated", curr_pos.x, curr_pos.y);
             SendMap();
+            SendTrafficInfo(curr_pos);
             return;
         }
     }
@@ -344,6 +346,7 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius) {
     srv.request.argv.emplace_back(v.y);
     srv.request.argv.emplace_back(radius);
 
+
     if( mDataClient.call(srv)) {
         try{
             pt::ptree tree;
@@ -359,14 +362,15 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius) {
                     _tmp_road_ptr->FromXML(r.second);
                     near_roads.emplace_back(_tmp_road_ptr);
                 }
-                cur_road_ids.insert(near_roads.back()->mRoadId);
-                roads_info_str += std::to_string(near_roads.back()->mRoadId)+" ";
+                cur_road_ids.insert(near_roads.back()->ID);
+                roads_info_str += std::to_string(near_roads.back()->ID) + " ";
             }
         }
         catch (...){
             ROS_INFO("Not receive any roads or something error happen.");
         }
     }
+
     srv.response.res="";
     srv.request.type = "JunctionByPos";
     if( mDataClient.call(srv))
@@ -387,20 +391,20 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius) {
                     _tmp_junction_ptr->FromXML(j.second);
                     near_juncs.push_back(_tmp_junction_ptr);
                 }
-                cur_junc_ids.insert(near_juncs.back()->mJunctionId);
-                juncs_info_str += std::to_string(near_juncs.back()->mJunctionId)+" ";
+                cur_junc_ids.insert(near_juncs.back()->ID);
+                juncs_info_str += std::to_string(near_juncs.back()->ID) + " ";
             }
         }
         catch (...){
             ROS_INFO("Not receive any junctions or something error happen.");
         }
-
     }
 
 
     if (juncs_info_str.empty()) juncs_info_str ="none ";
     if (roads_info_str.empty()) roads_info_str ="none ";
-    ROS_INFO("(%8.3f, %8.3f) Region: Roads { %s} Junctions { %s}", mCurrentPosition.x,mCurrentPosition.y,roads_info_str.c_str(),juncs_info_str.c_str());
+    ROS_INFO("(%8.3f, %8.3f) Region: Roads { %s} Junctions { %s}",
+             mCurrentPosition.x, mCurrentPosition.y, roads_info_str.c_str(), juncs_info_str.c_str());
 
     if(!must_recalu && (last_junc_ids==cur_junc_ids && last_road_ids==cur_road_ids))
     {
@@ -419,8 +423,7 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius) {
     for(auto &rptr: near_roads)
     {
         geometry_msgs::Polygon pg;
-        rptr->GenerateRegionPoses();
-        for (auto &rv: rptr->mRegionPoses)
+        for (auto &rv: rptr->GetRegionPoses())
         {
             geometry_msgs::Point32 p;
             p.x = static_cast<float>(rv.x);
@@ -433,7 +436,7 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius) {
     for(auto &jptr: near_juncs)
     {
         geometry_msgs::Polygon pg;
-        for (auto &jv: jptr->mRegionPoses)
+        for (auto &jv: jptr->GetRegionPoses())
         {
             geometry_msgs::Point32 p;
             p.x = static_cast<float>(jv.x);

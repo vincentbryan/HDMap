@@ -29,7 +29,7 @@ public:
     explicit Angle(const Coor &v)
     {
         m = atan2(v.y, v.x) / M_PI * 180.0;
-        m = Warp(m);
+        m = (m);
     }
 
     double ToYaw()
@@ -62,7 +62,7 @@ public:
         m = angle;
     }
 
-    ///Counterclockwise
+    /// Counter clockwise
     void Rotate(double degree)
     {
         m += degree;

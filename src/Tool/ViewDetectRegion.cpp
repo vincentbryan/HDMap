@@ -8,14 +8,11 @@
 #include "Type/Angle.h"
 #include <visualization_msgs/MarkerArray.h>
 #include <HDMap/msg_route_region.h>
-#include <Tool/polygonScan.h>
 #include <mutex>
 #include <sensor_msgs/PointCloud2.h>
-#include <termios.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/transforms.h>
 #include <pcl/kdtree/kdtree_flann.h>
-#include <tf/transform_datatypes.h>
 
 class ViewDetectRegion
 {
@@ -156,52 +153,14 @@ public:
         std::vector<hdmap::Coor> _effect_points;
         for(auto& polygon: msg.polygons)
         {
-            if(polygon.points.size() < 10)
-            {
-                _effect_points.clear();
-                double minX = std::numeric_limits<int>::max();
-                double minY = std::numeric_limits<int>::max();
-                double maxX = std::numeric_limits<int>::min();
-                double maxY = std::numeric_limits<int>::min();
-                for(auto& p: polygon.points)
-                {
-                    _effect_points.emplace_back(p.x,p.y);
-                    if(p.x > maxX) maxX = p.x;
-                    if(p.y > maxY) maxY = p.y;
-                    if(p.x < minX) minX = p.x;
-                    if(p.y < minY) minY = p.y;
-                }
-                // 平移（使得所有点大于0）,放大（0.5步长）并给扫描线算法使用
-                const double scale_step = 4;
-                std::vector<PolygonScan::Point> ps;
-                for(auto& p: _effect_points)
-                {
-                    ps.emplace_back(scale_step*(p.x-minX),scale_step*(p.y-minY));
-                }
-
-                auto _res_points = PolygonScan::polygonScan(ps);
-
-                // 缩小并平移到点云中
-                for(auto&p:_res_points)
-                {
-                    PointT _tmp_p{255,255,255};
-                    _tmp_p.x = static_cast<float>(p.x / scale_step + minX);
-                    _tmp_p.y = static_cast<float>(p.y / scale_step + minY);
-                    mRegionPoints->points.push_back(_tmp_p);
-                }
-
-            } else{
-                for(auto& p: polygon.points)
-                {
-                    PointT _tmp_p{255,255,255};
-                    _tmp_p.x = static_cast<float>(p.x);
-                    _tmp_p.y = static_cast<float>(p.y);
-                    mRegionPoints->points.push_back(_tmp_p);
-                }
+            for (auto &p: polygon.points) {
+                PointT _tmp_p{255, 255, 255};
+                _tmp_p.x = static_cast<float>(p.x);
+                _tmp_p.y = static_cast<float>(p.y);
+                mRegionPoints->points.push_back(_tmp_p);
             }
 
             regionTree.setInputCloud(mRegionPoints);
-
         }
 
         mLock.unlock();

@@ -2,16 +2,17 @@
 // Created by vincent on 18-10-13.
 //
 
-#include "Type/Junction.h"
+#include <Type/Junction.h>
+
 #include "Type/Map.h"
 
 using namespace hdmap;
 
 unsigned int Junction::JUNCTION_ID = 0;
 
-Junction::Junction()
-{
-    mJunctionId = JUNCTION_ID++;
+Junction::Junction(MapPtr ptr) {
+    ID = JUNCTION_ID++;
+    mMapInstantPtr = ptr;
 }
 
 void Junction::AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pose _from_lane_pose,
@@ -19,11 +20,11 @@ void Junction::AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pos
                              double _ctrl_len1, double _ctrl_len2)
 {
     std::pair<unsigned int, unsigned int> p(_from_road_id, _to_road_id);
-    if(mRoadLinks.find(p) != mRoadLinks.end())
+    if (RoadLinks.find(p) != RoadLinks.end())
     {
-        mRoadLinks[p].AddLaneLink(_from_lane_idx,
-                                  _to_lane_idx,
-                                  Bezier(_from_lane_pose, _to_lane_pose, _ctrl_len1, _ctrl_len2));
+        RoadLinks[p].AddLaneLink(_from_lane_idx,
+                                 _to_lane_idx,
+                                 Bezier(_from_lane_pose, _to_lane_pose, _ctrl_len1, _ctrl_len2));
     }
     else
     {
@@ -31,132 +32,74 @@ void Junction::AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pos
         road_link.AddLaneLink(_from_lane_idx,
                               _to_lane_idx,
                               Bezier(_from_lane_pose, _to_lane_pose, _ctrl_len1, _ctrl_len2));
-        mRoadLinks[p] = road_link;
+        RoadLinks[p] = road_link;
     }
 }
 
-std::vector<std::vector<Pose>> Junction::GetAllPose()
-{
-    if(mPoses.empty())
-        _GenerateAllPose();
-
-    return mPoses;
-}
-
-bool Junction::Check(std::pair<unsigned int, unsigned int> links)
-{
-    return mRoadLinks.find(links) != mRoadLinks.end();
-}
-
-std::pair<int, int> Junction::GetLink(std::pair<unsigned int, unsigned int> RoadPair)
-{
-    auto it = mRoadLinks.find(RoadPair);
-    return  it->first;
-}
-
-std::vector<Pose> Junction::GetPose(unsigned int from_road_id,
-                                    int from_lane_idx,
-                                    unsigned int to_road_id,
-                                    int to_lane_idx)
-{
-    return mRoadLinks[{from_road_id, to_road_id}].GetPose(from_lane_idx, to_lane_idx);
-}
 
 void Junction::Send(Sender &sender)
 {
-    if(mVertices.empty()) GenerateVertices();
+    if (mRegionPoses.empty()) GenerateRegionPoses();
 
-    std::string text = "Junction[" + std::to_string(mJunctionId) + "]";
-    Coor v;
+    std::string text = "Junction[" + std::to_string(ID) + "]";
 
-    for(auto & x : mVertices)
+    Coor center_coor;
+    for (auto &b: mBoundaryCurves)
     {
-        v.x += x.x;
-        v.y += x.y;
+        center_coor += b.GetStartPose().GetPosition();
+        center_coor += b.GetEndPose().GetPosition();
     }
-    if(!mVertices.empty())
+    center_coor /= 2 * mBoundaryCurves.size();
+    sender.array.markers.emplace_back(sender.GetText(text, center_coor));
+
+
+    // region boundary
+    visualization_msgs::Marker m;
+    std::vector<Pose> _region_boundary;
+    for (auto _bezire: mBoundaryCurves)
     {
-        v.x /= mVertices.size();
-        v.y /= mVertices.size();
+        auto it = _bezire.GetPoses(0.5);
+        _region_boundary.insert(_region_boundary.end(), it.begin(), it.end());
     }
-    sender.array.markers.emplace_back(sender.GetText(text, v));
-    sender.Send();
 
-
-    std::vector<Pose> roadlinkRegionPs;
-    for(auto & x : mVertices) roadlinkRegionPs.emplace_back(x, Angle(0));
-    roadlinkRegionPs.emplace_back(mVertices.front(), Angle(0));
-
-    auto m = sender.GetLineStrip(roadlinkRegionPs, 180.0/255.0, 76.0/255.0, 231.0/255.0, 1.0, 0, 0.15);
+    m = sender.GetLineStrip(_region_boundary, 180.0 / 255.0, 76.0 / 255.0, 231.0 / 255.0, 1.0, 0, 0.15);
     sender.array.markers.emplace_back(m);
+
+
     sender.Send();
-
-
-    std::vector<Pose> junctionRegionPs(mRegionPoses.begin(), mRegionPoses.end());
-    junctionRegionPs.emplace_back(mRegionPoses.front());
-
-    m = sender.GetLineStrip(junctionRegionPs,76.0/255.0, 180.0/255.0, 231.0/255.0 , 1.0, 0, 0.15);
-    sender.array.markers.emplace_back(m);
-    sender.Send();
-
-
-    for(auto & x : mRoadLinks)
+    for (auto &x : RoadLinks)
     {
         x.second.Send(sender);
     }
 }
 
-void Junction::_GenerateAllPose()
-{
-    for(auto x : mRoadLinks)
-    {
-        for(auto y : x.second.mLaneLinks)
-        {
-            mPoses.emplace_back(y.mReferLine.GetPoses(0.5));
-        }
-    }
-}
-
 RoadLink Junction::GetRoadLink (int rid1, int rid2)
 {
-    auto it = mRoadLinks.find(std::pair<unsigned int, unsigned int>(rid1, rid2));
+    auto it = RoadLinks.find(std::pair<unsigned int, unsigned int>(rid1, rid2));
     return it->second;
 }
 
 boost::property_tree::ptree Junction::ToXML()
 {
     pt::ptree p_junc;
-    p_junc.add("<xmlattr>.id", mJunctionId);
+    p_junc.add("<xmlattr>.id", ID);
 
-    if (mVertices.empty()) GenerateVertices();
-
-    /// 受到数据限制， Region数据由road和junction一起提供
-    /// GenerateRegionPoses 将在外部进行调用
+    if (mBoundaryCurves.empty()) GenerateRegionPoses();
 
     pt::ptree p_vec;
     pt::ptree p_v;
 
-    for(auto & v : mVertices)
+    for (auto &bezier: mBoundaryCurves)
     {
-        p_v.add("<xmlattr>.x", v.x);
-        p_v.add("<xmlattr>.y", v.y);
-        p_vec.add_child("vertex", p_v);
+        for (auto &p : bezier.GetParam())
+            p_v.add("param", p);
+        p_vec.add_child("bezier", p_v);
         p_v.clear();
     }
-    p_junc.add_child("vertices", p_vec);
-
-    p_vec.clear();
-    for (auto &v : mRegionPoses)
-    {
-        p_v.add("<xmlattr>.x", v.x);
-        p_v.add("<xmlattr>.y", v.y);
-        p_vec.add_child("vertex", p_v);
-        p_v.clear();
-    }
-    p_junc.add_child("regionVertices", p_vec);
+    p_junc.add_child("regionBoundary", p_vec);
 
 
-    for(auto & r : mRoadLinks)
+    for (auto &r : RoadLinks)
     {
         p_junc.add_child("roadLink", r.second.ToXML());
     }
@@ -171,183 +114,174 @@ void Junction::FromXML(const pt::ptree &p)
     {
         if(n.first == "<xmlattr>")
         {
-            mJunctionId = n.second.get<int>("id");
+            ID = n.second.get<int>("id");
         }
 
         if(n.first == "roadLink")
         {
             RoadLink r;
             r.FromXML(n.second);
-            mRoadLinks[{r.mFromRoadId, r.mToRoadId}] = r;
+            RoadLinks[{r.mFromRoadId, r.mToRoadId}] = r;
         }
 
-        if(n.first == "vertices")
+        if (n.first == "regionBoundary")
         {
             pt::ptree p_vec = n.second;
 
-            for(auto & t : p_vec.get_child(""))
+            for (auto &p_bezier : p_vec.get_child(""))
             {
-                if(t.first == "vertex")
+                std::vector<double> res;
+                for (auto &param: p_bezier.second.get_child(""))
                 {
-                    auto x = t.second.get<double>("<xmlattr>.x");
-                    auto y = t.second.get<double>("<xmlattr>.y");
-                    mVertices.emplace_back(x, y);
+                    res.emplace_back(std::atof(param.second.data().c_str()));
                 }
+                mBoundaryCurves.emplace_back(res);
             }
-        }
-
-        if (n.first == "regionVertices"){
-            pt::ptree p_vec = n.second;
-
-            for(auto & t : p_vec.get_child(""))
-            {
-                if(t.first == "vertex")
-                {
-                    auto x = t.second.get<double>("<xmlattr>.x");
-                    auto y = t.second.get<double>("<xmlattr>.y");
-                    mRegionPoses.emplace_back(x, y, 0);
-                }
-            }
+            GenerateRegionPoses();
         }
     }
 }
 
-double Junction::Distance(const Coor &v)
-{
-    double min_dist = 1000000;
-    for(auto & ps : GetAllPose())
-    {
-        for(auto & p : ps)
-        {
-            double t = sqrt((p.x - v.x)*(p.x - v.x) + (p.y - v.y)*(p.y - v.y));
-            if(t < min_dist)
-                min_dist = t;
-        }
-    }
-    return min_dist;
+double Junction::GetDistanceFromCoor(const Coor &v) {
+    if (mRegionPoses.empty()) GenerateRegionPoses();
+
+    assert(!mRegionPoses.empty());
+    std::vector<int> indices;
+    std::vector<double> distances;
+    mKdtree.NearestSearch({v.x, v.y}, indices, distances, 1);
+    return distances[0];
 }
 
-void Junction::GenerateVertices()
-{
-    std::map<unsigned int, int> road_lane;  /// 每一条道路最右侧的lane_idx
-    std::map<unsigned int, Pose> road_pose; /// 每一条道路最右侧的Pose
 
-    /// 获取每一条道路最右侧的Pose
-    for(auto & x : mRoadLinks)
-    {
-        auto& from_rid = x.second.mFromRoadId;
-        auto& to_rid = x.second.mToRoadId;
-
-        for(auto & y : x.second.mLaneLinks)
-        {
-            if(road_lane.find(from_rid) == road_lane.end() or
-                road_lane[from_rid] < y.mFromLaneIndex)
-            {
-                road_lane[from_rid] = y.mFromLaneIndex;
-                road_pose[from_rid] = y.mReferLine.GetStartPose();
-            }
-
-            if(road_lane.find(to_rid) == road_lane.end() or
-                road_lane[to_rid] < y.mToLaneIndex)
-            {
-                road_lane[to_rid] = y.mToLaneIndex;
-                road_pose[to_rid] = y.mReferLine.GetEndPose();
-            }
-        }
-    }
-
-    std::vector<Coor> vec;
-    for(auto & x : road_pose) ///将最右侧的Pose再向右移动3.0米
-    {
-        auto p = x.second;
-        p.Rotate(-90.0);
-        p.Translate(3.0, p.GetAngle());
-        vec.emplace_back(p.GetPosition());
-    }
-
-
-    auto test = [&vec, this](const Coor &s, const Coor &e) -> bool
-    {
-        for(auto & t : mVertices)
-            if(t == e) return false;
-
-        for(auto & t : vec)
-        {
-            if(t != s && t != e)
-            {
-                ///使用叉乘
-                double m = (s.x-t.x)*(e.y-t.y) - (e.x-t.x)*(s.y-t.y);
-
-                ///若是在同一直线,则判断t是否在s和e中间
-                if(fabs(m) < 0.01)
-                {
-                    double c1 = (t.x - s.x) * (t.x - e.x);
-                    double c2 = (t.y - s.y) * (t.y - e.y);
-                    if(c1 < 0 and c2 < 0)
-                        return false;
-                }
-                else if(m < 0)
-                    return false;
-            }
-        }
-        return true;
-    };
-
-    mVertices.emplace_back(vec.front());
-
-    for(int cnt = 1; cnt < vec.size(); ++cnt)
-    {
-        for(auto x : vec)
-        {
-            if(test(mVertices.back(), x))
-            {
-                mVertices.emplace_back(x);
-                break;
-            }
-        }
-    }
-}
-
-void Junction::GenerateRegionPoses(hdmap::Map *mapPtr) {
+void Junction::GenerateRegionPoses() {
 
     if (!mRegionPoses.empty()) return;
 
-    std::set<int> to_road_id,from_road_id;
+    if (mBoundaryCurves.empty()) {
 
-    Coor center_point;
-
-    for(auto & x : mRoadLinks){
-        if (to_road_id.count(x.second.mToRoadId)==0)
-        {
-            to_road_id.insert(x.second.mToRoadId);
-            RoadPtr to_road_ptr =  mapPtr->GetRoadPtrById(x.second.mToRoadId);
-            auto _front_sec = to_road_ptr->mSecPtrs.front();
-            Pose _lane_start_pose = _front_sec->GetLanePoseByIndex(_front_sec->mRightBoundary).front();
-            mRegionPoses.emplace_back(_lane_start_pose);
-            center_point += _lane_start_pose.GetPosition();
+        if (mMapInstantPtr == nullptr) {
+            printf("Junction should be initialized with Map pointer which contains information of roads.");
         }
-        if (to_road_id.count(x.second.mFromRoadId)==0)
+
+        // acquire poses
+        std::vector<std::pair<Pose, int>> _vec;
+        std::set<unsigned int> _to_id_set, _from_id_set;
+        Coor center_point;
+        for (const auto &_link: RoadLinks) {
+            unsigned int _id_from = _link.second.mFromRoadId;
+            unsigned int _id_to = _link.second.mToRoadId;
+            if (_to_id_set.count(_id_to) == 0) {
+                _to_id_set.insert(_id_to);
+                RoadPtr to_road_ptr = mMapInstantPtr->GetRoadPtrById(_id_to);
+                if (to_road_ptr != nullptr) {
+                    Pose _p_to = mMapInstantPtr->GetRoadPtrById(_id_to)->mSecPtrs.front()->GetLanePoseByIndex(
+                            -1).front();
+                    center_point += _p_to.GetPosition();
+                    _vec.emplace_back(_p_to, _id_to);
+                }
+            }
+            if (_from_id_set.count(_id_from) == 0) {
+                _from_id_set.insert(_id_from);
+                RoadPtr from_road_ptr = mMapInstantPtr->GetRoadPtrById(_id_from);
+                if (from_road_ptr != nullptr) {
+                    Pose _p_from = mMapInstantPtr->GetRoadPtrById(_id_from)->mSecPtrs.back()->GetLanePoseByIndex(
+                            -1).back();
+                    center_point += _p_from.GetPosition();
+                    _vec.emplace_back(_p_from, _id_from);
+                }
+            }
+        }
+
+        if (_vec.empty())
         {
-            to_road_id.insert(x.second.mFromRoadId);
-            RoadPtr from_road_ptr =  mapPtr->GetRoadPtrById(x.second.mFromRoadId);
-            auto _end_sec = from_road_ptr->mSecPtrs.back();
-            Pose _lane_end_pose = _end_sec->GetLanePoseByIndex(_end_sec->mRightBoundary).back();
-            mRegionPoses.emplace_back(_lane_end_pose);
-            center_point += _lane_end_pose.GetPosition();
+            printf("GenerateRegionPoses Fail\n");
+            return;
+        }
+
+        center_point /= _vec.size();
+
+        // re-range position of element of _vec according to Pose, clockwise.
+        sort(_vec.begin(), _vec.end(), [center_point]
+                (std::pair<Pose, int> &o1, std::pair<Pose, int> &o2) -> bool {
+            Angle aa(o1.first.GetPosition() - center_point);
+            Angle ab(o2.first.GetPosition() - center_point);
+            return aa.Value() > ab.Value();
+        });
+
+        for (int i = 0; i < _vec.size(); ++i)
+        {
+            int s = i == 0 ? _vec.size() - 1 : i - 1;
+            int e = i;
+
+            Pose _bezier_sta_p = _vec[s].first;
+            Pose _bezier_end_p = _vec[e].first;
+            double dis = _bezier_sta_p.DistanceFrom(_bezier_end_p);
+
+            //  (_vec[s].second|1) == (_vec[e].second|1)
+            auto road_1 = mMapInstantPtr->GetRoadPtrById(_vec[e].second);
+            auto road_2 = mMapInstantPtr->GetRoadPtrById(_vec[s].second);
+
+            if (mMapInstantPtr->GetRoadNeighbor(road_1)->ID == road_2->ID) {
+                Angle _angle(_bezier_end_p.GetPosition() - _bezier_sta_p.GetPosition());
+                _bezier_sta_p.GetAngle().SetAngle(_angle.Value());
+                _bezier_end_p.GetAngle().SetAngle(_angle.Value());
+                mBoundaryCurves.emplace_back(_bezier_sta_p, _bezier_end_p, dis / 2, dis / 2);
+            } else {
+                _bezier_sta_p.GetAngle().Rotate(180);
+                _bezier_end_p.GetAngle().Rotate(180);
+                mBoundaryCurves.emplace_back(_bezier_sta_p, _bezier_end_p, dis / 2, dis / 2);
+            }
         }
     }
 
-    center_point /= mRegionPoses.size();
-    auto cmp = [center_point, this](Pose &va, Pose &vb) -> bool {
-        Angle aa(va.GetPosition() - center_point);
-        Angle ab(vb.GetPosition() - center_point);
-        return aa.Value() < ab.Value();
-    };
-    sort(mRegionPoses.begin(), mRegionPoses.end(), cmp);
+
+    // get all pose points from bezier curves.
+    assert(!mBoundaryCurves.empty());
+    for (auto &b: mBoundaryCurves) {
+        const auto &_tmp = b.GetPoses(1);
+        mRegionPoses.insert(mRegionPoses.end(), _tmp.begin(), _tmp.end());
+    }
+
+    // store kdtree catch for distance search
+    mKdtreeData.clear();
+    for (auto &p: mRegionPoses) {
+        std::vector<double> _tmp{p.x, p.y};
+        mKdtreeData.emplace_back(_tmp);
+    }
+    mKdtree.SetData(mKdtreeData, kt::VARIANCE);
 
 }
+
 
 bool Junction::Cover(const Coor &v)
 {
-    return IGeometry::Cover(mVertices, {v});
+    if (mBoundaryCurves.empty()) {
+        GenerateRegionPoses();
+    }
+
+    std::vector<Coor> vec;
+
+    for (auto &b: mBoundaryCurves) {
+        const auto &_poses = b.GetPoses(1);
+        for (auto &_p: _poses) {
+            vec.emplace_back(_p.GetPosition());
+        }
+    }
+
+    return IGeometry::Cover(vec, {v});
 }
+
+std::vector<Pose> Junction::GetRegionPoses() {
+    if (mRegionPoses.empty()) {
+        GenerateRegionPoses();
+    }
+    return mRegionPoses;
+}
+
+std::vector<hdmap::Bezier> Junction::GetBoundaryCurves() {
+    if (mBoundaryCurves.empty()) {
+        GenerateRegionPoses();
+    }
+    return mBoundaryCurves;
+}
+

@@ -3,7 +3,6 @@
 //
 
 #include "Math/Bezier.h"
-#include <assert.h>
 
 using namespace hdmap;
 
@@ -22,7 +21,7 @@ Bezier::Bezier(Pose _start_pose, Pose _end_pose, double _ctrl_len1, double _ctrl
     length = 0;
     is_line = false;
 
-    if(_start_pose.GetAngle() == _end_pose.GetAngle())
+    if (_start_pose.GetAngle() == _end_pose.GetAngle())
     {
         Angle a(_end_pose.GetPosition() - _start_pose.GetPosition());
         if(a == _start_pose.GetAngle())

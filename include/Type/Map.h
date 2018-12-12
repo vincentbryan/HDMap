@@ -42,6 +42,8 @@ public:
 
     void CommitRoadInfo();
 
+    RoadPtr GetRoadNeighbor(RoadPtr ptr);
+
     JuncPtr AddJunction();
 
     void AddConnection(JuncPtr p,
@@ -49,28 +51,28 @@ public:
                        unsigned int to_road_id, int to_lane_idx,
                        double _ctrl_len1 = Bezier::DEFAULT_LENGTH,
                        double _ctrl_len2 = Bezier::DEFAULT_LENGTH);
+
     void AddRoadLink(JuncPtr p,
                      unsigned _from_road_id,
                      unsigned _to_road_id,
                      std::string _direction,
                      std::vector<std::tuple<int, int, double, double>>_lane_links);
+
     void Load(const std::string &file_name);
     void Save(const std::string &file_name);
     void Clear();
 
     std::vector<RoadPtr> AdjacentRoadInfo(RoadPtr p_road);
 
-//    void Trajectory(std::vector<std::pair<unsigned int, int>> sequences);
-
-        RoadPtr Locate(const Coor &v);
-
     void Send();
+
     boost::property_tree::ptree ToXML() override;
+
     void FromXML(const pt::ptree &p) override;
 
-        RoadPtr GetRoadPtrById(unsigned int road_id);
+    RoadPtr GetRoadPtrById(unsigned int road_id);
 
-        JuncPtr GetJuncPtrById(unsigned int junc_id);
+    JuncPtr GetJuncPtrById(unsigned int junc_id);
 };
 }
 
