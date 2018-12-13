@@ -13,6 +13,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/transforms.h>
 #include <pcl/kdtree/kdtree_flann.h>
+#include <tf/transform_datatypes.h>
 
 class ViewDetectRegion
 {
