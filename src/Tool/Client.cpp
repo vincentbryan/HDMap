@@ -242,6 +242,26 @@ void Client::Process()
                 break;
             }
         }
+
+        for(int i = 0; i < mCurPlanMap.mJuncPtrs.size() && !mRecord.is_init; ++i)
+        {
+            if(mCurPlanMap.mJuncPtrs[i]->Cover(curr_pos))
+            {
+                mRecord.curr_jid = mCurPlanMap.mJuncPtrs[i]->ID;
+                for (int r = 0; r < mCurPlanMap.mRoadPtrs.size(); ++r)
+                {
+                    if (mCurPlanMap.mRoadPtrs[r]->GetNextJid() == mRecord.curr_jid)
+                    {
+                        mRecord.curr_idx = r;
+                        mRecord.curr_rid = mCurPlanMap.mRoadPtrs[r]->ID;
+                        mRecord.next_rid = mCurPlanMap.mRoadPtrs[r + 1]->ID;
+                        break;
+                    }
+                }
+                mRecord.is_init = true;
+            }
+        }
+
         if(!mRecord.is_init)
         {
             ROS_ERROR("(%8.3f, %8.3f): Initial failed, please ensure that current position is in a road" , curr_pos.x, curr_pos.y);
@@ -289,7 +309,6 @@ void Client::Process()
                 mRecord.curr_idx++;
                 mRecord.curr_rid = mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->ID;
 
-
                 if(mRecord.curr_idx + 1 < mCurPlanMap.mRoadPtrs.size())
                 {
                     mRecord.curr_jid = mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->mNextJid;
@@ -304,7 +323,7 @@ void Client::Process()
             return;
         }
     }
-    ROS_ERROR("(%8.3f, %8.3f): Current position is out the routing!!!" , curr_pos.x, curr_pos.y);
+    ROS_ERROR("(%8.3f, %8.3f): Current position is out the routing and junction!!!" , curr_pos.x, curr_pos.y);
 }
 
 void Client::SendNearPolygonRegion(const Coor &v, double radius) {

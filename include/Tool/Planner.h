@@ -15,6 +15,9 @@ namespace hdmap
 class Planner
 {
 private:
+
+
+
     std::shared_ptr<Map> mHDMapPtr;
     Coor mStartPoint;
     Coor mEndPoint;
@@ -32,12 +35,10 @@ public:
     void PlanUsingSearch();
     void Send();
     void ToXML(std::string &str);
-
     bool OnRequest(HDMap::srv_route::Request & req, HDMap::srv_route::Response & res);
 
 private:
     void DFS(RoadPtr p_curr, std::vector<RoadPtr> v);
-
     void BFS(RoadPtr p_start, RoadPtr p_end, std::vector<RoadPtr> &trace);
     void Evaluate();
 };

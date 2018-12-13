@@ -6,7 +6,9 @@
 #define HDMAP_BEZIER_H
 
 #include <vector>
+#include <cassert>
 #include "Type/Pose.h"
+
 namespace hdmap
 {
 class Bezier

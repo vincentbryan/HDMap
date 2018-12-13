@@ -187,9 +187,10 @@ void Planner::ToXML(std::string &str)
 
 
 
+
 bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Response &res)
 {
-    if(req.method == "start")
+    if(req.method == "road")
     {
         if(req.argv.size()==2 && req.argv[0]==req.argv[1])
         {
@@ -226,6 +227,7 @@ bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Respon
         }
     }
 
+
     if(mRouting.empty())
     {
         ROS_ERROR_STREAM("Result: Cannot find a property road, please check the map again.");
@@ -241,4 +243,3 @@ bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Respon
     Send();
     return true;
 }
-

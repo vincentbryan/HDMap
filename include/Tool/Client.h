@@ -15,19 +15,19 @@ namespace hdmap
     class Client
 {
 private:
-        Map mCurPlanMap;
+    Map mCurPlanMap;
 
-        ros::Publisher mPubRouteRegion;
+    ros::Publisher mPubRouteRegion;
     ros::Publisher mPubTrafficLight;
     ros::Publisher mPubPlanner;
     ros::Publisher mPubVIZ;
     ros::Subscriber mSubGPS;
     ros::ServiceServer mServer;
-        ros::ServiceClient mPlanClient;
-        ros::ServiceClient mDataClient;
+    ros::ServiceClient mPlanClient;
+    ros::ServiceClient mDataClient;
 
     std::mutex mLock;
-        Coor mCurrentPosition;
+    Coor mCurrentPosition;
 
     class Record
     {
@@ -50,7 +50,7 @@ private:
     }mRecord;
 
 public:
-        Client(ros::NodeHandle &n);
+    Client(ros::NodeHandle &n);
 
     void LocationCallBack(const nox_msgs::Location &msg);
 
@@ -58,11 +58,11 @@ public:
 
     void SendMap();
 
-        void SendGPS(const Coor &v);
+    void SendGPS(const Coor &v);
 
-        void SendTrafficInfo(const Coor &v);
+    void SendTrafficInfo(const Coor &v);
 
-        void SendNearPolygonRegion(const Coor &v, double radius = 100);
+    void SendNearPolygonRegion(const Coor &v, double radius = 100);
 
     void Process();
 };
