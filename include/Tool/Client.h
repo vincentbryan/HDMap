@@ -38,6 +38,7 @@ private:
         int curr_jid = -1;
         int next_rid = -1;
 
+
     public:
         void Reset()
         {

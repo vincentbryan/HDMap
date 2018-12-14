@@ -12,11 +12,7 @@
 class ViewGPS
 {
 public:
-
-
-
     ros::Publisher pub;
-
 
     void  renderCar(ros::Publisher& MarkerPublisher, double x, double y, double radius){
 

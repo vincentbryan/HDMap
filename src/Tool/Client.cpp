@@ -40,6 +40,7 @@ void Client::LocationCallBack(const nox_msgs::Location &msg)
 {
     std::lock_guard<std::mutex> lock(mLock);
     mCurrentPosition = {msg.x, msg.y};
+
 }
 
 bool Client::OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res)
@@ -201,7 +202,8 @@ void Client::Process()
             {
                 mRecord.curr_rid = mCurPlanMap.mRoadPtrs[i]->ID;
                 mRecord.curr_idx = i;
-                if(mRecord.curr_rid+1 == mCurPlanMap.mRoadPtrs.size())
+
+                if(mRecord.curr_idx+1 == mCurPlanMap.mRoadPtrs.size())
                 {
                     mRecord.curr_jid = -1;
                 }
@@ -209,9 +211,14 @@ void Client::Process()
                 {
                     mRecord.curr_jid = mCurPlanMap.mRoadPtrs[i]->mNextJid;
                 }
+
                 if(i + 1 < mCurPlanMap.mRoadPtrs.size())
                 {
                     mRecord.next_rid = mCurPlanMap.mRoadPtrs[i + 1]->ID;
+                }
+                else
+                {
+                    mRecord.next_rid = -1;
                 }
                 mRecord.is_init = true;
             }
@@ -239,7 +246,7 @@ void Client::Process()
         if(!mRecord.is_init)
         {
             /// not int mCurPlanMap, ask re-plan
-            ROS_INFO("(%8.3f, %8.3f) is not in current plan Map, try to re-plan", curr_pos.x, curr_pos.y);
+            ROS_INFO("(%8.3f, %8.3f) is not in current local Map, try to re-plan", curr_pos.x, curr_pos.y);
 
             std::vector<RoadPtr> near_roads;
             std::vector<JuncPtr> near_juncs;
@@ -274,7 +281,7 @@ void Client::Process()
     {
         mRecord.is_init = false;
         ROS_ERROR("(%8.3f, %8.3f): Current position is out the routing and junction, "
-                  "Re-Plan is ready to execute." , curr_pos.x, curr_pos.y);
+                  "local map search is ready to execute." , curr_pos.x, curr_pos.y);
     }
     else
     {
@@ -283,7 +290,7 @@ void Client::Process()
                     curr_pos.x, curr_pos.y,mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->ID);
         else
             ROS_INFO("(%8.3f, %8.3f): In Junction[%d]",
-                    curr_pos.x, curr_pos.y,mCurPlanMap.mJuncPtrs[mRecord.curr_jid]->ID);
+                    curr_pos.x, curr_pos.y,mCurPlanMap.GetJuncPtrById(mRecord.curr_jid)->ID);
 
         SendMap();
         SendTrafficInfo(curr_pos);
