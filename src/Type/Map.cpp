@@ -169,18 +169,19 @@ void Map::FromXML(const pt::ptree &p)
     mRoadPtrs.clear();
     mJuncPtrs.clear();
 
-    for(auto & r : p.get_child("hdmap.roads"))
-    {
-        RoadPtr pRoad(new Road());
-        pRoad->FromXML(r.second);
-        mRoadPtrs.emplace_back(pRoad);
-        mRoadIdToPtr[pRoad->ID] = pRoad;
-        Road::ROAD_ID = std::max((unsigned) 0, pRoad->ID);
-    }
-    Road::ROAD_ID++;
 
     try
     {
+        for(auto & r : p.get_child("hdmap.roads"))
+        {
+            RoadPtr pRoad(new Road());
+            pRoad->FromXML(r.second);
+            mRoadPtrs.emplace_back(pRoad);
+            mRoadIdToPtr[pRoad->ID] = pRoad;
+            Road::ROAD_ID = std::max((unsigned) 0, pRoad->ID);
+        }
+        Road::ROAD_ID++;
+
         for(auto & j : p.get_child("hdmap.junctions"))
         {
             JuncPtr pJunc(new Junction(MapPtr(this)));
@@ -222,6 +223,8 @@ void Map::Clear()
 {
     mRoadPtrs.clear();
     mJuncPtrs.clear();
+    mJuncIdToPtr.clear();
+    mRoadIdToPtr.clear();
     Road::ROAD_ID = 0;
     Junction::JUNCTION_ID = 0;
 }

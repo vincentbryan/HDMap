@@ -36,6 +36,10 @@ private:
     void AppendPose(double s_);
     void GenerateAllPose(double ds);
 
+    std::vector<Pose> GetRegionPoses() override {};
+
+    void GenerateRegionPoses() override {};
+
 public:
     explicit LaneSection(unsigned int _section_id = 0,
                          double _start_s = 0,
@@ -56,7 +60,9 @@ public:
     void Send(Sender &sender) override;
 
     bool Cover(const Coor &v) override;
+
     boost::property_tree::ptree ToXML() override;
+
     void FromXML(const pt::ptree &p) override;
 };
 }

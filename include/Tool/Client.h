@@ -12,7 +12,7 @@
 
 namespace hdmap
 {
-    class Client
+class Client
 {
 private:
     Map mCurPlanMap;
@@ -65,6 +65,14 @@ public:
     void SendNearPolygonRegion(const Coor &v, double radius = 100);
 
     void Process();
+private:
+
+    bool PlanByCommand(const std::string& method, std::vector<int> argv);
+
+    std::string GetNearRoadPtrs(std::vector<RoadPtr>& near_roads, const Coor& coor, double distance = 50);
+
+    std::string GetNearJunctionPtrs(std::vector<JuncPtr>& near_juncs, const Coor& coor, double distance = 50);
+
 };
 }
 

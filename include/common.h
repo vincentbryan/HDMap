@@ -21,5 +21,5 @@ namespace hdmap
     using JuncPtr = std::shared_ptr<Junction>;
     using SecPtr  = std::shared_ptr<LaneSection>;
     using SigPtr  = std::shared_ptr<Signal>;
-    using MapPtr  = std::shared_ptr<Map>;
+    using MapPtr  = Map*;
 }

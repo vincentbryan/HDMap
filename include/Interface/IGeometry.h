@@ -5,7 +5,7 @@
 #ifndef HDMAP_IGEOMETRY_H
 #define HDMAP_IGEOMETRY_H
 
-#include "Type/Coor.h"
+#include "Type/Pose.h"
 #include <vector>
 #include <array>
 #include <algorithm>
@@ -15,10 +15,16 @@ namespace hdmap
 class IGeometry
 {
 public:
+
     virtual bool Cover(const Coor &v) = 0;
 
+    virtual std::vector<Pose> GetRegionPoses() = 0;
+
 protected:
-    bool Cover(std::vector<Coor> _vertices, const std::vector<Coor> &vp)
+
+    virtual void GenerateRegionPoses() = 0;
+
+    bool Cover(std::vector<Pose> _vertices, const std::vector<Coor> &vp)
     {
 
         if (_vertices.size() < 3) return false;

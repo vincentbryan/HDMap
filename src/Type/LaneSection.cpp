@@ -172,18 +172,18 @@ bool LaneSection::Cover(const Coor &v)
 {
     if(mAllLanePose.empty()) GenerateAllPose(0.5);
 
-    std::vector<Coor> vec;
+    std::vector<Pose> vec;
 
     for(auto & x : mReferLine.GetPoses(0.5))
     {
-        vec.push_back(x.GetPosition());
+        vec.push_back(x);
     }
 
     if(mRightBoundary > 0)
     {
         auto ps = mAllLanePose[mRightBoundary];
         std::reverse(ps.begin(), ps.end());
-        for(auto & x : ps) vec.push_back(x.GetPosition());
+        for(auto & x : ps) vec.push_back(x);
     }
 
     return IGeometry::Cover(vec, {v});

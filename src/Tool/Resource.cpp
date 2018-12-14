@@ -66,11 +66,10 @@ bool hdmap::Resource::OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_ma
         cur_y = req.argv[1];
         
         // do catch
-        const double  dis_tolerence=1;
-        if( pow(last_x-cur_x,2)+pow(last_y-cur_y,2) < dis_tolerence
+        const double  dis_tolerence_pow = 4*4;
+        if( pow(last_x-cur_x,2)+pow(last_y-cur_y,2) < dis_tolerence_pow
             && (!_catch_junctions.empty() || !_catch_roads.empty()))
         {
-
             roads = _catch_roads;
             junctions = _catch_junctions;
             if (req.type == "RoadByPos")

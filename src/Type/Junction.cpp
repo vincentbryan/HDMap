@@ -1,3 +1,5 @@
+#include <utility>
+
 //
 // Created by vincent on 18-10-13.
 //
@@ -12,7 +14,7 @@ unsigned int Junction::JUNCTION_ID = 0;
 
 Junction::Junction(MapPtr ptr) {
     ID = JUNCTION_ID++;
-    mMapInstantPtr = ptr;
+    mMapInstantPtr = std::move(ptr);
 }
 
 void Junction::AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pose _from_lane_pose,
@@ -259,16 +261,7 @@ bool Junction::Cover(const Coor &v)
         GenerateRegionPoses();
     }
 
-    std::vector<Coor> vec;
-
-    for (auto &b: mBoundaryCurves) {
-        const auto &_poses = b.GetPoses(1);
-        for (auto &_p: _poses) {
-            vec.emplace_back(_p.GetPosition());
-        }
-    }
-
-    return IGeometry::Cover(vec, {v});
+    return IGeometry::Cover(mRegionPoses, {v});
 }
 
 std::vector<Pose> Junction::GetRegionPoses() {

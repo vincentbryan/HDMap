@@ -13,7 +13,7 @@
 
 namespace hdmap
 {
-class Road : public IView, public IXML, IGeometry
+class Road : public IView, public IXML, public IGeometry
 {
 
 public:
@@ -34,6 +34,7 @@ private:
 
     std::vector<Pose> mRegionPoses;
 
+    void GenerateRegionPoses() override;
 
 public:
 
@@ -72,9 +73,7 @@ public:
 
     double GetDistanceFromCoor(const Coor &v);
 
-    void GenerateRegionPoses();
-
-    std::vector<Pose> GetRegionPoses();
+    std::vector<Pose> GetRegionPoses() override;
 
     void Send(Sender &sender) override;
 

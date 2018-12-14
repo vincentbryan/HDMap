@@ -190,7 +190,7 @@ void Planner::ToXML(std::string &str)
 
 bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Response &res)
 {
-    if(req.method == "road")
+    if(req.method == "start")
     {
         if(req.argv.size()==2 && req.argv[0]==req.argv[1])
         {

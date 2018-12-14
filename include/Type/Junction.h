@@ -41,6 +41,8 @@ private:
 
     std::vector<hdmap::Bezier> mBoundaryCurves;
 
+    void GenerateRegionPoses() override;
+
 public:
 
     explicit Junction(MapPtr ptr = nullptr);
@@ -49,7 +51,6 @@ public:
                        unsigned int _to_road_id, int _to_lane_idx, Pose _to_lane_pose,
                        double _ctrl_len1, double _ctrl_len2);
 
-    void GenerateRegionPoses();
 
     void Send(Sender &sender) override;
 
@@ -57,7 +58,7 @@ public:
 
     bool Cover(const Coor &v) override;
 
-    std::vector<Pose> GetRegionPoses();
+    std::vector<Pose> GetRegionPoses() override;
 
     std::vector<hdmap::Bezier> GetBoundaryCurves();
 

@@ -1,3 +1,5 @@
+#include <utility>
+
 //
 // Created by vincent on 18-10-31.
 //
@@ -9,6 +11,8 @@
 #include <HDMap/srv_route.h>
 #include <HDMap/srv_map_data.h>
 #include <unordered_set>
+#include <Tool/Client.h>
+
 #include "Tool/Client.h"
 using namespace hdmap;
 
@@ -40,50 +44,25 @@ void Client::LocationCallBack(const nox_msgs::Location &msg)
 
 bool Client::OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res)
 {
-    if(req.cmd == "start" || req.cmd == "seq")
+    if(req.cmd == "start")
     {
-        HDMap::srv_route srv;
-        srv.request.method = req.cmd;
-        srv.request.argv = req.argv;
-        if(mPlanClient.call(srv))
+        if(PlanByCommand(req.cmd, req.argv))
         {
-            mCurPlanMap.Clear();
-            mRecord.Reset();
-            srv.request.method = req.cmd;
-            srv.request.argv = req.argv;
-            std::stringstream ss;
-            ss << srv.response.route;
-            std::cout << ss.str() << std::endl;
-            try
-            {
-                pt::ptree tree;
-                srv.request.method = req.cmd;
-                srv.request.argv = req.argv;
-                pt::read_xml(ss, tree);
-                mCurPlanMap.FromXML(tree);
-
-                for(auto & x : mCurPlanMap.mRoadPtrs)
-                    res.route.emplace_back(x->ID);
-
-                return true;
-            }
-            catch (std::exception & e)
-            {
-                std::cout << "Error: " << e.what() << std::endl;
-                return false;
-            }
+            for(auto & x : mCurPlanMap.mRoadPtrs)
+                res.route.emplace_back(x->ID);
+            return true;
         }
-        else
-        {
-            ROS_ERROR_STREAM("Failed to received from MapService!!!");
-            return false;
-        }
+        return false;
     }
-    else
+    else if(req.cmd == "end")
     {
         mCurPlanMap.Clear();
         mRecord.Reset();
         mCurrentPosition = {0, 0};
+    }
+    else
+    {
+        ROS_ERROR("Not such Command: %s",req.cmd.c_str());
     }
     return true;
 }
@@ -211,16 +190,12 @@ void Client::Process()
     SendGPS(curr_pos);
     SendNearPolygonRegion(curr_pos);
 
-    // Global initial location
-    if(!mRecord.is_init)
+    // Check if current plan map covers curr_pos, if not re-plan
+    if (!mRecord.is_init)
     {
-        if(mCurPlanMap.mRoadPtrs.empty())
-        {
-            ROS_INFO("(%8.3f, %8.3f): No route, waiting for map command", curr_pos.x, curr_pos.y);
-            return;
-        }
+        if(mCurPlanMap.mRoadPtrs.empty()) return;
 
-        for(int i = 0; i < mCurPlanMap.mRoadPtrs.size(); ++i)
+        for(int i = 0; i < mCurPlanMap.mRoadPtrs.size() && !mRecord.is_init; ++i)
         {
             if(mCurPlanMap.mRoadPtrs[i]->Cover(curr_pos))
             {
@@ -239,7 +214,6 @@ void Client::Process()
                     mRecord.next_rid = mCurPlanMap.mRoadPtrs[i + 1]->ID;
                 }
                 mRecord.is_init = true;
-                break;
             }
         }
 
@@ -264,66 +238,91 @@ void Client::Process()
 
         if(!mRecord.is_init)
         {
-            ROS_ERROR("(%8.3f, %8.3f): Initial failed, please ensure that current position is in a road" , curr_pos.x, curr_pos.y);
-            return;
-        }
-    }
+            /// not int mCurPlanMap, ask re-plan
+            ROS_INFO("(%8.3f, %8.3f) is not in current plan Map, try to re-plan", curr_pos.x, curr_pos.y);
 
-    // send the current road information
-    if(mRecord.curr_idx < mCurPlanMap.mRoadPtrs.size())
-    {
-        if(mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->Cover(curr_pos))
-        {
-            SendTrafficInfo(curr_pos);
-            SendMap();
-            return;
-        }
-    }
+            std::vector<RoadPtr> near_roads;
+            std::vector<JuncPtr> near_juncs;
+            GetNearRoadPtrs(near_roads,curr_pos, 20);
+            GetNearJunctionPtrs(near_juncs,curr_pos, 20);
 
-    // find the junction and send
-    if(mRecord.curr_jid != -1)
-    {
-        for(auto & j : mCurPlanMap.mJuncPtrs)
-        {
-            if (j->ID == mRecord.curr_jid)
+            if (!near_roads.empty())
             {
-                if(j->Cover(curr_pos))
+                ROS_ERROR("(%8.3f, %8.3f): Current position is out the routing and junction." ,
+                          curr_pos.x, curr_pos.y);
+
+                int _cur_road_id = near_roads.front()->ID;
+                int _end_road_id = mCurPlanMap.mRoadPtrs.back()->ID;
+                if(PlanByCommand("start", {_cur_road_id, _end_road_id}))
                 {
-                    ROS_INFO("(%8.3f, %8.3f): In junction[%d]", curr_pos.x, curr_pos.y, j->ID);
-                    SendMap();
-                    SendTrafficInfo(curr_pos);
-                    return;
+                    ROS_INFO("(%8.3f, %8.3f): Re-Plan success, Road[%d] to Road[%d].",
+                             curr_pos.x, curr_pos.y,_cur_road_id,_end_road_id);
                 }
             }
         }
+        return;
     }
 
-    // find the next road and send
-    if(mRecord.curr_idx + 1 < mCurPlanMap.mRoadPtrs.size())
-    {
-        if(mCurPlanMap.mRoadPtrs[mRecord.curr_idx+1]->Cover(curr_pos))
-        {
-            ROS_INFO("(%8.3f, %8.3f): In next_road, trying to update record", curr_pos.x, curr_pos.y);
-            if(mRecord.curr_idx + 1 < mCurPlanMap.mRoadPtrs.size())
-            {
-                mRecord.curr_idx++;
-                mRecord.curr_rid = mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->ID;
+    // check if record road or junction covers curr_pos
+    bool _is_in_rr = mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->Cover(curr_pos);
 
-                if(mRecord.curr_idx + 1 < mCurPlanMap.mRoadPtrs.size())
-                {
-                    mRecord.curr_jid = mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->mNextJid;
-                    mRecord.next_rid = mCurPlanMap.mRoadPtrs[mRecord.curr_idx + 1]->ID;
-                }
-                else
-                    mRecord.curr_jid = mRecord.next_rid = -1;
-            }
-            ROS_INFO("(%8.3f, %8.3f): Record updated", curr_pos.x, curr_pos.y);
-            SendMap();
-            SendTrafficInfo(curr_pos);
-            return;
+    bool _is_in_rj = false;
+    if (!_is_in_rr && mRecord.curr_jid != -1)
+        _is_in_rj = mCurPlanMap.GetJuncPtrById(mRecord.curr_jid)->Cover(curr_pos);
+
+    if (!_is_in_rr && !_is_in_rj)
+    {
+        mRecord.is_init = false;
+        ROS_ERROR("(%8.3f, %8.3f): Current position is out the routing and junction, "
+                  "Re-Plan is ready to execute." , curr_pos.x, curr_pos.y);
+    }
+    else
+    {
+        if (_is_in_rr)
+            ROS_INFO("(%8.3f, %8.3f): In Road[%d]",
+                    curr_pos.x, curr_pos.y,mCurPlanMap.mRoadPtrs[mRecord.curr_idx]->ID);
+        else
+            ROS_INFO("(%8.3f, %8.3f): In Junction[%d]",
+                    curr_pos.x, curr_pos.y,mCurPlanMap.mJuncPtrs[mRecord.curr_jid]->ID);
+
+        SendMap();
+        SendTrafficInfo(curr_pos);
+        return;
+    }
+}
+
+bool Client::PlanByCommand(const std::string& method, std::vector<int> argv)
+{
+    HDMap::srv_route srv;
+    srv.request.method = method;
+    srv.request.argv = std::move(argv);
+    if(mPlanClient.call(srv))
+    {
+        mCurPlanMap.Clear();
+        mRecord.Reset();
+        srv.request.method = srv.request.method;
+        srv.request.argv = srv.request.argv;
+        std::stringstream ss;
+        ss << srv.response.route;
+        std::cout << ss.str() << std::endl;
+        try
+        {
+            pt::ptree tree;
+            pt::read_xml(ss, tree);
+            mCurPlanMap.FromXML(tree);
+            return true;
+        }
+        catch (std::exception & e)
+        {
+            std::cout << "Error: " << e.what() << std::endl;
+            return false;
         }
     }
-    ROS_ERROR("(%8.3f, %8.3f): Current position is out the routing and junction!!!" , curr_pos.x, curr_pos.y);
+    else
+    {
+        ROS_ERROR_STREAM("Failed to received from MapService!!!");
+        return false;
+    }
 }
 
 void Client::SendNearPolygonRegion(const Coor &v, double radius) {
@@ -356,15 +355,62 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius) {
     /// 寻找附近的road和junction
     std::vector<RoadPtr > near_roads;
     std::vector<JuncPtr > near_juncs;
-    std::string roads_info_str,juncs_info_str;
+    std::string roads_info_str = GetNearRoadPtrs(near_roads,v,radius);
+    std::string juncs_info_str = GetNearJunctionPtrs(near_juncs,v,radius);
+    ROS_INFO("(%8.3f, %8.3f): Region: Roads { %s } Junctions { %s }",
+             mCurrentPosition.x, mCurrentPosition.y, roads_info_str.c_str(), juncs_info_str.c_str());
+
+    std::vector<IGeometry*> _geometries;
+    for (const auto& _rptr: near_roads)
+    {
+        cur_road_ids.insert(_rptr->ID);
+        _geometries.emplace_back(_rptr.get());
+    }
+    for (const auto& _jptr: near_juncs)
+    {
+        cur_junc_ids.insert(_jptr->ID);
+        _geometries.emplace_back(_jptr.get());
+    }
+
+    if(!must_recalu && (last_junc_ids==cur_junc_ids && last_road_ids==cur_road_ids))
+    {
+        ROS_INFO("Detected Roads and Junctions are same with last time, region message would not be sent.");
+        return;
+    }
+    last_junc_ids = cur_junc_ids;
+    last_road_ids = cur_road_ids;
+
+
+    HDMap::msg_route_region mrr;
+    mrr.header.frame_id = "hdmap";
+    mrr.header.stamp = ros::Time::now();
+
+    for(const auto& geo: _geometries)
+    {
+        geometry_msgs::Polygon pg;
+        for (const auto & _pose: geo->GetRegionPoses())
+        {
+            geometry_msgs::Point32 p;
+            p.x = static_cast<float>(_pose.x);
+            p.y = static_cast<float>(_pose.y);
+            p.z = static_cast<float>(_pose.GetAngle().Value());
+            pg.points.push_back(p);
+        }
+        mrr.polygons.emplace_back(pg);
+    }
+
+    mPubRouteRegion.publish(mrr);
+}
+
+std::string Client::GetNearRoadPtrs(std::vector<RoadPtr>& near_roads, const Coor &coor, double distance)
+{
+    std::string roads_info_str;
 
     HDMap::srv_map_data srv;
-
     srv.request.type = "RoadByPos";
-    srv.request.argv.emplace_back(v.x);
-    srv.request.argv.emplace_back(v.y);
-    srv.request.argv.emplace_back(radius);
-
+    srv.request.argv.emplace_back(coor.x);
+    srv.request.argv.emplace_back(coor.y);
+    srv.request.argv.emplace_back(distance);
 
     if( mDataClient.call(srv)) {
         try{
@@ -381,7 +427,6 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius) {
                     _tmp_road_ptr->FromXML(r.second);
                     near_roads.emplace_back(_tmp_road_ptr);
                 }
-                cur_road_ids.insert(near_roads.back()->ID);
                 roads_info_str += std::to_string(near_roads.back()->ID) + " ";
             }
         }
@@ -390,8 +435,21 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius) {
         }
     }
 
-    srv.response.res="";
+    if (roads_info_str.empty()) roads_info_str ="none";
+
+    return roads_info_str;
+}
+
+std::string Client::GetNearJunctionPtrs(std::vector<JuncPtr>& near_juncs, const Coor &coor, double distance)
+{
+    std::string juncs_info_str;
+
+    HDMap::srv_map_data srv;
     srv.request.type = "JunctionByPos";
+    srv.request.argv.emplace_back(coor.x);
+    srv.request.argv.emplace_back(coor.y);
+    srv.request.argv.emplace_back(distance);
+
     if( mDataClient.call(srv))
     {
         try{
@@ -410,7 +468,6 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius) {
                     _tmp_junction_ptr->FromXML(j.second);
                     near_juncs.push_back(_tmp_junction_ptr);
                 }
-                cur_junc_ids.insert(near_juncs.back()->ID);
                 juncs_info_str += std::to_string(near_juncs.back()->ID) + " ";
             }
         }
@@ -419,52 +476,7 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius) {
         }
     }
 
+    if (juncs_info_str.empty()) juncs_info_str ="none";
 
-    if (juncs_info_str.empty()) juncs_info_str ="none ";
-    if (roads_info_str.empty()) roads_info_str ="none ";
-    ROS_INFO("(%8.3f, %8.3f) Region: Roads { %s} Junctions { %s}",
-             mCurrentPosition.x, mCurrentPosition.y, roads_info_str.c_str(), juncs_info_str.c_str());
-
-    if(!must_recalu && (last_junc_ids==cur_junc_ids && last_road_ids==cur_road_ids))
-    {
-        ROS_INFO("Detected Roads and Junctions are same with last time, region message would not be sent.");
-        return;
-    }
-    last_junc_ids = cur_junc_ids;
-    last_road_ids = cur_road_ids;
-
-    // TODO: 双向道路中间分开的合并处理
-
-    HDMap::msg_route_region mrr;
-    mrr.header.frame_id = "hdmap";
-    mrr.header.stamp = ros::Time::now();
-
-    for(auto &rptr: near_roads)
-    {
-        geometry_msgs::Polygon pg;
-        for (auto &rv: rptr->GetRegionPoses())
-        {
-            geometry_msgs::Point32 p;
-            p.x = static_cast<float>(rv.x);
-            p.y = static_cast<float>(rv.y);
-            p.z = static_cast<float>(rv.GetAngle().Value());
-            pg.points.push_back(p);
-        }
-        mrr.polygons.emplace_back(pg);
-    }
-    for(auto &jptr: near_juncs)
-    {
-        geometry_msgs::Polygon pg;
-        for (auto &jv: jptr->GetRegionPoses())
-        {
-            geometry_msgs::Point32 p;
-            p.x = static_cast<float>(jv.x);
-            p.y = static_cast<float>(jv.y);
-            p.z = static_cast<float>(jv.GetAngle().Value());
-            pg.points.push_back(p);
-        }
-        mrr.polygons.emplace_back(pg);
-    }
-
-    mPubRouteRegion.publish(mrr);
+    return juncs_info_str;
 }
