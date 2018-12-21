@@ -232,6 +232,9 @@ double Road::GetDistanceFromCoor(const Coor &v) {
     if (mRegionPoses.empty()) {
         GenerateRegionPoses();
     }
+
+    if (Cover(v)) return 0;
+    
     std::vector<int> indices;
     std::vector<double> distances;
     mKdtree.NearestSearch({v.x, v.y}, indices, distances, 1);

@@ -22,21 +22,21 @@ void Map::SetSender(std::shared_ptr<Sender> sender)
 RoadPtr Map::AddRoad(const Pose &_start_pose)
 {
     RoadPtr p(new Road(_start_pose));
-    mRoadPtrs.emplace_back(p);
+    RoadPtrs.emplace_back(p);
     return p;
 }
 
 JuncPtr Map::AddJunction()
 {
     JuncPtr p(new Junction(MapPtr(this)));
-    mJuncPtrs.emplace_back(p);
+    JuncPtrs.emplace_back(p);
     return p;
 }
 
 void Map::Send()
 {
-    for(auto & m : mRoadPtrs) m->Send(*pSender);
-    for(auto & j : mJuncPtrs) j->Send(*pSender);
+    for(auto & m : RoadPtrs) m->Send(*pSender);
+    for(auto & j : JuncPtrs) j->Send(*pSender);
 }
 
 
@@ -48,14 +48,14 @@ void Map::AddConnection(JuncPtr p, unsigned int from_road, int from_lane_idx,
 
     if(from_lane_idx > 0)
     {
-        auto p1 = mRoadPtrs[from_road]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx).back();
-        auto p2 = mRoadPtrs[from_road]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx-1).back();
+        auto p1 = RoadPtrs[from_road]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx).back();
+        auto p2 = RoadPtrs[from_road]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx-1).back();
         start_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
     }
     else
     {
-        auto p1 = mRoadPtrs[from_road]->mSecPtrs.front()->GetLanePoseByIndex(from_lane_idx).front();
-        auto p2 = mRoadPtrs[from_road]->mSecPtrs.front()->GetLanePoseByIndex(from_lane_idx+1).front();
+        auto p1 = RoadPtrs[from_road]->mSecPtrs.front()->GetLanePoseByIndex(from_lane_idx).front();
+        auto p2 = RoadPtrs[from_road]->mSecPtrs.front()->GetLanePoseByIndex(from_lane_idx+1).front();
         start_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
         start_pose.Rotate(180);
     }
@@ -63,14 +63,14 @@ void Map::AddConnection(JuncPtr p, unsigned int from_road, int from_lane_idx,
 
     if(to_lane_idx >  0)
     {
-        auto p1 = mRoadPtrs[to_road]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx).front();
-        auto p2 = mRoadPtrs[to_road]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx-1).front();
+        auto p1 = RoadPtrs[to_road]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx).front();
+        auto p2 = RoadPtrs[to_road]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx-1).front();
         end_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
     }
     else
     {
-        auto p1 = mRoadPtrs[to_road]->mSecPtrs.back()->GetLanePoseByIndex(to_lane_idx).back();
-        auto p2 = mRoadPtrs[to_road]->mSecPtrs.back()->GetLanePoseByIndex(to_lane_idx+1).back();
+        auto p1 = RoadPtrs[to_road]->mSecPtrs.back()->GetLanePoseByIndex(to_lane_idx).back();
+        auto p2 = RoadPtrs[to_road]->mSecPtrs.back()->GetLanePoseByIndex(to_lane_idx+1).back();
         end_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
         end_pose.Rotate(180);
     }
@@ -83,19 +83,19 @@ void Map::AddConnection(JuncPtr p, unsigned int from_road, int from_lane_idx,
     );
 
     if(from_lane_idx > 0)
-        mRoadPtrs[from_road]->mNextJid = p->ID;
+        RoadPtrs[from_road]->mNextJid = p->ID;
     else
-        mRoadPtrs[from_road]->mPrevJid = p->ID;
+        RoadPtrs[from_road]->mPrevJid = p->ID;
 
     if(to_lane_idx > 0)
-        mRoadPtrs[to_road]->mPrevJid = p->ID;
+        RoadPtrs[to_road]->mPrevJid = p->ID;
     else
-        mRoadPtrs[to_road]->mNextJid = p->ID;
+        RoadPtrs[to_road]->mNextJid = p->ID;
 }
 
 void Map::CommitRoadInfo()
 {
-    for(auto & p : mRoadPtrs)
+    for(auto & p : RoadPtrs)
     {
         if(!p->mSecPtrs.empty())
             p->Lenght = p->mSecPtrs.back()->mStartS + p->mSecPtrs.back()->mReferLine.Length();
@@ -135,7 +135,7 @@ std::vector<RoadPtr> Map::AdjacentRoadInfo(RoadPtr p_road)
     int jid = p_road->mNextJid;
     if(jid == -1) return res;
 
-    for (auto const &m : mJuncPtrs[jid]->RoadLinks)
+    for (auto const &m : JuncPtrs[jid]->RoadLinks)
     {
         if (m.first.first == p_road->ID)
         {
@@ -149,14 +149,14 @@ std::vector<RoadPtr> Map::AdjacentRoadInfo(RoadPtr p_road)
 boost::property_tree::ptree Map::ToXML()
 {
     pt::ptree p_map;
-    for(auto & road : mRoadPtrs)
+    for(auto & road : RoadPtrs)
     {
         p_map.add_child("hdmap.roads.road", road->ToXML());
         mRoadIdToPtr[road->ID] = road;
     }
 
 
-    for(auto & junc : mJuncPtrs){
+    for(auto & junc : JuncPtrs){
         p_map.add_child("hdmap.junctions.junction", junc->ToXML());
         mJuncIdToPtr[junc->ID] = junc;
     }
@@ -165,10 +165,7 @@ boost::property_tree::ptree Map::ToXML()
 
 void Map::FromXML(const pt::ptree &p)
 {
-
-    mRoadPtrs.clear();
-    mJuncPtrs.clear();
-
+    Clear();
 
     try
     {
@@ -176,8 +173,7 @@ void Map::FromXML(const pt::ptree &p)
         {
             RoadPtr pRoad(new Road());
             pRoad->FromXML(r.second);
-            mRoadPtrs.emplace_back(pRoad);
-            mRoadIdToPtr[pRoad->ID] = pRoad;
+            AddRoadFromPtr(pRoad);
             Road::ROAD_ID = std::max((unsigned) 0, pRoad->ID);
         }
         Road::ROAD_ID++;
@@ -186,8 +182,7 @@ void Map::FromXML(const pt::ptree &p)
         {
             JuncPtr pJunc(new Junction(MapPtr(this)));
             pJunc->FromXML(j.second);
-            mJuncPtrs.emplace_back(pJunc);
-            mJuncIdToPtr[pJunc->ID] = pJunc;
+            AddJunctionFromPtr(pJunc);
             Junction::JUNCTION_ID = std::max((unsigned) 0, pJunc->ID);
         }
         Junction::JUNCTION_ID++;
@@ -205,7 +200,9 @@ RoadPtr Map::GetRoadPtrById(unsigned int road_id)
     {
         return mRoadIdToPtr[road_id];
     }
+#ifdef DEBUG_INFO
     printf("No Found Road %d, Maybe initialization dose not finish.\n", road_id);
+#endif
     return nullptr;
 }
 
@@ -215,14 +212,16 @@ JuncPtr Map::GetJuncPtrById(unsigned int junc_id)
     {
         return mJuncIdToPtr[junc_id];
     }
+#ifdef DEBUG_INFO
     printf("No Found Junction %d, Maybe initialization dose not finish.\n", junc_id);
+#endif
     return nullptr;
 }
 
 void Map::Clear()
 {
-    mRoadPtrs.clear();
-    mJuncPtrs.clear();
+    RoadPtrs.clear();
+    JuncPtrs.clear();
     mJuncIdToPtr.clear();
     mRoadIdToPtr.clear();
     Road::ROAD_ID = 0;
@@ -245,12 +244,12 @@ void Map::AddRoadLink(JuncPtr p,
         auto ctrl_len2 = std::get<3>(k);
         Pose p1, p2;
 
-        p1 = mRoadPtrs[_from_road_id]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx).back();
-        p2 = mRoadPtrs[_from_road_id]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx-1).back();
+        p1 = RoadPtrs[_from_road_id]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx).back();
+        p2 = RoadPtrs[_from_road_id]->mSecPtrs.back()->GetLanePoseByIndex(from_lane_idx-1).back();
         Pose start_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
 
-        p1 = mRoadPtrs[_to_road_id]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx).front();
-        p2 = mRoadPtrs[_to_road_id]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx-1).front();
+        p1 = RoadPtrs[_to_road_id]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx).front();
+        p2 = RoadPtrs[_to_road_id]->mSecPtrs.front()->GetLanePoseByIndex(to_lane_idx-1).front();
         Pose end_pose = {0.5 * (p1.GetPosition() + p2.GetPosition()), p1.GetAngle()};
 
         road_link.AddLaneLink(from_lane_idx, to_lane_idx, Bezier(start_pose, end_pose, ctrl_len1, ctrl_len2));
@@ -258,26 +257,43 @@ void Map::AddRoadLink(JuncPtr p,
     std::pair<unsigned int, unsigned int> m(_from_road_id, _to_road_id);
     p->RoadLinks[m] = road_link;
 
-    mRoadPtrs[_from_road_id]->mNextJid = p->ID;
-    mRoadPtrs[_to_road_id]->mPrevJid = p->ID;
+    RoadPtrs[_from_road_id]->mNextJid = p->ID;
+    RoadPtrs[_to_road_id]->mPrevJid = p->ID;
 }
 
 unsigned long Map::GetRoadSize() {
-    return mRoadPtrs.size();
+    return RoadPtrs.size();
 }
 
 unsigned long Map::GetJunctionSize() {
-    return mJuncPtrs.size();
+    return JuncPtrs.size();
 }
 
 RoadPtr Map::GetRoadNeighbor(RoadPtr ptr) {
     const double _MIN_DIS_NEIGHBOR = 8.0;
     Coor _tmp_coor = ptr->GetReferenceLinePoses()[0].GetPosition();
-    for (auto &road: mRoadPtrs) {
+    for (auto &road: RoadPtrs) {
         double dis = road->GetDistanceFromCoor(_tmp_coor);
         if (dis < _MIN_DIS_NEIGHBOR && ptr->ID != road->ID) {
             return road;
         }
     }
     return nullptr;
+}
+void Map::AddRoadFromPtr(RoadPtr road)
+{
+    if(GetRoadPtrById(road->ID) == nullptr)
+    {
+        RoadPtrs.emplace_back(road);
+        mRoadIdToPtr[road->ID] = road;
+    }
+}
+
+void Map::AddJunctionFromPtr(JuncPtr junction)
+{
+    if(GetJuncPtrById(junction->ID)== nullptr)
+    {
+        JuncPtrs.emplace_back(junction);
+        mJuncIdToPtr[junction->ID] = junction;
+    }
 }

@@ -36,7 +36,7 @@ private:
         int curr_idx = -1;
         int curr_rid = -1;
         int curr_jid = -1;
-        int next_rid = -1;
+        int next_idx = -1;
 
 
     public:
@@ -46,7 +46,7 @@ private:
             curr_idx = -1;
             curr_rid = -1;
             curr_jid = -1;
-            next_rid = -1;
+            next_idx = -1;
         }
     }mRecord;
 
@@ -61,12 +61,14 @@ public:
 
     void SendGPS(const Coor &v);
 
-    void SendTrafficInfo(const Coor &v);
+    void SendTrafficInfo(const Coor &v, RoadPtr target_road = nullptr);
 
     void SendNearPolygonRegion(const Coor &v, double radius = 100);
 
     void Process();
 private:
+
+    bool RePlanRoute(const Coor& cur);
 
     bool PlanByCommand(const std::string& method, std::vector<int> argv);
 

@@ -64,6 +64,7 @@ void  renderCar(ros::Publisher& MarkerPublisher, double x, double y, double radi
     carmarker.scale.x = 1;
     carmarker.scale.y = 1;
     carmarker.scale.z = 1;
+    carmarker.color.a = carmarker.color.r = carmarker.color.b = carmarker.color.g = 1;
     carmarker.mesh_resource = "package://HDMap/res/car2/car.dae";
     carmarker.mesh_use_embedded_materials = 1;
 
@@ -112,7 +113,7 @@ void renderPolygon(const HDMap::msg_route_region& msg)
 int main(int argc, char** argv){
     ros::init(argc, argv, "map_test");
     ros::NodeHandle n;
-    ros::Publisher GPSPublisher = n.advertise<nox_msgs::Location>("Localization", 10);
+    ros::Publisher GPSPublisher = n.advertise<nox_msgs::Location>("Localization", 1);
     ros::Publisher MarkerPublisher = n.advertise<visualization_msgs::MarkerArray>("/CurCar", 0);
 
     ros::ServiceClient map_data_client = n.serviceClient<HDMap::srv_map_data>("map_data_service");

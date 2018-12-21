@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(HDMap)
-set(CMAKE_CXX_STANDARD 11)
-add_compile_options(-std=c++11)
+set(CMAKE_CXX_STANDARD 14)
 
 find_package(catkin REQUIRED COMPONENTS
 		roscpp
@@ -9,6 +8,9 @@ find_package(catkin REQUIRED COMPONENTS
 		std_msgs
 		geometry_msgs
 		message_generation
+
+		tf
+		tf_conversions
 )
 
 find_package( PCL REQUIRED)
@@ -100,6 +102,7 @@ add_executable(ViewDetectRegion
 		src/Tool/Sender.cpp
 )
 
+add_executable(RepubPoint src/republish.cpp)
 
 target_link_libraries(MapService
 ${catkin_LIBRARIES}
@@ -133,3 +136,5 @@ target_link_libraries(ViewDetectRegion
 ${catkin_LIBRARIES}
 ${PCL_LIBRARIES}
 )
+
+target_link_libraries(RepubPoint ${catkin_LIBRARIES} ${PCL_LIBRARIES})

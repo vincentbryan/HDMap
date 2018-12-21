@@ -154,7 +154,7 @@ void Planner::ToXML(std::string &str)
         {
             int jid = mRouting[i]->mNextJid;
             assert(jid != -1);
-            auto junc = mHDMapPtr->mJuncPtrs[jid];
+            auto junc = mHDMapPtr->JuncPtrs[jid];
             p_junc.add("<xmlattr>.id", junc->ID);
 
             pt::ptree p_vec;
@@ -186,14 +186,13 @@ void Planner::ToXML(std::string &str)
 }
 
 
-
-
 bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Response &res)
 {
     if(req.method == "start")
     {
         if(req.argv.size()==2 && req.argv[0]==req.argv[1])
         {
+            mRouting.clear();
             mRouting.push_back(mHDMapPtr->GetRoadPtrById(req.argv[0]));
             ROS_INFO("Request: Walk on the same Road %d method: %s", req.argv.front(), req.method.c_str());
         }
@@ -218,7 +217,6 @@ bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Respon
                     }
                 }
             }
-
         }
         else
         {

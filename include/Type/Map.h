@@ -26,8 +26,8 @@ class Map : public IXML
     std::unordered_map<unsigned int, JuncPtr> mJuncIdToPtr;
 
 public:
-    std::vector<RoadPtr> mRoadPtrs;
-    std::vector<JuncPtr> mJuncPtrs;
+    std::vector<RoadPtr> RoadPtrs;
+    std::vector<JuncPtr> JuncPtrs;
     std::shared_ptr<Sender> pSender;
 
     Map();
@@ -35,6 +35,12 @@ public:
     void SetSender(std::shared_ptr<Sender> sender);
 
     RoadPtr AddRoad(const Pose &start_pose);
+
+    JuncPtr AddJunction();
+
+    void AddRoadFromPtr(RoadPtr road);
+
+    void AddJunctionFromPtr(JuncPtr junction);
 
     unsigned long GetRoadSize();
 
@@ -44,7 +50,7 @@ public:
 
     RoadPtr GetRoadNeighbor(RoadPtr ptr);
 
-    JuncPtr AddJunction();
+
 
     void AddConnection(JuncPtr p,
                        unsigned int from_road_id, int from_lane_idx,

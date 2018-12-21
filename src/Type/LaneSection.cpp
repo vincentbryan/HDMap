@@ -2,6 +2,7 @@
 // Created by vincent on 18-10-8.
 //
 
+#include <random>
 #include "Type/LaneSection.h"
 
 using namespace hdmap;
@@ -95,7 +96,10 @@ void LaneSection::Send(Sender &sender)
         }
         else
         {
-            auto solid_line = sender.GetLineStrip(x.second, 0.7, 0.7, 0.7, 0.3);
+            std::mt19937 rg = std::mt19937(std::random_device()());
+            double c = (rg()%255)/255.0;
+
+            auto solid_line = sender.GetLineStrip(x.second, c, 0.7, 0.7, 1.0);
             sender.array.markers.push_back(solid_line);
         }
         auto lane_idx = sender.GetText(std::to_string(x.first), x.second[x.second.size()/2].GetPosition());

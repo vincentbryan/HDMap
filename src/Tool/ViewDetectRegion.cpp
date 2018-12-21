@@ -58,7 +58,7 @@ public:
         }
 
         carmarker.header.frame_id = FRAME_ID;
-        carmarker.header.stamp = ros::Time();
+        carmarker.header.stamp =ros::Time::now();
         carmarker.id = 0;
         carmarker.type = visualization_msgs::Marker::MESH_RESOURCE;
         carmarker.action = visualization_msgs::Marker::ADD;
@@ -66,6 +66,7 @@ public:
         carmarker.scale.x =  0.009;
         carmarker.scale.y =  0.009;
         carmarker.scale.z =  0.009;
+        carmarker.color.a = carmarker.color.g = carmarker.color.r = carmarker.color.b = 1;
         carmarker.mesh_resource = CAR_RESOURCE_PATH;
         carmarker.mesh_use_embedded_materials = 1;
 
@@ -74,7 +75,7 @@ public:
         textmarker.text= _buf;
 
         textmarker.header.frame_id = FRAME_ID;
-        textmarker.header.stamp = ros::Time();
+        textmarker.header.stamp = ros::Time::now();
         textmarker.id = 1;
         textmarker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
         textmarker.action = visualization_msgs::Marker::ADD;
@@ -134,7 +135,7 @@ public:
         pcl::toROSMsg(*transform_cloud,_tmp);
 
         _tmp.header.frame_id = FRAME_ID;
-        _tmp.header.stamp = ros::Time();
+        _tmp.header.stamp = ros::Time::now();
         mPubRegionPoint.publish(_tmp);
     }
 
