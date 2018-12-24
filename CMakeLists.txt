@@ -102,7 +102,7 @@ add_executable(ViewDetectRegion
 		src/Tool/Sender.cpp
 )
 
-add_executable(RepubPoint src/republish.cpp)
+add_executable(RepubPoint src/Tool/Republish.cpp)
 
 target_link_libraries(MapService
 ${catkin_LIBRARIES}

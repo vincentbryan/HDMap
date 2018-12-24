@@ -29,7 +29,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Visualization Manager:
@@ -58,7 +58,7 @@ Visualization Manager:
       Marker Topic: /ViewDetectRegion/CarInfo
       Name: MarkerArray
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -123,7 +123,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0
+      Angle: 0.5799999237060547
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -133,11 +133,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 15.78937816619873
+      Scale: 2.663705587387085
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: 464.1031799316406
-      Y: 37.9752197265625
+      X: -97.99696350097656
+      Y: -218.70828247070312
     Saved: ~
 Window Geometry:
   Displays:
@@ -155,5 +155,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1645
-  X: 44
-  Y: 129
+  X: 222
+  Y: 121
