@@ -18,52 +18,62 @@
 #include <std_msgs/Header.h>
 #include <geometry_msgs/Polygon.h>
 
-namespace HDMap {
-    template<class ContainerAllocator>
-    struct msg_route_region_ {
-        typedef msg_route_region_<ContainerAllocator> Type;
+namespace HDMap
+{
+template <class ContainerAllocator>
+struct msg_route_region_
+{
+  typedef msg_route_region_<ContainerAllocator> Type;
 
-        msg_route_region_()
-                : header(), polygons() {
-        }
-
-        msg_route_region_(const ContainerAllocator &_alloc)
-                : header(_alloc), polygons(_alloc) {
-            (void) _alloc;
-        }
-
-
-        typedef ::std_msgs::Header_<ContainerAllocator> _header_type;
-        _header_type header;
-
-        typedef std::vector<::geometry_msgs::Polygon_<ContainerAllocator>, typename ContainerAllocator::template rebind<::geometry_msgs::Polygon_<ContainerAllocator> >::other> _polygons_type;
-        _polygons_type polygons;
+  msg_route_region_()
+    : header()
+    , polygons()  {
+    }
+  msg_route_region_(const ContainerAllocator& _alloc)
+    : header(_alloc)
+    , polygons(_alloc)  {
+  (void)_alloc;
+    }
 
 
-        typedef boost::shared_ptr<::HDMap::msg_route_region_<ContainerAllocator> > Ptr;
-        typedef boost::shared_ptr<::HDMap::msg_route_region_<ContainerAllocator> const> ConstPtr;
 
-    }; // struct msg_route_region_
+   typedef  ::std_msgs::Header_<ContainerAllocator>  _header_type;
+  _header_type header;
 
-    typedef ::HDMap::msg_route_region_<std::allocator<void> > msg_route_region;
+   typedef std::vector< ::geometry_msgs::Polygon_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Polygon_<ContainerAllocator> >::other >  _polygons_type;
+  _polygons_type polygons;
 
-    typedef boost::shared_ptr<::HDMap::msg_route_region> msg_route_regionPtr;
-    typedef boost::shared_ptr<::HDMap::msg_route_region const> msg_route_regionConstPtr;
+
+
+
+
+  typedef boost::shared_ptr< ::HDMap::msg_route_region_<ContainerAllocator> > Ptr;
+  typedef boost::shared_ptr< ::HDMap::msg_route_region_<ContainerAllocator> const> ConstPtr;
+
+}; // struct msg_route_region_
+
+typedef ::HDMap::msg_route_region_<std::allocator<void> > msg_route_region;
+
+typedef boost::shared_ptr< ::HDMap::msg_route_region > msg_route_regionPtr;
+typedef boost::shared_ptr< ::HDMap::msg_route_region const> msg_route_regionConstPtr;
 
 // constants requiring out of line definition
 
 
 
-    template<typename ContainerAllocator>
-    std::ostream &operator<<(std::ostream &s, const ::HDMap::msg_route_region_<ContainerAllocator> &v) {
-        ros::message_operations::Printer<::HDMap::msg_route_region_<ContainerAllocator> >::stream(s, "", v);
-        return s;
-    }
+template<typename ContainerAllocator>
+std::ostream& operator<<(std::ostream& s, const ::HDMap::msg_route_region_<ContainerAllocator> & v)
+{
+ros::message_operations::Printer< ::HDMap::msg_route_region_<ContainerAllocator> >::stream(s, "", v);
+return s;
+}
 
 } // namespace HDMap
 
-namespace ros {
-    namespace message_traits {
+namespace ros
+{
+namespace message_traits
+{
 
 
 
@@ -75,62 +85,67 @@ namespace ros {
 
 
 
-        template<class ContainerAllocator>
-        struct IsFixedSize<::HDMap::msg_route_region_<ContainerAllocator> >
-                : FalseType {
-        };
+template <class ContainerAllocator>
+struct IsFixedSize< ::HDMap::msg_route_region_<ContainerAllocator> >
+  : FalseType
+  { };
 
-        template<class ContainerAllocator>
-        struct IsFixedSize<::HDMap::msg_route_region_<ContainerAllocator> const>
-                : FalseType {
-        };
+template <class ContainerAllocator>
+struct IsFixedSize< ::HDMap::msg_route_region_<ContainerAllocator> const>
+  : FalseType
+  { };
 
-        template<class ContainerAllocator>
-        struct IsMessage<::HDMap::msg_route_region_<ContainerAllocator> >
-                : TrueType {
-        };
+template <class ContainerAllocator>
+struct IsMessage< ::HDMap::msg_route_region_<ContainerAllocator> >
+  : TrueType
+  { };
 
-        template<class ContainerAllocator>
-        struct IsMessage<::HDMap::msg_route_region_<ContainerAllocator> const>
-                : TrueType {
-        };
+template <class ContainerAllocator>
+struct IsMessage< ::HDMap::msg_route_region_<ContainerAllocator> const>
+  : TrueType
+  { };
 
-        template<class ContainerAllocator>
-        struct HasHeader<::HDMap::msg_route_region_<ContainerAllocator> >
-                : TrueType {
-        };
+template <class ContainerAllocator>
+struct HasHeader< ::HDMap::msg_route_region_<ContainerAllocator> >
+  : TrueType
+  { };
 
-        template<class ContainerAllocator>
-        struct HasHeader<::HDMap::msg_route_region_<ContainerAllocator> const>
-                : TrueType {
-        };
+template <class ContainerAllocator>
+struct HasHeader< ::HDMap::msg_route_region_<ContainerAllocator> const>
+  : TrueType
+  { };
 
 
-        template<class ContainerAllocator>
-        struct MD5Sum<::HDMap::msg_route_region_<ContainerAllocator> > {
-            static const char *value() {
-                return "436cca0b8e50ceff14d30527fc67b7a4";
-            }
+template<class ContainerAllocator>
+struct MD5Sum< ::HDMap::msg_route_region_<ContainerAllocator> >
+{
+  static const char* value()
+  {
+    return "436cca0b8e50ceff14d30527fc67b7a4";
+  }
 
-            static const char *value(const ::HDMap::msg_route_region_<ContainerAllocator> &) { return value(); }
+  static const char* value(const ::HDMap::msg_route_region_<ContainerAllocator>&) { return value(); }
+  static const uint64_t static_value1 = 0x436cca0b8e50ceffULL;
+  static const uint64_t static_value2 = 0x14d30527fc67b7a4ULL;
+};
 
-            static const uint64_t static_value1 = 0x436cca0b8e50ceffULL;
-            static const uint64_t static_value2 = 0x14d30527fc67b7a4ULL;
-        };
+template<class ContainerAllocator>
+struct DataType< ::HDMap::msg_route_region_<ContainerAllocator> >
+{
+  static const char* value()
+  {
+    return "HDMap/msg_route_region";
+  }
 
-        template<class ContainerAllocator>
-        struct DataType<::HDMap::msg_route_region_<ContainerAllocator> > {
-            static const char *value() {
-                return "HDMap/msg_route_region";
-            }
+  static const char* value(const ::HDMap::msg_route_region_<ContainerAllocator>&) { return value(); }
+};
 
-            static const char *value(const ::HDMap::msg_route_region_<ContainerAllocator> &) { return value(); }
-        };
-
-        template<class ContainerAllocator>
-        struct Definition<::HDMap::msg_route_region_<ContainerAllocator> > {
-            static const char *value() {
-                return "Header header\n\
+template<class ContainerAllocator>
+struct Definition< ::HDMap::msg_route_region_<ContainerAllocator> >
+{
+  static const char* value()
+  {
+    return "Header header\n\
 geometry_msgs/Polygon[] polygons\n\
 \n\
 ================================================================================\n\
@@ -170,53 +185,58 @@ float32 x\n\
 float32 y\n\
 float32 z\n\
 ";
-            }
+  }
 
-            static const char *value(const ::HDMap::msg_route_region_<ContainerAllocator> &) { return value(); }
-        };
+  static const char* value(const ::HDMap::msg_route_region_<ContainerAllocator>&) { return value(); }
+};
 
-    } // namespace message_traits
+} // namespace message_traits
 } // namespace ros
 
-namespace ros {
-    namespace serialization {
+namespace ros
+{
+namespace serialization
+{
 
-        template<class ContainerAllocator>
-        struct Serializer<::HDMap::msg_route_region_<ContainerAllocator> > {
-            template<typename Stream, typename T>
-            inline static void allInOne(Stream &stream, T m) {
-                stream.next(m.header);
-                stream.next(m.polygons);
-            }
+  template<class ContainerAllocator> struct Serializer< ::HDMap::msg_route_region_<ContainerAllocator> >
+  {
+    template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
+    {
+      stream.next(m.header);
+      stream.next(m.polygons);
+    }
 
-            ROS_DECLARE_ALLINONE_SERIALIZER
-        }; // struct msg_route_region_
+    ROS_DECLARE_ALLINONE_SERIALIZER
+  }; // struct msg_route_region_
 
-    } // namespace serialization
+} // namespace serialization
 } // namespace ros
 
-namespace ros {
-    namespace message_operations {
+namespace ros
+{
+namespace message_operations
+{
 
-        template<class ContainerAllocator>
-        struct Printer<::HDMap::msg_route_region_<ContainerAllocator> > {
-            template<typename Stream>
-            static void
-            stream(Stream &s, const std::string &indent, const ::HDMap::msg_route_region_<ContainerAllocator> &v) {
-                s << indent << "header: ";
-                s << std::endl;
-                Printer<::std_msgs::Header_<ContainerAllocator> >::stream(s, indent + "  ", v.header);
-                s << indent << "polygons[]" << std::endl;
-                for (size_t i = 0; i < v.polygons.size(); ++i) {
-                    s << indent << "  polygons[" << i << "]: ";
-                    s << std::endl;
-                    s << indent;
-                    Printer<::geometry_msgs::Polygon_<ContainerAllocator> >::stream(s, indent + "    ", v.polygons[i]);
-                }
-            }
-        };
+template<class ContainerAllocator>
+struct Printer< ::HDMap::msg_route_region_<ContainerAllocator> >
+{
+  template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::HDMap::msg_route_region_<ContainerAllocator>& v)
+  {
+    s << indent << "header: ";
+    s << std::endl;
+    Printer< ::std_msgs::Header_<ContainerAllocator> >::stream(s, indent + "  ", v.header);
+    s << indent << "polygons[]" << std::endl;
+    for (size_t i = 0; i < v.polygons.size(); ++i)
+    {
+      s << indent << "  polygons[" << i << "]: ";
+      s << std::endl;
+      s << indent;
+      Printer< ::geometry_msgs::Polygon_<ContainerAllocator> >::stream(s, indent + "    ", v.polygons[i]);
+    }
+  }
+};
 
-    } // namespace message_operations
+} // namespace message_operations
 } // namespace ros
 
 #endif // HDMAP_MESSAGE_MSG_ROUTE_REGION_H

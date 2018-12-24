@@ -17,7 +17,7 @@ class Sender
 {
 private:
     ros::Publisher pub;
-    const std::string frame_id = "/hdmap";
+    const std::string frame_id = "/world";
 
 public:
     visualization_msgs::MarkerArray array;

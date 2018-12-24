@@ -46,7 +46,7 @@ void Client::LocationCallBack(const nox_msgs::Location &msg)
 bool Client::OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res)
 {
     mRecord.Reset();
-    if(req.cmd == "start")
+    if(req.cmd == "r2r")
     {
         mRecord.Reset();
         if(PlanByCommand(req.cmd, req.argv))
@@ -115,7 +115,7 @@ void Client::SendTrafficInfo(const Coor &v, RoadPtr target_road)
 
         HDMap::msg_signal_list ss;
 
-        ss.header.frame_id = "/hdmap";
+        ss.header.frame_id = "/world";
         ss.header.stamp = ros::Time::now();
 
         bool detected = false;
@@ -151,7 +151,7 @@ void Client::SendTrafficInfo(const Coor &v, RoadPtr target_road)
 void Client::SendGPS(const Coor &v)
 {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "/hdmap";
+    marker.header.frame_id = "/world";
     marker.header.stamp = ros::Time::now();
     marker.action = visualization_msgs::Marker::ADD;
     marker.pose.orientation.w = 1.0;
@@ -201,7 +201,7 @@ void Client::Process()
 
         for(int i = 0; i < mCurPlanMap.RoadPtrs.size() && !mRecord.is_init; ++i)
         {
-            if(mCurPlanMap.RoadPtrs[i]->Cover(curr_pos))
+            if(mCurPlanMap.RoadPtrs[i]->IsCover(curr_pos))
             {
                 mRecord.curr_rid = mCurPlanMap.RoadPtrs[i]->ID;
                 mRecord.curr_idx = i;
@@ -229,7 +229,7 @@ void Client::Process()
 
         for(int i = 0; i < mCurPlanMap.JuncPtrs.size() && !mRecord.is_init; ++i)
         {
-            if(mCurPlanMap.JuncPtrs[i]->Cover(curr_pos))
+            if(mCurPlanMap.JuncPtrs[i]->IsCover(curr_pos))
             {
                 mRecord.curr_jid = mCurPlanMap.JuncPtrs[i]->ID;
                 for (int r = 0; r < mCurPlanMap.RoadPtrs.size(); ++r)
@@ -269,7 +269,7 @@ void Client::Process()
         _is_in_cur_road = mCurPlanMap.RoadPtrs[mRecord.curr_idx]->GetDistanceFromCoor(curr_pos) < _MIN_DIS;
     
     if (!_is_in_cur_road && mRecord.curr_jid != -1)
-        _is_in_cur_junc = mCurPlanMap.GetJuncPtrById(mRecord.curr_jid)->Cover(curr_pos);
+        _is_in_cur_junc = mCurPlanMap.GetJuncPtrById(mRecord.curr_jid)->IsCover(curr_pos);
 
     if(!_is_in_cur_road && !_is_in_cur_junc && mRecord.next_idx != -1)
     {
@@ -324,7 +324,7 @@ void Client::Process()
     }
 }
 
-bool Client::PlanByCommand(const std::string& method, std::vector<int> argv)
+bool Client::PlanByCommand(const std::string& method, std::vector<double> argv)
 {
     HDMap::srv_route srv;
     srv.request.method = method;
@@ -414,7 +414,7 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius)
 
 
     HDMap::msg_route_region mrr;
-    mrr.header.frame_id = "hdmap";
+    mrr.header.frame_id = "/world";
     mrr.header.stamp = ros::Time::now();
 
     for(const auto& geo: _geometries)
@@ -526,11 +526,11 @@ bool Client::RePlanRoute(const Coor &cur) {
         // SendTrafficInfo(cur);
         // mRecord.curr_rid = _tmp_id;
 
-        if(!near_roads.front()->Cover(cur))
+        if(!near_roads.front()->IsCover(cur))
         {
             if (!near_juncs.empty())
             {
-                if(!near_juncs.front()->Cover(cur))
+                if(!near_juncs.front()->IsCover(cur))
                 {
                     ROS_ERROR("(%8.3f, %8.3f): Current position is out the routing and junction." ,
                               cur.x, cur.y);
@@ -553,7 +553,7 @@ bool Client::RePlanRoute(const Coor &cur) {
 
         int _cur_road_id = near_roads.front()->ID;
         int _end_road_id = mCurPlanMap.RoadPtrs.back()->ID;
-        if(PlanByCommand("start", {_cur_road_id, _end_road_id}))
+        if(PlanByCommand("r2r", {_cur_road_id, _end_road_id}))
         {
             ROS_INFO("(%8.3f, %8.3f): Re-Plan success, Road[%d] to Road[%d].",
                      cur.x, cur.y,_cur_road_id,_end_road_id);

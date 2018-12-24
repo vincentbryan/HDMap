@@ -7,7 +7,11 @@
 #include <termios.h>
 #include <HDMap/srv_map_data.h>
 #include <HDMap/msg_route_region.h>
+#include <HDMap/srv_route.h>
 #include <tf/transform_datatypes.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
 using namespace std;
 
 
@@ -51,7 +55,7 @@ int getch()
 void  renderCar(ros::Publisher& MarkerPublisher, double x, double y, double radius){
 
     visualization_msgs::Marker carmarker;
-    carmarker.header.frame_id = "hdmap";
+    carmarker.header.frame_id = "/world";
     carmarker.header.stamp = ros::Time();
     carmarker.ns = "map_test";
     carmarker.id = 0;
@@ -74,7 +78,7 @@ void  renderCar(ros::Publisher& MarkerPublisher, double x, double y, double radi
     sprintf(_buf,"(%3.2f, %3.2f, %3.1f)",x,y,radius*180.0/TFSIMD_PI);
     textmarker.text= _buf;
 
-    textmarker.header.frame_id = "hdmap";
+    textmarker.header.frame_id = "/world";
     textmarker.header.stamp = ros::Time();
     textmarker.ns = "map_test";
     textmarker.id = 1;
@@ -117,6 +121,7 @@ int main(int argc, char** argv){
     ros::Publisher MarkerPublisher = n.advertise<visualization_msgs::MarkerArray>("/CurCar", 0);
 
     ros::ServiceClient map_data_client = n.serviceClient<HDMap::srv_map_data>("map_data_service");
+    ros::ServiceClient map_plan_client = n.serviceClient<HDMap::srv_route>("map_plan_service");
     ros::Subscriber map_sub_route_region = n.subscribe("map_pub_route_region",10,renderPolygon);
 
     // mode values
@@ -175,6 +180,33 @@ int main(int argc, char** argv){
                     std::cerr << "Server error occurred\n\n";
                 }
 
+            }
+            else if (vec.front() == "plan" && vec.size() >= 4)
+            {
+                HDMap::srv_route srv_route;
+                srv_route.request.method = vec[1];
+                for(int i = 2; i < vec.size(); ++i)
+                {
+                     srv_route.request.argv.emplace_back(std::stod(vec[i]));
+                }
+
+                if (map_plan_client.call(srv_route))
+                {
+                    std::stringstream ss;
+                    ss << srv_route.response.route;
+                    boost::property_tree::ptree tree;
+                    boost::property_tree::read_xml(ss, tree);
+
+                    cout << "Roads:\n";
+                    for (auto &r: tree.get_child("hdmap.roads")) {
+                        std::cout << r.second.get<int>("<xmlattr>.id") << " ";
+                    }
+                    cout <<"\nJunctions:\n";
+                    for (auto &r: tree.get_child("hdmap.junctions")) {
+                        std::cout << r.second.get<int>("<xmlattr>.id") << " ";
+                    }
+                    cout <<"\n";
+                }
             }
             else{
                 std::cout << "invalid input\n\n";

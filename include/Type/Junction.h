@@ -56,7 +56,7 @@ public:
 
     void FromXML(const pt::ptree &p) override;
 
-    bool Cover(const Coor &v) override;
+    bool IsCover(const Coor &v) override;
 
     std::vector<Pose> GetRegionPoses() override;
 

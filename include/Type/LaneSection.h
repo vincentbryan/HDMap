@@ -34,6 +34,7 @@ public:
 
 private:
     void AppendPose(double s_);
+
     void GenerateAllPose(double ds);
 
     std::vector<Pose> GetRegionPoses() override {};
@@ -59,7 +60,7 @@ public:
 
     void Send(Sender &sender) override;
 
-    bool Cover(const Coor &v) override;
+    bool IsCover(const Coor &v) override;
 
     boost::property_tree::ptree ToXML() override;
 

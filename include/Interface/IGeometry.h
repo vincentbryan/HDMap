@@ -16,15 +16,11 @@ class IGeometry
 {
 public:
 
-    virtual bool Cover(const Coor &v) = 0;
+    virtual bool IsCover(const Coor &v) = 0;
 
     virtual std::vector<Pose> GetRegionPoses() = 0;
 
-protected:
-
-    virtual void GenerateRegionPoses() = 0;
-
-    bool Cover(std::vector<Pose> _vertices, const std::vector<Coor> &vp)
+    static bool Cover(std::vector<Pose> _vertices, const std::vector<Coor> &vp)
     {
 
         if (_vertices.size() < 3) return false;
@@ -55,6 +51,11 @@ protected:
         }
         return std::all_of(res.begin(), res.end(), [](bool v) { return v; });
     }
+
+protected:
+
+    virtual void GenerateRegionPoses() = 0;
+
 };
 
 }

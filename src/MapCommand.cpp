@@ -26,7 +26,7 @@ static std::string brief =
         "  (j11) <---r38--- (j12)<---r40--- (j13)                  \n"
         "        ----r37-->      ----r39-->                        \n"
         "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n"
-        "\e[1;32m[start rid ...]: start a route                    \n"
+        "\e[1;32m[ r2r rid rid ]: road to road                       \n"
         "[     end     ]: finish a route                           \n"
         "[   exit / q  ]: exit\e[0m                                \n";
 
@@ -42,7 +42,7 @@ void Print(std::vector<int> v)
         for(auto & x : v) std::cout << x << " ";
 
     if(v.empty())
-        std::cout << "] Tips: use 'start' to start a route";
+        std::cout << "] Tips: use 'r2r' to start a route";
     else
         std::cout << "] Tips: use 'end' to finish the current route";
     std::cout << "\e[0m\n";
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
         string s;
         getline(cin, s);
         auto vec = split(s, " ");
-        if(vec.front() == "start")
+        if(vec.front() == "r2r")
         {
             HDMap::srv_map_cmd srv;
             if(vec.size() < 3)
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
                 continue;
             }
 
-            srv.request.cmd = "start";
+            srv.request.cmd = "r2r";
 
             for(int i = 1; i < vec.size(); ++i){
                 srv.request.argv.emplace_back(atoi(vec[i].c_str()));

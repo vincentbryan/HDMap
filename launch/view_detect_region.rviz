@@ -71,22 +71,22 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: RGB8
+      Color Transformer: Intensity
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
+      Max Intensity: 104
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
-      Size (Pixels): 3
+      Size (Pixels): 2
       Size (m): 0.009999999776482582
       Style: Points
-      Topic: /ViewDetectRegion/RegionPoint
+      Topic: /points_global
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -103,7 +103,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: hdmap
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -123,7 +123,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0
+      Angle: 0.8100005984306335
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -133,11 +133,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 15.78937816619873
+      Scale: 2.0929532051086426
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: 464.1031799316406
-      Y: 37.9752197265625
+      X: 310.90740966796875
+      Y: -33.822601318359375
     Saved: ~
 Window Geometry:
   Displays:
@@ -155,5 +155,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1645
-  X: 44
-  Y: 129
+  X: 353
+  Y: 151

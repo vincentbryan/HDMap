@@ -297,3 +297,130 @@ void Map::AddJunctionFromPtr(JuncPtr junction)
         mJuncIdToPtr[junction->ID] = junction;
     }
 }
+
+std::vector<RoadPtr> Map::GetRoadPtrByDistance(const Coor &coor, double distance, bool keep_one) {
+    
+    std::vector<RoadPtr> roads;
+    std::vector<std::pair<double, RoadPtr>> _road_dis_vec;
+    
+    
+    std::vector<JuncPtr> junctions = GetJuncPtrByDistance(coor,distance, true);
+    std::set<uint> _road_id_set;
+    
+    for(auto& jptr: junctions){
+        for (auto &rl: jptr->RoadLinks)
+        {
+            uint r1 = rl.first.first;
+            uint r2 = rl.first.second;
+
+            _road_id_set.insert(r1);
+            _road_id_set.insert(r2);
+
+            _road_id_set.insert(GetRoadNeighbor(GetRoadPtrById(r1))->ID);
+            _road_id_set.insert(GetRoadNeighbor(GetRoadPtrById(r2))->ID);
+        }
+    }
+
+    unsigned int _nearest_rid = 0;
+    double _nearest_dis = std::numeric_limits<double>::max();
+    
+    for (auto &rid: _road_id_set)
+    {
+        auto r_ptr = GetRoadPtrById(rid);
+
+        if (r_ptr != nullptr) {
+            double _dis = r_ptr->GetDistanceFromCoor(coor);
+            if (_dis > distance) continue;
+            _road_dis_vec.emplace_back(_dis, r_ptr);
+            if (_nearest_dis > _dis)
+            {
+                _nearest_dis = _dis;
+                _nearest_rid = rid;
+            }
+        }
+    }
+    
+    std::sort(_road_dis_vec.begin(), _road_dis_vec.end());
+
+    for (auto &p: _road_dis_vec) roads.emplace_back(p.second);
+
+    if (roads.empty() && keep_one)
+        roads.emplace_back(GetRoadPtrById(_nearest_rid));
+
+    return roads;
+}
+
+std::vector<JuncPtr> Map::GetJuncPtrByDistance(const Coor &coor, double distance, bool keep_one) {
+
+
+    std::vector<JuncPtr> junctions;
+    std::vector<std::pair<double,JuncPtr >> _junc_dis_vec;
+    
+    unsigned int _nearest_jid = 0;
+    double _nearest_dis = std::numeric_limits<double>::max();
+
+    for (const auto& _jptr: JuncPtrs)
+    {
+        const auto _dis = _jptr->GetDistanceFromCoor(coor);
+        if ( _dis <= distance )
+        {
+            _junc_dis_vec.emplace_back(_dis, _jptr);
+        }
+        if (_nearest_dis > _dis)
+        {
+            _nearest_dis = _dis;
+            _nearest_jid = _jptr->ID;
+        }
+    }
+    
+    std::sort(_junc_dis_vec.begin(),_junc_dis_vec.end());
+
+    for(auto &p :_junc_dis_vec) junctions.emplace_back(p.second);
+    
+    if(_junc_dis_vec.empty() && keep_one)
+        junctions.emplace_back(GetJuncPtrById(_nearest_jid));
+    
+    return junctions;
+}
+
+std::tuple<RoadPtr, SecPtr, int> Map::GetLaneInfoByPosition(const Coor &coor) {
+
+    int _target_lane_id = -1;
+    auto _near_roads = GetRoadPtrByDistance(coor,0);
+
+    if (_near_roads.empty())
+    {
+        ROS_INFO("GetLaneInfoByPosition: Not in any road, skip for lane matching.");
+        return {nullptr, nullptr, _target_lane_id};
+    }
+
+
+    auto _cur_road_ptr = _near_roads.front();
+    auto _end_road_ptr = GetRoadPtrByDistance(coor,0, true).front();
+
+    for(auto & _lane_sec_ptr: _cur_road_ptr->mSecPtrs)
+    {
+        if(_lane_sec_ptr->IsCover(coor))
+        {
+            std::vector<Pose> _left_side_pose = _lane_sec_ptr-> GetReferPose();
+            std::vector<Pose> _side_pose;
+
+            for (int _lane_id = 1; _lane_id <= _lane_sec_ptr->mRightBoundary; ++ _lane_id)
+            {
+                _side_pose.clear();
+                auto _right_side_pose = _lane_sec_ptr->GetLanePoseByIndex(_lane_id);
+
+                _side_pose.insert(_side_pose.end(),_right_side_pose.begin(),_right_side_pose.end());
+                _side_pose.insert(_side_pose.end(),_left_side_pose.rbegin(),_left_side_pose.rend());
+                if(IGeometry::Cover(_side_pose,{coor}))
+                {
+                    _target_lane_id = _lane_id;
+                    break;
+                }
+                _left_side_pose = _right_side_pose;
+            }
+            return {_cur_road_ptr, _lane_sec_ptr, _target_lane_id};
+        }
+    }
+    return {nullptr, nullptr, _target_lane_id};
+}

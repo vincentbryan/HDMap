@@ -20,7 +20,7 @@ public:
         visualization_msgs::Marker marker;
 
         marker.header.stamp = ros::Time::now();
-        marker.header.frame_id = "hdmap";
+        marker.header.frame_id = "/world";
         marker.id = id++;
         marker.action = visualization_msgs::Marker::ADD;
         marker.type = visualization_msgs::Marker::SPHERE;

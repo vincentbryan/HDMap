@@ -255,7 +255,7 @@ void Junction::GenerateRegionPoses() {
 }
 
 
-bool Junction::Cover(const Coor &v)
+bool Junction::IsCover(const Coor &v)
 {
     if (mBoundaryCurves.empty()) {
         GenerateRegionPoses();

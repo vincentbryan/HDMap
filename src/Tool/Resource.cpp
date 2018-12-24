@@ -1,17 +1,14 @@
 #include <utility>
-
-//
-// Created by iceytan on 18-11-24.
-//
-
 #include <Tool/Resource.h>
 #include <unordered_set>
 
-hdmap::Resource::Resource(const std::string& res_path) {
+hdmap::Resource::Resource(const std::string& res_path)
+{
     mMap.Load(res_path);
 }
 
-bool hdmap::Resource::OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_map_data::Response &res) {
+bool hdmap::Resource::OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_map_data::Response &res)
+{
     std::string _info;
     std::vector<RoadPtr > roads;
     std::vector<JuncPtr > junctions;
@@ -43,15 +40,7 @@ bool hdmap::Resource::OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_ma
     else if(req.type == "RoadByPos" || req.type == "JunctionByPos")
     {
         
-        static double last_x, last_y;
-        static std::vector<RoadPtr > _catch_roads;
-        static std::vector<JuncPtr > _catch_junctions;
-
-        // decltype(_catch_junctions)().swap(_catch_junctions);
-        // decltype(_catch_roads)().swap(_catch_roads);
-        // !!! the mem assigned to _catch_* will not release util end the program.!!!
-        
-        double cur_x,cur_y,dis;
+        double dis;
         if (req.argv.size() == 2){
             dis = 100;
         }
@@ -62,112 +51,29 @@ bool hdmap::Resource::OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_ma
             ROS_ERROR("Resource Server Error, %s must specify x and y", req.type.c_str());
             return false;
         }
-        cur_x = req.argv[0];
-        cur_y = req.argv[1];
         
-        // do catch
-        const double  dis_tolerence_pow = 4*4;
-        if( pow(last_x-cur_x,2)+pow(last_y-cur_y,2) < dis_tolerence_pow
-            && (!_catch_junctions.empty() || !_catch_roads.empty()))
+        Coor _cur_coor;
+        _cur_coor.x = req.argv[0];
+        _cur_coor.y = req.argv[1];
+
+        if (req.type == "JunctionByPos")
         {
-            roads = _catch_roads;
-            junctions = _catch_junctions;
-            if (req.type == "RoadByPos")
-            {
-                for(auto &r: roads)
-                    _info += std::to_string(r->ID) + " ";
-                _info = _info.empty()? "[none] ":"[catch] "+_info;
-            }
-            else
-            {
-                for(auto &j: junctions)
-                    _info += std::to_string(j->ID) + " ";
-                _info = _info.empty()? "[none] ":"[catch] "+_info;
-            }
+            junctions = mMap.GetJuncPtrByDistance(_cur_coor, dis);
+            for (auto& jptr: junctions)  _info += std::to_string(jptr->ID) + " ";
         }
-        else
+        else if (req.type == "RoadByPos" )
         {
-            // find junctions, and record the nearest junction
-            std::vector<std::pair<double, JuncPtr >> _jtmp; // save for sort by distance.
-            int _nearest_jid = -1;
-            double _nearest_dis = std::numeric_limits<double>::max();
-            for(auto& j: mMap.JuncPtrs)
-            {
-                auto dis_to_j = j->GetDistanceFromCoor({cur_x, cur_y});
-                if(dis_to_j<=dis)
-                {
-                    _jtmp.emplace_back(dis_to_j,j);
-                    _info += std::to_string(j->ID) + " ";
-                }
-                if(_nearest_dis > dis_to_j)
-                {
-                    _nearest_dis = dis_to_j;
-                    _nearest_jid = j->ID;
-                }
-            }
-            std::sort(_jtmp.begin(),_jtmp.end());
-
-            for(auto &p :_jtmp)
-            {
-                junctions.emplace_back(p.second);
-            }
-
-            _catch_junctions = junctions;
-
-            if( req.type == "RoadByPos" )
-            {
-                _info = "";
-                // else if none of road was found, do a search from the nearest junction
-                if(junctions.empty() && _nearest_jid!=-1)
-                {
-                    junctions.emplace_back(mMap.GetJuncPtrById(_nearest_jid));
-                }
-
-                std::set<uint> _road_id_set;
-                // get all adjacent roads from junction
-                for(auto& jptr: junctions){
-                    for (auto &rl: jptr->RoadLinks)
-                    {
-                        uint r1 = rl.first.first;
-                        uint r2 = rl.first.second;
-
-                        _road_id_set.insert(r1);
-                        _road_id_set.insert(r2);
-
-                        _road_id_set.insert(mMap.GetRoadNeighbor(mMap.GetRoadPtrById(r1))->ID);
-                        _road_id_set.insert(mMap.GetRoadNeighbor(mMap.GetRoadPtrById(r2))->ID);
-                    }
-                }
-
-                std::vector<std::pair<double, RoadPtr>> _rtmp; // save for sort by distance.
-
-                for (auto &rp: _road_id_set)
-                {
-                    auto r_ptr = mMap.GetRoadPtrById(rp);
-
-                    if (r_ptr != nullptr) {
-                        double r1_dis = r_ptr->GetDistanceFromCoor({cur_x, cur_y});
-                        if (r1_dis > dis) continue;
-                        _info += std::to_string(r_ptr->ID) + " ";
-                        _rtmp.emplace_back(r1_dis, r_ptr);
-                    }
-                }
-                std::sort(_rtmp.begin(), _rtmp.end());
-
-                for (auto &p: _rtmp) {
-                    roads.emplace_back(p.second);
-                }
-                _catch_roads = roads;
-            }
-            last_x = cur_x;
-            last_y = cur_y;
+            roads = mMap.GetRoadPtrByDistance(_cur_coor,dis);
+            for (auto& rptr: roads)  _info += std::to_string(rptr->ID) + " ";
         }
 
         auto obj_name = req.type=="RoadByPos"? "Road":"Junction";
-        ROS_INFO("(%4.3f,%4.3f) %s requests %s { %s} successfully", cur_x, cur_y, req.type.c_str(), obj_name, _info.c_str());
+        ROS_INFO("(%4.3f,%4.3f) %s requests %s { %s} successfully",
+                _cur_coor.x,_cur_coor.y , req.type.c_str(), obj_name, _info.c_str());
 
     }
-    else{
+    else
+    {
         ROS_ERROR("Resource Server Error, Not such a type: %s",req.type.c_str());
         return false;
     }
@@ -176,7 +82,8 @@ bool hdmap::Resource::OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_ma
     return true;
 }
 
-void hdmap::Resource::SetSender(std::shared_ptr<Sender> sender_ptr) {
+void hdmap::Resource::SetSender(std::shared_ptr<Sender> sender_ptr)
+{
     if (this->mMap.RoadPtrs.empty()){
         ROS_ERROR("Resource maybe not loaded correctly, mMap is empty()");
     }
@@ -185,11 +92,13 @@ void hdmap::Resource::SetSender(std::shared_ptr<Sender> sender_ptr) {
     }
 }
 
-std::shared_ptr<hdmap::Map> hdmap::Resource::GetMap() {
-    return std::shared_ptr<hdmap::Map>(&mMap);
+hdmap::MapPtr hdmap::Resource::GetMap()
+{
+    return  &mMap;
 }
 
-std::string hdmap::Resource::ToXML(std::vector<RoadPtr> roads, std::vector<JuncPtr > junctions) {
+std::string hdmap::Resource::ToXML(std::vector<RoadPtr> roads, std::vector<JuncPtr > junctions)
+{
     try{
         pt::ptree tree;
         for(auto& r: roads){

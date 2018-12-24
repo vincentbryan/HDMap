@@ -34,7 +34,7 @@ void LaneSection::AddLane(int _lane_idx, double _start_width, double _end_width,
 std::vector<Pose> LaneSection::GetReferPose()
 {
     if(mAllLanePose.empty())
-        GenerateAllPose(0.5);
+        GenerateAllPose(1.0);
     return mAllLanePose[0];
 }
 
@@ -79,7 +79,7 @@ void LaneSection::AppendPose(double s_)
 std::map<int, std::vector<Pose>> LaneSection::GetAllPose()
 {
     if(mAllLanePose.empty())
-        GenerateAllPose(0.5);
+        GenerateAllPose(1.0);
     return mAllLanePose;
 }
 
@@ -172,13 +172,13 @@ void LaneSection::FromXML(const pt::ptree &p)
 }
 
 
-bool LaneSection::Cover(const Coor &v)
+bool LaneSection::IsCover(const Coor &v)
 {
-    if(mAllLanePose.empty()) GenerateAllPose(0.5);
+    if(mAllLanePose.empty()) GenerateAllPose(1.0);
 
     std::vector<Pose> vec;
 
-    for(auto & x : mReferLine.GetPoses(0.5))
+    for(auto & x : mReferLine.GetPoses(1.0))
     {
         vec.push_back(x);
     }

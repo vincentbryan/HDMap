@@ -70,7 +70,7 @@ private:
 
     bool RePlanRoute(const Coor& cur);
 
-    bool PlanByCommand(const std::string& method, std::vector<int> argv);
+    bool PlanByCommand(const std::string& method, std::vector<double> argv);
 
     std::string GetNearRoadPtrs(std::vector<RoadPtr>& near_roads, const Coor& coor, double distance = 50);
 

@@ -50,8 +50,6 @@ public:
 
     RoadPtr GetRoadNeighbor(RoadPtr ptr);
 
-
-
     void AddConnection(JuncPtr p,
                        unsigned int from_road_id, int from_lane_idx,
                        unsigned int to_road_id, int to_lane_idx,
@@ -79,6 +77,13 @@ public:
     RoadPtr GetRoadPtrById(unsigned int road_id);
 
     JuncPtr GetJuncPtrById(unsigned int junc_id);
+
+    std::vector<RoadPtr> GetRoadPtrByDistance(const Coor& coor, double distance, bool keep_one = false);
+    
+    std::vector<JuncPtr> GetJuncPtrByDistance(const Coor& coor, double distance, bool keep_one = false);
+
+    std::tuple<RoadPtr, SecPtr, int> GetLaneInfoByPosition(const Coor& coor);
+
 };
 }
 

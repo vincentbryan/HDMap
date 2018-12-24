@@ -23,7 +23,7 @@ class ViewDetectRegion
     using Kdtree = pcl::KdTreeFLANN <PointT> ;
 
     const char* CAR_RESOURCE_PATH= "package://HDMap/res/car2/car.dae";
-    const char* FRAME_ID = "hdmap";
+    const char* FRAME_ID = "/world";
 
 public:
     enum DisPlayMode { ABSOLUTE, RELATIVE};
@@ -54,21 +54,24 @@ public:
             carmarker.pose.position.x = mCurX;
             carmarker.pose.position.y = mCurY;
             carmarker.pose.orientation =
-                    tf::createQuaternionMsgFromRollPitchYaw(TFSIMD_HALF_PI,0,TFSIMD_PI+mCurYaw*M_PI/180);
+                    tf::createQuaternionMsgFromRollPitchYaw(TFSIMD_HALF_PI,0, TFSIMD_PI+mCurYaw*M_PI/180);
         }
 
         carmarker.header.frame_id = FRAME_ID;
         carmarker.header.stamp =ros::Time::now();
         carmarker.id = 0;
-        carmarker.type = visualization_msgs::Marker::MESH_RESOURCE;
         carmarker.action = visualization_msgs::Marker::ADD;
         carmarker.pose.position.z = 0.7;
-        carmarker.scale.x =  0.009;
-        carmarker.scale.y =  0.009;
-        carmarker.scale.z =  0.009;
+        carmarker.scale.x =  1.8;
+        carmarker.scale.y =  1;
+        carmarker.scale.z =  4.0;
         carmarker.color.a = carmarker.color.g = carmarker.color.r = carmarker.color.b = 1;
-        carmarker.mesh_resource = CAR_RESOURCE_PATH;
-        carmarker.mesh_use_embedded_materials = 1;
+
+//        carmarker.type = visualization_msgs::Marker::MESH_RESOURCE;
+//        carmarker.mesh_resource = CAR_RESOURCE_PATH;
+
+        carmarker.type = visualization_msgs::Marker::CUBE;
+
 
         char _buf[32];
         sprintf(_buf,"(%3.2f, %3.2f, %3.1f)",mCurX,mCurY,mCurYaw);
@@ -142,9 +145,15 @@ public:
     void LocationCallBack(const nox_msgs::Location & msg)
     {
         std::lock_guard<std::mutex> lock(mLock);
-        mCurX = msg.x;
-        mCurY = msg.y;
-        mCurYaw = msg.yaw;
+        // 位置调整
+        const double lx = 0.13;
+        const double ly = 1.34;
+        mCurYaw = msg.yaw -2.2;
+        const double theta = mCurYaw * M_PI / 180.0;
+
+        mCurX = msg.x + lx * cos(theta) - ly * sin(theta);
+        mCurY = msg.y + lx * sin(theta) + ly * cos(theta);
+
         RenderCarInfo();
         RenderRegionPoint();
     }

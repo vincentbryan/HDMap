@@ -12,7 +12,8 @@
 
 namespace hdmap {
 
-    class Resource {
+    class Resource
+    {
         Map mMap;
 
         std::string ToXML(std::vector<RoadPtr>, std::vector<JuncPtr>);
@@ -22,7 +23,7 @@ namespace hdmap {
 
         void SetSender(std::shared_ptr<Sender> sender_ptr);
 
-        std::shared_ptr<Map> GetMap();
+        MapPtr GetMap();
 
         bool OnRequest(HDMap::srv_map_data::Request &req, HDMap::srv_map_data::Response &res);
     };

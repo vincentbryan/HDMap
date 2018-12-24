@@ -12,98 +12,112 @@
 #include <HDMap/srv_map_dataResponse.h>
 
 
-namespace HDMap {
+namespace HDMap
+{
 
-    struct srv_map_data {
+struct srv_map_data
+{
 
-        typedef srv_map_dataRequest Request;
-        typedef srv_map_dataResponse Response;
-        Request request;
-        Response response;
+typedef srv_map_dataRequest Request;
+typedef srv_map_dataResponse Response;
+Request request;
+Response response;
 
-        typedef Request RequestType;
-        typedef Response ResponseType;
+typedef Request RequestType;
+typedef Response ResponseType;
 
-    }; // struct srv_map_data
+}; // struct srv_map_data
 } // namespace HDMap
 
 
-namespace ros {
-    namespace service_traits {
+namespace ros
+{
+namespace service_traits
+{
 
 
-        template<>
-        struct MD5Sum<::HDMap::srv_map_data> {
-            static const char *value() {
-                return "639c0397f1eee5211a23928eb4038bd4";
-            }
+template<>
+struct MD5Sum< ::HDMap::srv_map_data > {
+  static const char* value()
+  {
+    return "639c0397f1eee5211a23928eb4038bd4";
+  }
 
-            static const char *value(const ::HDMap::srv_map_data &) { return value(); }
-        };
+  static const char* value(const ::HDMap::srv_map_data&) { return value(); }
+};
 
-        template<>
-        struct DataType<::HDMap::srv_map_data> {
-            static const char *value() {
-                return "HDMap/srv_map_data";
-            }
+template<>
+struct DataType< ::HDMap::srv_map_data > {
+  static const char* value()
+  {
+    return "HDMap/srv_map_data";
+  }
 
-            static const char *value(const ::HDMap::srv_map_data &) { return value(); }
-        };
+  static const char* value(const ::HDMap::srv_map_data&) { return value(); }
+};
 
 
 // service_traits::MD5Sum< ::HDMap::srv_map_dataRequest> should match 
 // service_traits::MD5Sum< ::HDMap::srv_map_data > 
-        template<>
-        struct MD5Sum<::HDMap::srv_map_dataRequest> {
-            static const char *value() {
-                return MD5Sum<::HDMap::srv_map_data>::value();
-            }
-
-            static const char *value(const ::HDMap::srv_map_dataRequest &) {
-                return value();
-            }
-        };
+template<>
+struct MD5Sum< ::HDMap::srv_map_dataRequest>
+{
+  static const char* value()
+  {
+    return MD5Sum< ::HDMap::srv_map_data >::value();
+  }
+  static const char* value(const ::HDMap::srv_map_dataRequest&)
+  {
+    return value();
+  }
+};
 
 // service_traits::DataType< ::HDMap::srv_map_dataRequest> should match 
 // service_traits::DataType< ::HDMap::srv_map_data > 
-        template<>
-        struct DataType<::HDMap::srv_map_dataRequest> {
-            static const char *value() {
-                return DataType<::HDMap::srv_map_data>::value();
-            }
-
-            static const char *value(const ::HDMap::srv_map_dataRequest &) {
-                return value();
-            }
-        };
+template<>
+struct DataType< ::HDMap::srv_map_dataRequest>
+{
+  static const char* value()
+  {
+    return DataType< ::HDMap::srv_map_data >::value();
+  }
+  static const char* value(const ::HDMap::srv_map_dataRequest&)
+  {
+    return value();
+  }
+};
 
 // service_traits::MD5Sum< ::HDMap::srv_map_dataResponse> should match 
 // service_traits::MD5Sum< ::HDMap::srv_map_data > 
-        template<>
-        struct MD5Sum<::HDMap::srv_map_dataResponse> {
-            static const char *value() {
-                return MD5Sum<::HDMap::srv_map_data>::value();
-            }
-
-            static const char *value(const ::HDMap::srv_map_dataResponse &) {
-                return value();
-            }
-        };
+template<>
+struct MD5Sum< ::HDMap::srv_map_dataResponse>
+{
+  static const char* value()
+  {
+    return MD5Sum< ::HDMap::srv_map_data >::value();
+  }
+  static const char* value(const ::HDMap::srv_map_dataResponse&)
+  {
+    return value();
+  }
+};
 
 // service_traits::DataType< ::HDMap::srv_map_dataResponse> should match 
 // service_traits::DataType< ::HDMap::srv_map_data > 
-        template<>
-        struct DataType<::HDMap::srv_map_dataResponse> {
-            static const char *value() {
-                return DataType<::HDMap::srv_map_data>::value();
-            }
+template<>
+struct DataType< ::HDMap::srv_map_dataResponse>
+{
+  static const char* value()
+  {
+    return DataType< ::HDMap::srv_map_data >::value();
+  }
+  static const char* value(const ::HDMap::srv_map_dataResponse&)
+  {
+    return value();
+  }
+};
 
-            static const char *value(const ::HDMap::srv_map_dataResponse &) {
-                return value();
-            }
-        };
-
-    } // namespace service_traits
+} // namespace service_traits
 } // namespace ros
 
 #endif // HDMAP_MESSAGE_SRV_MAP_DATA_H

@@ -178,11 +178,11 @@ void Road::FromXML(const pt::ptree &p)
     }
 }
 
-bool Road::Cover(const Coor &v)
+bool Road::IsCover(const Coor &v)
 {
     for(auto & x : mSecPtrs)
     {
-        if(x->Cover(v))
+        if(x->IsCover(v))
             return true;
     }
     return false;
@@ -233,7 +233,7 @@ double Road::GetDistanceFromCoor(const Coor &v) {
         GenerateRegionPoses();
     }
 
-    if (Cover(v)) return 0;
+    if (IsCover(v)) return 0;
     
     std::vector<int> indices;
     std::vector<double> distances;

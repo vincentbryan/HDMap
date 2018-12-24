@@ -38,7 +38,7 @@ struct srv_routeRequest_
    typedef std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other >  _method_type;
   _method_type method;
 
-   typedef std::vector<int32_t, typename ContainerAllocator::template rebind<int32_t>::other >  _argv_type;
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _argv_type;
   _argv_type argv;
 
 
@@ -76,7 +76,7 @@ namespace message_traits
 
 
 // BOOLTRAITS {'IsFixedSize': False, 'IsMessage': True, 'HasHeader': False}
-// {'geometry_msgs': ['/opt/ros/lunar/share/geometry_msgs/cmake/../msg'], 'HDMap': ['/media/vincent/DATA/Ubuntu/Project/catkin_ws/src/HDMap/msg'], 'std_msgs': ['/opt/ros/lunar/share/std_msgs/cmake/../msg']}
+// {'geometry_msgs': ['/opt/ros/melodic/share/geometry_msgs/cmake/../msg'], 'HDMap': ['/home/iceytan/CLionProjects/HDMap/msg'], 'std_msgs': ['/opt/ros/melodic/share/std_msgs/cmake/../msg']}
 
 // !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
 
@@ -119,12 +119,12 @@ struct MD5Sum< ::HDMap::srv_routeRequest_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "eb107281a380295566619916daace57e";
+    return "caba35a9bad5ae6ba10a3196b7abbe6c";
   }
 
   static const char* value(const ::HDMap::srv_routeRequest_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xeb107281a3802955ULL;
-  static const uint64_t static_value2 = 0x66619916daace57eULL;
+  static const uint64_t static_value1 = 0xcaba35a9bad5ae6bULL;
+  static const uint64_t static_value2 = 0xa10a3196b7abbe6cULL;
 };
 
 template<class ContainerAllocator>
@@ -144,7 +144,7 @@ struct Definition< ::HDMap::srv_routeRequest_<ContainerAllocator> >
   static const char* value()
   {
     return "string method\n\
-int32[] argv\n\
+float64[] argv\n\
 ";
   }
 
@@ -189,7 +189,7 @@ struct Printer< ::HDMap::srv_routeRequest_<ContainerAllocator> >
     for (size_t i = 0; i < v.argv.size(); ++i)
     {
       s << indent << "  argv[" << i << "]: ";
-      Printer<int32_t>::stream(s, indent + "  ", v.argv[i]);
+      Printer<double>::stream(s, indent + "  ", v.argv[i]);
     }
   }
 };
