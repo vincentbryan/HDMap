@@ -96,6 +96,7 @@ struct Pose
     }
 
     static bool InLine(const Pose & p1, const Pose & p2);
+
     static double AngleThresHold;
 };
 }

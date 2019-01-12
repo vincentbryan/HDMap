@@ -18,8 +18,12 @@ namespace hdmap
     class Map;
 
     using RoadPtr = std::shared_ptr<Road>;
+
     using JuncPtr = std::shared_ptr<Junction>;
+
     using SecPtr  = std::shared_ptr<LaneSection>;
+
     using SigPtr  = std::shared_ptr<Signal>;
+
     using MapPtr  = Map*;
 }

@@ -15,15 +15,11 @@ namespace hdmap
 class Angle
 {
 private:
+
     double m;
-    double Warp(double d)
-    {
-        while (d < 0) d += 360.0;
-        while (d >= 360.0) d -= 360.0;
-        return d;
-    }
 
 public:
+
     explicit Angle(double _m = 0) : m(_m){};
 
     explicit Angle(const Coor &v)
@@ -34,12 +30,15 @@ public:
 
     double ToYaw()
     {
-        return Warp(m-90);
+        m = m - 90;
+        Wrap(*this, 0, 360);
+        return m;
     }
 
     void FromYaw(double y)
     {
-        m = Warp(y + 90);
+        m = y + 90;
+        Wrap(*this);
     }
 
     Coor ToVector()
@@ -71,11 +70,13 @@ public:
     friend std::istream & operator >> (std::istream & is, Angle & angle)
     {
         is >> angle.m;
+        return is;
     };
 
     friend std::ostream & operator << (std::ostream & os, const Angle & angle)
     {
         os << angle.m;
+        return os;
     }
 
     bool operator == (const Angle & a)
@@ -86,6 +87,18 @@ public:
     bool operator != (const Angle & a)
     {
         return m != a.Value();
+    }
+
+    Angle operator - (const Angle& _angle) const
+    {
+        return Angle( this->m - _angle.m);
+    }
+
+    /// down and up accept degree.
+    static void Wrap(Angle& angle, double down = 0.0, double up = 360.0)
+    {
+        while (angle.m < down) angle.m += 360.0;
+        while (angle.m >= up) angle.m -= 360.0;
     }
 };
 }

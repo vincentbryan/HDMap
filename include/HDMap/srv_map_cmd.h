@@ -40,7 +40,7 @@ template<>
 struct MD5Sum< ::HDMap::srv_map_cmd > {
   static const char* value()
   {
-    return "b616eb18e77140742b002119560b88f1";
+    return "776481a0311bd5eb8362a997ec01b096";
   }
 
   static const char* value(const ::HDMap::srv_map_cmd&) { return value(); }

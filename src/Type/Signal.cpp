@@ -5,24 +5,12 @@
 #include "Type/Signal.h"
 using namespace hdmap;
 
-void Signal::Send(hdmap::Sender &sender)
+void Signal::OnSend(hdmap::Sender &sender)
 {
     std::string text = mInfo;
     auto m = sender.GetText(text, {x, y}, 0, 1.0, 0, 1.0, 0.5, 1.0);
-
-//    double w = 0.36;
-//    double theta = mDirection.Value();
-//    double x0 = x + w/2.0 * std::cos((theta+90.0) / 180.0 * M_PI);
-//    double y0 = y + w/2.0 * std::sin((theta+90.0) / 180.0 * M_PI);
-//    double x1 = x + w/2.0 * std::cos((theta-90.0) / 180.0 * M_PI);
-//    double y1 = y + w/2.0 * std::sin((theta-90.0) / 180.0 * M_PI);
-//    auto m1 = sender.GetText("0", {x0, y0}, 0, 0, 1.0, 0.5, 1.0);
-//    auto m2 = sender.GetText("1", {x1, y1}, 0, 0, 1.0, 0.5, 1.0);
-//    sender.array.markers.emplace_back(m1);
-//    sender.array.markers.emplace_back(m2);
-
     sender.array.markers.emplace_back(m);
-    sender.Send();
+    // sender.Send();
 }
 
 Signal::Signal(double _x, double _y, double _z, Angle dir, std::string _type, std::string _info)

@@ -1,9 +1,4 @@
 #include <utility>
-
-//
-// Created by vincent on 18-10-9.
-//
-
 #include <boost/property_tree/ptree.hpp>
 #include <Type/Map.h>
 
@@ -35,8 +30,11 @@ JuncPtr Map::AddJunction()
 
 void Map::Send()
 {
-    for(auto & m : RoadPtrs) m->Send(*pSender);
-    for(auto & j : JuncPtrs) j->Send(*pSender);
+    for(auto & m : RoadPtrs) m->OnSend(*pSender);
+    for(auto & j : JuncPtrs) j->OnSend(*pSender);
+
+    pSender->Send();
+
 }
 
 
@@ -269,7 +267,8 @@ unsigned long Map::GetJunctionSize() {
     return JuncPtrs.size();
 }
 
-RoadPtr Map::GetRoadNeighbor(RoadPtr ptr) {
+RoadPtr Map::GetRoadNeighbor(RoadPtr ptr)
+{
     const double _MIN_DIS_NEIGHBOR = 8.0;
     Coor _tmp_coor = ptr->GetReferenceLinePoses()[0].GetPosition();
     for (auto &road: RoadPtrs) {
@@ -280,6 +279,7 @@ RoadPtr Map::GetRoadNeighbor(RoadPtr ptr) {
     }
     return nullptr;
 }
+
 void Map::AddRoadFromPtr(RoadPtr road)
 {
     if(GetRoadPtrById(road->ID) == nullptr)
@@ -304,7 +304,7 @@ std::vector<RoadPtr> Map::GetRoadPtrByDistance(const Coor &coor, double distance
     std::vector<std::pair<double, RoadPtr>> _road_dis_vec;
     
     
-    std::vector<JuncPtr> junctions = GetJuncPtrByDistance(coor,distance, true);
+    std::vector<JuncPtr> junctions = GetJuncPtrByDistance(coor, distance, true);
     std::set<uint> _road_id_set;
     
     for(auto& jptr: junctions){
@@ -316,8 +316,18 @@ std::vector<RoadPtr> Map::GetRoadPtrByDistance(const Coor &coor, double distance
             _road_id_set.insert(r1);
             _road_id_set.insert(r2);
 
-            _road_id_set.insert(GetRoadNeighbor(GetRoadPtrById(r1))->ID);
-            _road_id_set.insert(GetRoadNeighbor(GetRoadPtrById(r2))->ID);
+            auto r1_neighbor_ptr = GetRoadNeighbor(GetRoadPtrById(r1));
+            auto r2_neighbor_ptr = GetRoadNeighbor(GetRoadPtrById(r2));
+            if(r1_neighbor_ptr)
+            {
+                _road_id_set.insert(r1_neighbor_ptr->ID);
+            }
+            if(r2_neighbor_ptr)
+            {
+                _road_id_set.insert(r2_neighbor_ptr->ID);
+            }
+
+
         }
     }
 
@@ -330,7 +340,7 @@ std::vector<RoadPtr> Map::GetRoadPtrByDistance(const Coor &coor, double distance
 
         if (r_ptr != nullptr) {
             double _dis = r_ptr->GetDistanceFromCoor(coor);
-            if (_dis > distance) continue;
+            if (_dis > _nearest_dis) continue;
             _road_dis_vec.emplace_back(_dis, r_ptr);
             if (_nearest_dis > _dis)
             {
@@ -338,6 +348,11 @@ std::vector<RoadPtr> Map::GetRoadPtrByDistance(const Coor &coor, double distance
                 _nearest_rid = rid;
             }
         }
+    }
+
+    if (_road_dis_vec.empty())
+    {
+        return {};
     }
     
     std::sort(_road_dis_vec.begin(), _road_dis_vec.end());
@@ -383,44 +398,99 @@ std::vector<JuncPtr> Map::GetJuncPtrByDistance(const Coor &coor, double distance
     return junctions;
 }
 
-std::tuple<RoadPtr, SecPtr, int> Map::GetLaneInfoByPosition(const Coor &coor) {
+std::tuple<RoadPtr, SecPtr, int> Map::GetLaneInfoByPose(const Pose &pose) {
 
     int _target_lane_id = -1;
-    auto _near_roads = GetRoadPtrByDistance(coor,0);
+    auto _near_roads = GetRoadPtrByDistance(pose.GetPosition(), 1);
 
     if (_near_roads.empty())
     {
-        ROS_INFO("GetLaneInfoByPosition: Not in any road, skip for lane matching.");
+        ROS_INFO("GetLaneInfoByPose: Not in any road, skip for lane matching.");
         return {nullptr, nullptr, _target_lane_id};
     }
 
+    const double _ANGLE_TORELENT = 30;
 
     auto _cur_road_ptr = _near_roads.front();
-    auto _end_road_ptr = GetRoadPtrByDistance(coor,0, true).front();
 
-    for(auto & _lane_sec_ptr: _cur_road_ptr->mSecPtrs)
+    for (auto& rptr: _near_roads)
     {
-        if(_lane_sec_ptr->IsCover(coor))
+        for(auto & _lane_sec_ptr: rptr->mSecPtrs)
         {
-            std::vector<Pose> _left_side_pose = _lane_sec_ptr-> GetReferPose();
-            std::vector<Pose> _side_pose;
+            // select road by direction and covering.
+            const auto& _lane_region_rpose = _lane_sec_ptr->GetReferenceLinePose();
+            Angle _diff_angle = pose.GetAngle() - _lane_region_rpose[_lane_region_rpose.size()/2].GetAngle();
+            Angle::Wrap(_diff_angle, -180, 180);
 
-            for (int _lane_id = 1; _lane_id <= _lane_sec_ptr->mRightBoundary; ++ _lane_id)
+            if(_lane_sec_ptr->IsCover(pose.GetPosition()) && abs(_diff_angle.Value()) <  _ANGLE_TORELENT)
             {
-                _side_pose.clear();
-                auto _right_side_pose = _lane_sec_ptr->GetLanePoseByIndex(_lane_id);
+                std::vector<Pose> _left_side_pose = _lane_sec_ptr->GetReferenceLinePose();
+                std::vector<Pose> _side_pose;
 
-                _side_pose.insert(_side_pose.end(),_right_side_pose.begin(),_right_side_pose.end());
-                _side_pose.insert(_side_pose.end(),_left_side_pose.rbegin(),_left_side_pose.rend());
-                if(IGeometry::Cover(_side_pose,{coor}))
+                for (int _lane_id = 1; _lane_id <= _lane_sec_ptr->mRightBoundary; ++ _lane_id)
                 {
-                    _target_lane_id = _lane_id;
-                    break;
+                    _side_pose.clear();
+                    auto _right_side_pose = _lane_sec_ptr->GetLanePoseByIndex(_lane_id);
+
+                    _side_pose.insert(_side_pose.end(),_right_side_pose.begin(),_right_side_pose.end());
+                    _side_pose.insert(_side_pose.end(),_left_side_pose.rbegin(),_left_side_pose.rend());
+                    if(IGeometry::Cover(_side_pose,{pose.GetPosition()}))
+                    {
+                        _target_lane_id = _lane_id;
+                        break;
+                    }
+                    _left_side_pose = _right_side_pose;
                 }
-                _left_side_pose = _right_side_pose;
+                return {rptr, _lane_sec_ptr, _target_lane_id};
             }
-            return {_cur_road_ptr, _lane_sec_ptr, _target_lane_id};
         }
     }
+
     return {nullptr, nullptr, _target_lane_id};
+}
+
+std::tuple<JuncPtr, RoadLink, int> Map::GetRoadLinkByPose(const Pose &pose)
+{
+    auto _res = GetJuncPtrByDistance({pose.x,pose.y},0);
+
+    if (_res.empty())
+    {
+        std::cout << "Cannot not find a junction"<< std::endl;
+        return {nullptr, RoadLink(), -1};
+    }
+
+    // select a roadlink by position, direction.
+    JuncPtr _jptr = _res.front();
+
+    std::vector<std::tuple<double, RoadLink*, int>> _select_result;
+
+    for (auto& _roadlink: _jptr->RoadLinks)
+    {
+        double _min_distance = std::numeric_limits<double>::max();
+        double _diff_angle = -1;
+        int _link_id = -1;
+        for (int _i = 0; _i < _roadlink.second.mLaneLinks.size(); ++_i)
+        {
+            auto& _link = _roadlink.second.mLaneLinks[_i];
+            for(auto& _link_pose: _link.mReferLine.GetPoses(1.0))
+            {
+                double _cur_distance = Coor::Distance(_link_pose.GetPosition(), pose.GetPosition());
+
+                if(_cur_distance < _min_distance)
+                {
+                    _min_distance = _cur_distance;
+                    Angle _tmp_angle = _link_pose.GetAngle() - pose.GetAngle();
+                    Angle::Wrap(_tmp_angle, -180.0, 180.0);
+                    _diff_angle = abs(_tmp_angle.Value());
+                    _link_id = _i;
+                }
+            }
+            assert(_link_id!= -1);
+            _select_result.emplace_back(_diff_angle, &_roadlink.second, _link_id);
+        }
+    }
+
+    std::sort(_select_result.begin(),_select_result.end());
+
+    return {_jptr, *std::get<1>(_select_result.front()), std::get<2>(_select_result.front())};
 }

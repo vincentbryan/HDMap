@@ -44,7 +44,7 @@ void LaneLink::FromXML(const pt::ptree &p)
     mReferLine = Bezier(res);
 }
 
-void LaneLink::Send(Sender &sender)
+void LaneLink::OnSend(Sender &sender)
 {
     auto x = mReferLine.GetPoses(1.0);
     
@@ -57,5 +57,5 @@ void LaneLink::Send(Sender &sender)
     auto to = sender.GetArrow(x.back(), 234.0/255, 247.0/255, 134.0/255, 1.0);
     sender.array.markers.emplace_back(to);
     
-    sender.Send();
+    // sender.Send();
 }

@@ -1,8 +1,4 @@
-//
-// Created by iceytan on 18-11-21.
-//
 #include <ros/ros.h>
-#include <nox_location.h>
 #include <Tool/Sender.h>
 #include <termios.h>
 #include <HDMap/srv_map_data.h>
@@ -11,6 +7,7 @@
 #include <tf/transform_datatypes.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <nav_msgs/Odometry.h>
 
 using namespace std;
 
@@ -45,17 +42,16 @@ int getch()
     newt = oldt;
     newt.c_lflag &= ~(ICANON);                 // disable buffering
     tcsetattr( STDIN_FILENO, TCSANOW, &newt);  // apply new settings
-
     int c = getchar();  // read character (non-blocking)
     tcsetattr( STDIN_FILENO, TCSANOW, &oldt);  // restore old settings
     return c;
 }
 
 
-void  renderCar(ros::Publisher& MarkerPublisher, double x, double y, double radius){
+void renderCar(ros::Publisher& MarkerPublisher, double x, double y, double angle){
 
     visualization_msgs::Marker carmarker;
-    carmarker.header.frame_id = "/world";
+    carmarker.header.frame_id = "map";
     carmarker.header.stamp = ros::Time();
     carmarker.ns = "map_test";
     carmarker.id = 0;
@@ -64,21 +60,21 @@ void  renderCar(ros::Publisher& MarkerPublisher, double x, double y, double radi
     carmarker.pose.position.x = x;
     carmarker.pose.position.y = y;
     carmarker.pose.position.z = 0.7;
-    carmarker.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(TFSIMD_HALF_PI,0,TFSIMD_HALF_PI+radius);
+    carmarker.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(TFSIMD_HALF_PI,0,TFSIMD_HALF_PI+angle);
     carmarker.scale.x = 1;
     carmarker.scale.y = 1;
     carmarker.scale.z = 1;
     carmarker.color.a = carmarker.color.r = carmarker.color.b = carmarker.color.g = 1;
-    carmarker.mesh_resource = "package://HDMap/res/car2/car.dae";
+    carmarker.mesh_resource = "package://HDMap/res/car_texture/car.dae";
     carmarker.mesh_use_embedded_materials = 1;
 
     visualization_msgs::Marker textmarker;
 
     char _buf[32];
-    sprintf(_buf,"(%3.2f, %3.2f, %3.1f)",x,y,radius*180.0/TFSIMD_PI);
+    sprintf(_buf,"(%3.2f, %3.2f, %3.1f)",x,y,angle*180.0/TFSIMD_PI);
     textmarker.text= _buf;
 
-    textmarker.header.frame_id = "/world";
+    textmarker.header.frame_id = "map";
     textmarker.header.stamp = ros::Time();
     textmarker.ns = "map_test";
     textmarker.id = 1;
@@ -117,7 +113,7 @@ void renderPolygon(const HDMap::msg_route_region& msg)
 int main(int argc, char** argv){
     ros::init(argc, argv, "map_test");
     ros::NodeHandle n;
-    ros::Publisher GPSPublisher = n.advertise<nox_msgs::Location>("Localization", 1);
+    ros::Publisher GPSPublisher = n.advertise<nav_msgs::Odometry>("odom", 1);
     ros::Publisher MarkerPublisher = n.advertise<visualization_msgs::MarkerArray>("/CurCar", 0);
 
     ros::ServiceClient map_data_client = n.serviceClient<HDMap::srv_map_data>("map_data_service");
@@ -136,16 +132,21 @@ int main(int argc, char** argv){
             getline(cin, s);
             auto vec = split(s, " ");
             if (vec.front() == "gps" && vec.size()>=3 && vec.size()<=4){
-                nox_msgs::Location msg;
-                cur_x = msg.x = std::stod(vec[1]);
-                cur_y = msg.y = std::stod(vec[2]);
-                cur_d = msg.yaw = vec.size()==4? std::stod(vec[3]):0;
-                
-                msg.yaw -= 90;
-                GPSPublisher.publish(msg);
+
+                nav_msgs::Odometry _odom;
+                _odom.header.stamp = ros::Time::now();
+                cur_x = _odom.pose.pose.position.x  =   std::stod(vec[1]);
+                cur_y = _odom.pose.pose.position.y  =   std::stod(vec[2]);
+                cur_d = vec.size()==4? std::stod(vec[3]):0;
+
+                _odom.pose.pose.orientation =  tf::createQuaternionMsgFromYaw( (cur_d - 90) * TFSIMD_PI/180.0 );
+
+                GPSPublisher.publish(_odom);
+
                 renderCar(MarkerPublisher,cur_x, cur_y, cur_d*TFSIMD_PI/180.0);
             }
-            else if (vec.front()=="control"){
+            else if (vec.front()=="control")
+            {
                 std::cout << "Start Control Mode\n";
                 is_cut_commond_IO = true;
                 pwm=1;
@@ -241,13 +242,19 @@ int main(int argc, char** argv){
                         if (pwm>1)--pwm;
                     }
                 }
-                nox_msgs::Location msg;
-                cur_x = msg.x = cos(cur_d*TFSIMD_PI/180)*d+cur_x;
-                cur_y = msg.y = sin(cur_d*TFSIMD_PI/180)*d+cur_y;
-                msg.yaw = cur_d-90;
-                GPSPublisher.publish(msg);
-                renderCar(MarkerPublisher, cur_x, cur_y, cur_d*TFSIMD_PI/180.0);
 
+                double _rad_cur_d = cur_d*TFSIMD_PI/180;
+                cur_x = cos(_rad_cur_d)*d+cur_x;
+                cur_y = sin(_rad_cur_d)*d+cur_y;
+
+                nav_msgs::Odometry _odom;
+                _odom.header.stamp = ros::Time::now();
+                _odom.pose.pose.position.x = cur_x;
+                _odom.pose.pose.position.y = cur_y;
+                _odom.pose.pose.orientation =  tf::createQuaternionMsgFromYaw(_rad_cur_d - TFSIMD_HALF_PI);
+
+                GPSPublisher.publish(_odom);
+                renderCar(MarkerPublisher,cur_x, cur_y, _rad_cur_d);
             }
         }
 

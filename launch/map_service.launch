@@ -1,4 +1,4 @@
 <launch>
-  <node name="MapService" pkg="HDMap" args="$(find HDMap)/map/map.xml" type="MapService" output="screen" cwd="node">
+  <node name="MapService" pkg="HDMap" args="$(find HDMap)/res/map.xml" type="MapService" output="screen" cwd="node">
   </node>
 </launch>

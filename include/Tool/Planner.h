@@ -41,7 +41,7 @@ public:
 
 private:
     void BFS(RoadPtr p_start, RoadPtr p_end, std::vector<RoadPtr> &trace);
-    bool PlanRouteByPoses(std::vector<Coor> cors);
+    bool PlanRouteByPoses(std::vector<Pose> poses);
     bool PlanRouteByRoadIDs(std::vector<int> ids);
 };
 }

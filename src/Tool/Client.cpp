@@ -1,17 +1,15 @@
-#include <utility>
-
 //
 // Created by vincent on 18-10-31.
 //
-
-#include <Location.h>
 #include <HDMap/msg_signal_list.h>
 #include <HDMap/msg_route_region.h>
+#include <HDMap/msg_route_info.h>
 #include <std_msgs/String.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <HDMap/srv_route.h>
 #include <HDMap/srv_map_data.h>
 #include <unordered_set>
-#include <Tool/Client.h>
+#include <tf/tf.h>
 
 #include "Tool/Client.h"
 using namespace hdmap;
@@ -27,45 +25,62 @@ Client::Client(ros::NodeHandle & n)
 
     mPubRouteRegion = n.advertise<HDMap::msg_route_region>("map_pub_route_region",1);
     mPubTrafficLight = n.advertise<HDMap::msg_signal_list>("map_to_traffic_light", 1);
-    mPubVIZ = n.advertise<visualization_msgs::Marker>("map_to_rviz", 1000);
+    mPubVIZ = n.advertise<visualization_msgs::Marker>("map_to_rviz", 100);
     mPubPlanner = n.advertise<std_msgs::String>("map_to_planner", 1);
+    mPubPointCloud = n.advertise<sensor_msgs::PointCloud2>("map_pub_pointcloud", 5, true);
+    mPubRouteInfo = n.advertise<HDMap::msg_route_info>("map_pub_route_info", 5, true);
 
-    mSubGPS = n.subscribe("Localization", 1, &Client::LocationCallBack, this);
+    mSubGPS = n.subscribe("odom", 1, &Client::LocationCallBack, this);
     mServer = n.advertiseService("map_command", &Client::OnCommandRequest, this);
 
-    mCurrentPosition = Coor();
+    mCurrentPose = Pose();
 }
 
-void Client::LocationCallBack(const nox_msgs::Location &msg)
+void Client::LocationCallBack(const nav_msgs::Odometry &msg)
 {
     std::lock_guard<std::mutex> lock(mLock);
-    mCurrentPosition = {msg.x, msg.y};
-
+    const auto& _position = msg.pose.pose.position;
+    geometry_msgs::Quaternion orientation = msg.pose.pose.orientation;
+    tf::Matrix3x3 mat(tf::Quaternion(orientation.x, orientation.y, orientation.z, orientation.w));
+    double _yaw, _pitch, _roll;
+    mat.getEulerYPR(_yaw, _pitch, _roll);
+    mCurrentPose = {_position.x, _position.y, 90.0 + _yaw*180.0/TFSIMD_PI};
 }
 
 bool Client::OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res)
 {
     mRecord.Reset();
-    if(req.cmd == "r2r")
+    if(req.cmd == "r2r" || req.cmd == "p2p")
     {
-        mRecord.Reset();
+        mRecord.plan_method = req.cmd;
+        // temporary adjust for that target pose's angle is zero
+
         if(PlanByCommand(req.cmd, req.argv))
         {
-            for(auto & x : mCurPlanMap.RoadPtrs)
-                res.route.emplace_back(x->ID);
+            res.suss = 1;
+
+            if (req.cmd == "p2p")
+            {
+                mRecord.start_pose  = {req.argv[0], req.argv[1], req.argv[2]};
+                mRecord.target_pose = {req.argv[3], req.argv[4], req.argv[5]};
+            }
+
             return true;
         }
+        else res.suss = 0;
+        ROS_ERROR("OnCommandRequest: request fail, for more details please log in server.");
         return false;
     }
-    else if(req.cmd == "end")
+    else if(req.cmd == "clear")
     {
         mCurPlanMap.Clear();
-        mCurrentPosition = {0, 0};
+        mCurrentPose = {0, 0, 0};
     }
     else
     {
         ROS_ERROR("Not such Command: %s",req.cmd.c_str());
     }
+
     return true;
 }
 
@@ -84,11 +99,39 @@ void Client::SendMap()
         if(m != nullptr)
             p_map.add_child("hdmap.roads.road", m->ToXML());
     }
-    if(mRecord.curr_jid != -1)
+    if(mRecord.curr_jid != -1 && mRecord.curr_rid!= -1 && mRecord.next_idx !=-1)
     {
         auto m = mCurPlanMap.GetJuncPtrById(mRecord.curr_jid);
         if(m != nullptr)
-            p_map.add_child("hdmap.junctions.junction", m->ToXML());
+        {
+            pt::ptree p_junc;
+            p_junc.add("<xmlattr>.id", m->ID);
+
+            pt::ptree p_vec;
+            pt::ptree p_v;
+
+            for (auto &bezier: m->GetBoundaryCurves())
+            {
+                for (auto &p : bezier.GetParam())
+                    p_v.add("param", p);
+                p_vec.add_child("bezier", p_v);
+                p_v.clear();
+            }
+            p_junc.add_child("regionBoundary", p_vec);
+
+            auto road_link = m->GetRoadLink(mRecord.curr_rid, mCurPlanMap.RoadPtrs[mRecord.next_idx]->ID);
+            p_junc.add_child("roadLink", road_link.ToXML());
+            p_map.add_child("hdmap.junctions.junction", p_junc);
+            p_junc.clear();
+        }
+    }
+
+    if(mRecord.target_pose.x != 0.0 && mRecord.target_pose.y != 0.0)
+    {
+        pt::ptree p_junc;
+        p_junc.add("param",mRecord.target_pose.x);
+        p_junc.add("param",mRecord.target_pose.y);
+        p_map.add_child("hdmap.route_info.target", p_junc);
     }
 
     std::stringstream ss;
@@ -115,7 +158,7 @@ void Client::SendTrafficInfo(const Coor &v, RoadPtr target_road)
 
         HDMap::msg_signal_list ss;
 
-        ss.header.frame_id = "/world";
+        ss.header.frame_id = mCurPlanMap.pSender->frame_id;
         ss.header.stamp = ros::Time::now();
 
         bool detected = false;
@@ -143,7 +186,7 @@ void Client::SendTrafficInfo(const Coor &v, RoadPtr target_road)
             }
         }
         mPubTrafficLight.publish(ss);
-        ROS_INFO("(%8.3f, %8.3f): In road[%d] with [%d] signals, detection state: [%d]",
+        ROS_INFO("(%8.3f, %8.3f): In road[%d] with [%ld] signals, detection state: [%d]",
                  v.x, v.y, mRecord.curr_rid, signals.size(), detected);
     }
 }
@@ -151,7 +194,7 @@ void Client::SendTrafficInfo(const Coor &v, RoadPtr target_road)
 void Client::SendGPS(const Coor &v)
 {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "/world";
+    marker.header.frame_id = mCurPlanMap.pSender->frame_id;
     marker.header.stamp = ros::Time::now();
     marker.action = visualization_msgs::Marker::ADD;
     marker.pose.orientation.w = 1.0;
@@ -188,20 +231,21 @@ void Client::SendGPS(const Coor &v)
 void Client::Process()
 {
     mLock.lock();
-    Coor curr_pos = mCurrentPosition;
+    Pose curr_pose = mCurrentPose;
     mLock.unlock();
 
-    SendGPS(curr_pos);
-    SendNearPolygonRegion(curr_pos);
+    SendGPS({curr_pose.x,curr_pose.y});
+    SendNearPolygonRegion({curr_pose.x,curr_pose.y});
+    SendPointCloud({curr_pose.x, curr_pose.y}, 50);
 
-    // Check if current plan map covers curr_pos, if not re-plan
+    // Check if current plan map covers curr_pose, if not re-plan
     if (!mRecord.is_init)
     {
         if(mCurPlanMap.RoadPtrs.empty()) return;
 
         for(int i = 0; i < mCurPlanMap.RoadPtrs.size() && !mRecord.is_init; ++i)
         {
-            if(mCurPlanMap.RoadPtrs[i]->IsCover(curr_pos))
+            if(mCurPlanMap.RoadPtrs[i]->IsCover({curr_pose.x,curr_pose.y}))
             {
                 mRecord.curr_rid = mCurPlanMap.RoadPtrs[i]->ID;
                 mRecord.curr_idx = i;
@@ -229,27 +273,41 @@ void Client::Process()
 
         for(int i = 0; i < mCurPlanMap.JuncPtrs.size() && !mRecord.is_init; ++i)
         {
-            if(mCurPlanMap.JuncPtrs[i]->IsCover(curr_pos))
+            if(mCurPlanMap.JuncPtrs[i]->IsCover({curr_pose.x,curr_pose.y}))
             {
+                int _fitnest_road_r = -1;
+                double _min_diff = 361;
                 mRecord.curr_jid = mCurPlanMap.JuncPtrs[i]->ID;
                 for (int r = 0; r < mCurPlanMap.RoadPtrs.size(); ++r)
                 {
-                    if (mCurPlanMap.RoadPtrs[r]->GetNextJid() == mRecord.curr_jid)
-                    {
-                        mRecord.curr_idx = r;
-                        mRecord.curr_rid = mCurPlanMap.RoadPtrs[r]->ID;
-                        if( r + 1 < mCurPlanMap.RoadPtrs.size())
-                        {
-                            mRecord.next_idx = r+1;
-                        }
-                        else
-                        {
-                            mRecord.next_idx = -1;
-                        }
+                    auto& _road_ptr = mCurPlanMap.RoadPtrs[r];
 
-                        break;
+                    if (_road_ptr->mNextJid == mRecord.curr_jid)
+                    {
+                        Angle _diff_angle = _road_ptr->GetReferenceLinePoses().back().GetAngle()-curr_pose.GetAngle();
+
+                        Angle::Wrap(_diff_angle, -180, 180);
+
+                        double _diff_angle_value = abs(_diff_angle.Value());
+
+                        if(_diff_angle_value < _min_diff)
+                        {
+                            _min_diff = _diff_angle_value;
+                            _fitnest_road_r = r;
+                        }
                     }
                 }
+                mRecord.curr_idx = _fitnest_road_r;
+                mRecord.curr_rid = mCurPlanMap.RoadPtrs[_fitnest_road_r]->ID;
+                if( _fitnest_road_r + 1 < mCurPlanMap.RoadPtrs.size())
+                {
+                    mRecord.next_idx = _fitnest_road_r+1;
+                }
+                else
+                {
+                    mRecord.next_idx = -1;
+                }
+
                 mRecord.is_init = true;
             }
         }
@@ -257,7 +315,7 @@ void Client::Process()
         if(!mRecord.is_init)
         {
             /// not int mCurPlanMap, ask re-plan
-            RePlanRoute(curr_pos);
+            RePlanRoute(curr_pose);
         }
         return;
     }
@@ -266,14 +324,14 @@ void Client::Process()
     const double _MIN_DIS = 0.5;
     bool _is_in_cur_road = false, _is_in_cur_junc = false, _is_in_next_road = false;
     if(mRecord.curr_idx!=-1)
-        _is_in_cur_road = mCurPlanMap.RoadPtrs[mRecord.curr_idx]->GetDistanceFromCoor(curr_pos) < _MIN_DIS;
+        _is_in_cur_road = mCurPlanMap.RoadPtrs[mRecord.curr_idx]->GetDistanceFromCoor({curr_pose.x,curr_pose.y}) < _MIN_DIS;
     
     if (!_is_in_cur_road && mRecord.curr_jid != -1)
-        _is_in_cur_junc = mCurPlanMap.GetJuncPtrById(mRecord.curr_jid)->IsCover(curr_pos);
+        _is_in_cur_junc = mCurPlanMap.GetJuncPtrById(mRecord.curr_jid)->IsCover({curr_pose.x,curr_pose.y});
 
     if(!_is_in_cur_road && !_is_in_cur_junc && mRecord.next_idx != -1)
     {
-        _is_in_next_road = mCurPlanMap.RoadPtrs[mRecord.next_idx]->GetDistanceFromCoor(curr_pos) < _MIN_DIS;
+        _is_in_next_road = mCurPlanMap.RoadPtrs[mRecord.next_idx]->GetDistanceFromCoor({curr_pose.x,curr_pose.y}) < _MIN_DIS;
         if (_is_in_next_road)
         {
             mRecord.curr_rid = mCurPlanMap.RoadPtrs[mRecord.next_idx]->ID;
@@ -303,23 +361,23 @@ void Client::Process()
     {
         mRecord.is_init = false;
         ROS_ERROR("(%8.3f, %8.3f): Current position is out route, "
-                  "local map search is ready to execute." , curr_pos.x, curr_pos.y);
+                  "local map search is ready to execute." , curr_pose.x, curr_pose.y);
     }
     else
     {
         if(_is_in_cur_junc)
         {
             ROS_INFO("(%8.3f, %8.3f): In Junction[%d]",
-                     curr_pos.x, curr_pos.y,mCurPlanMap.GetJuncPtrById(mRecord.curr_jid)->ID);
+                     curr_pose.x, curr_pose.y,mCurPlanMap.GetJuncPtrById(mRecord.curr_jid)->ID);
         }
         else
         {
             ROS_INFO("(%8.3f, %8.3f): In Road[%d]",
-                     curr_pos.x, curr_pos.y,mCurPlanMap.RoadPtrs[mRecord.curr_idx]->ID);
+                     curr_pose.x, curr_pose.y,mCurPlanMap.RoadPtrs[mRecord.curr_idx]->ID);
         }
 
         SendMap();
-        SendTrafficInfo(curr_pos);
+        SendTrafficInfo({curr_pose.x,curr_pose.y});
         return;
     }
 }
@@ -332,8 +390,6 @@ bool Client::PlanByCommand(const std::string& method, std::vector<double> argv)
     if(mPlanClient.call(srv))
     {
         mCurPlanMap.Clear();
-        srv.request.method = srv.request.method;
-        srv.request.argv = srv.request.argv;
         std::stringstream ss;
         ss << srv.response.route;
         try
@@ -341,6 +397,35 @@ bool Client::PlanByCommand(const std::string& method, std::vector<double> argv)
             pt::ptree tree;
             pt::read_xml(ss, tree);
             mCurPlanMap.FromXML(tree);
+
+            HDMap::msg_route_info _route_info;
+            for(auto& rptr: mCurPlanMap.RoadPtrs)
+            {
+                _route_info.route_id.emplace_back(rptr->ID);
+                const std::vector<hdmap::Pose>& _r_res = rptr->GetReferenceLinePoses();
+
+                int _idx = 0;
+                while(true)
+                {
+                    const Pose& _p = _r_res[_idx];
+                    _route_info.route_pose.emplace_back(_p.x);
+                    _route_info.route_pose.emplace_back(_p.y);
+                    _route_info.route_pose.emplace_back(_p.GetAngle().Value());
+
+                    _idx += 20;
+
+                    if (_idx >= _r_res.size())
+                    {
+                        _route_info.route_pose.emplace_back(_r_res.back().x);
+                        _route_info.route_pose.emplace_back(_r_res.back().y);
+                        _route_info.route_pose.emplace_back(_r_res.back().GetAngle().Value());
+                        break;
+                    }
+                }
+
+            }
+            mPubRouteInfo.publish(_route_info);
+
             return true;
         }
         catch (std::exception & e)
@@ -390,7 +475,7 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius)
     std::string roads_info_str = GetNearRoadPtrs(near_roads,v,radius);
     std::string juncs_info_str = GetNearJunctionPtrs(near_juncs,v,radius);
     ROS_INFO("(%8.3f, %8.3f): Region: Roads { %s } Junctions { %s }",
-             mCurrentPosition.x, mCurrentPosition.y, roads_info_str.c_str(), juncs_info_str.c_str());
+             mCurrentPose.x, mCurrentPose.y, roads_info_str.c_str(), juncs_info_str.c_str());
 
     std::vector<IGeometry*> _geometries;
     for (const auto& _rptr: near_roads)
@@ -414,7 +499,7 @@ void Client::SendNearPolygonRegion(const Coor &v, double radius)
 
 
     HDMap::msg_route_region mrr;
-    mrr.header.frame_id = "/world";
+    mrr.header.frame_id = mCurPlanMap.pSender->frame_id;
     mrr.header.stamp = ros::Time::now();
 
     for(const auto& geo: _geometries)
@@ -511,53 +596,121 @@ std::string Client::GetNearJunctionPtrs(std::vector<JuncPtr>& near_juncs, const 
     return juncs_info_str;
 }
 
-bool Client::RePlanRoute(const Coor &cur) {
-    ROS_INFO("(%8.3f, %8.3f) is not in current local Map, try to re-plan", cur.x, cur.y);
+bool Client::RePlanRoute(const Pose& cur_pose)
+{
+    const Coor& cur = cur_pose.GetPosition();
 
-    std::vector<RoadPtr> near_roads;
-    std::vector<JuncPtr> near_juncs;
-    GetNearRoadPtrs(near_roads,cur, 20);
-    GetNearJunctionPtrs(near_juncs,cur, 20);
+    ROS_INFO("(%8.3f, %8.3f) is not in current local Map, try to re-plan", cur_pose.x, cur_pose.y);
 
-    if (!near_roads.empty())
+    if(mRecord.plan_method == "undefined")
     {
-        // 直接使用最近路的信号灯信息, 暂时修改 id
-        // int _tmp_id = mRecord.curr_rid;
-        // SendTrafficInfo(cur);
-        // mRecord.curr_rid = _tmp_id;
-
-        if(!near_roads.front()->IsCover(cur))
+        ROS_INFO("(%8.3f, %8.3f) Not define plan method, skip re plan", cur_pose.x, cur_pose.y);
+        return false;
+    }
+    else if (mRecord.plan_method == "p2p"){
+        if(PlanByCommand("p2p", {cur_pose.x, cur_pose.y,cur_pose.GetAngle().Value(),
+                                 mRecord.target_pose.x, mRecord.target_pose.y, mRecord.target_pose.GetAngle().Value()}))
         {
-            if (!near_juncs.empty())
+            ROS_INFO("(%8.3f, %8.3f): Re-Plan success, (%3.2f, %3.2f, %3.2f) to (%3.2f, %3.2f, %3.2f).",
+                     cur_pose.x, cur_pose.y,cur_pose.x, cur_pose.y,cur_pose.GetAngle().Value(),
+                     mRecord.target_pose.x, mRecord.target_pose.y,  mRecord.target_pose.GetAngle().Value());
+        }
+        else return false;
+    }
+    else if (mRecord.plan_method == "r2r")
+    {
+        std::vector<RoadPtr> near_roads;
+        std::vector<JuncPtr> near_juncs;
+
+        GetNearRoadPtrs(near_roads, cur, 20);
+        GetNearJunctionPtrs(near_juncs, cur, 2);
+
+        if (!near_roads.empty())
+        {
+            if(!near_roads.front()->IsCover(cur))
             {
-                if(!near_juncs.front()->IsCover(cur))
+                if (!near_juncs.empty())
                 {
-                    ROS_ERROR("(%8.3f, %8.3f): Current position is out the routing and junction." ,
-                              cur.x, cur.y);
-                    return false;
-                }
-                else
-                {
-                    mCurPlanMap.AddJunctionFromPtr(near_juncs[0]);
-                    ROS_ERROR("(%8.3f, %8.3f): Current position is in junction[%d]." ,
-                              cur.x, cur.y, near_juncs.front()->ID);
+                    if(!near_juncs.front()->IsCover(cur))
+                    {
+                        // current position is not in any junctions or roads.
+                        ROS_ERROR("(%8.3f, %8.3f): Current position is out the routing and junction." ,
+                                  cur.x, cur.y);
+                        return false;
+                    }
+                    else
+                    {
+                        // current position is in junction, add to local map if it is not in.
+                        mCurPlanMap.AddJunctionFromPtr (near_juncs[0]);
+                        ROS_ERROR("(%8.3f, %8.3f): Current position is in junction[%d]." ,
+                                  cur.x, cur.y, near_juncs.front()->ID);
+                    }
                 }
             }
-        }
-        else
-        {
-            ROS_ERROR("(%8.3f, %8.3f): Current position is in road[%d]." ,
-                      cur.x, cur.y, near_roads.front()->ID);
-        }
+            else
+            {
+                ROS_ERROR("(%8.3f, %8.3f): Current position is in road[%d]." ,
+                          cur.x, cur.y, near_roads.front()->ID);
+            }
 
-
-        int _cur_road_id = near_roads.front()->ID;
-        int _end_road_id = mCurPlanMap.RoadPtrs.back()->ID;
-        if(PlanByCommand("r2r", {_cur_road_id, _end_road_id}))
-        {
-            ROS_INFO("(%8.3f, %8.3f): Re-Plan success, Road[%d] to Road[%d].",
-                     cur.x, cur.y,_cur_road_id,_end_road_id);
+            int _cur_road_id = near_roads.front()->ID;
+            int _end_road_id = mCurPlanMap.RoadPtrs.back()->ID;
+            if(PlanByCommand("r2r", {double(_cur_road_id), double(_end_road_id)}))
+            {
+                ROS_INFO("(%8.3f, %8.3f): Re-Plan success, Road[%d] to Road[%d].",
+                         cur.x, cur.y,_cur_road_id,_end_road_id);
+            }
+            else
+            {
+                return false;
+            }
         }
     }
+
     return true;
+}
+
+void Client::SendPointCloud(const Coor& v, const double& distance)
+{
+
+    int subscribe_num = mPubPointCloud.getNumSubscribers();
+    if( subscribe_num == 0 || mLocalPointCloudPtr == nullptr )
+    {
+        return;
+    }
+    else
+    {
+        pcl::PointCloud<pcl::PointXYZI>::Ptr _pub_cloud;
+        if (v.x == -1 && v.y == -1)
+        {
+            _pub_cloud = mLocalPointCloudPtr;
+        }
+        _pub_cloud->header.frame_id= mCurPlanMap.pSender->frame_id;
+        pcl_conversions::toPCL(ros::Time::now(), _pub_cloud->header.stamp);
+
+        pcl::PointXYZI searchPoint;
+        searchPoint.x= static_cast<float>(v.x);
+        searchPoint.y= static_cast<float>(v.y);
+
+        std::vector<int> _indices;
+        std::vector<float> _distance;
+        mKdTree.radiusSearch(searchPoint, distance, _indices, _distance);
+
+        pcl::copyPointCloud(*mLocalPointCloudPtr, _indices, *_pub_cloud);
+        mPubPointCloud.publish(_pub_cloud);
+    }
+}
+
+void Client::SetInputPointCloud(const std::string & path)
+{
+    if (mLocalPointCloudPtr == nullptr)
+    {
+        mLocalPointCloudPtr.reset(new pcl::PointCloud<pcl::PointXYZI>());
+        mLocalPointCloudPtr->header.frame_id = mCurPlanMap.pSender->frame_id;
+        pcl::io::loadPCDFile(path, *mLocalPointCloudPtr);
+        if(!mLocalPointCloudPtr->empty())
+        {
+            mKdTree.setInputCloud(mLocalPointCloudPtr);
+        }
+    }
 }

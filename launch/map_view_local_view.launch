@@ -1,0 +1,4 @@
+<launch>
+	<node name="ViewDetectRegion" pkg="HDMap" type="ViewDetectRegion" output="screen" cwd="node" args="RELATIVE"/>
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find HDMap)/launch/view_local.rviz" required="true" output="screen" />
+</launch>

@@ -1,11 +1,5 @@
 #include <utility>
-
-//
-// Created by vincent on 18-10-13.
-//
-
 #include <Type/Junction.h>
-
 #include "Type/Map.h"
 
 using namespace hdmap;
@@ -14,7 +8,7 @@ unsigned int Junction::JUNCTION_ID = 0;
 
 Junction::Junction(MapPtr ptr) {
     ID = JUNCTION_ID++;
-    mMapInstantPtr = std::move(ptr);
+    mMapInstantPtr = ptr;
 }
 
 void Junction::AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pose _from_lane_pose,
@@ -39,9 +33,11 @@ void Junction::AddConnection(unsigned int _from_road_id, int _from_lane_idx, Pos
 }
 
 
-void Junction::Send(Sender &sender)
+void Junction::OnSend(Sender &sender)
 {
     if (mRegionPoses.empty()) GenerateRegionPoses();
+
+    if (mRegionPoses.empty()) return;
 
     std::string text = "Junction[" + std::to_string(ID) + "]";
 
@@ -60,7 +56,7 @@ void Junction::Send(Sender &sender)
     std::vector<Pose> _region_boundary;
     for (auto _bezire: mBoundaryCurves)
     {
-        auto it = _bezire.GetPoses(0.5);
+        auto it = _bezire.GetPoses(1.0);
         _region_boundary.insert(_region_boundary.end(), it.begin(), it.end());
     }
 
@@ -68,10 +64,11 @@ void Junction::Send(Sender &sender)
     sender.array.markers.emplace_back(m);
 
 
-    sender.Send();
+    // sender.Send();
+
     for (auto &x : RoadLinks)
     {
-        x.second.Send(sender);
+        x.second.OnSend(sender);
     }
 }
 
@@ -144,17 +141,6 @@ void Junction::FromXML(const pt::ptree &p)
     }
 }
 
-double Junction::GetDistanceFromCoor(const Coor &v) {
-    if (mRegionPoses.empty()) GenerateRegionPoses();
-
-    assert(!mRegionPoses.empty());
-    std::vector<int> indices;
-    std::vector<double> distances;
-    mKdtree.NearestSearch({v.x, v.y}, indices, distances, 1);
-    return distances[0];
-}
-
-
 void Junction::GenerateRegionPoses() {
 
     if (!mRegionPoses.empty()) return;
@@ -163,6 +149,12 @@ void Junction::GenerateRegionPoses() {
 
         if (mMapInstantPtr == nullptr) {
             printf("Junction should be initialized with Map pointer which contains information of roads.");
+        }
+
+        if(RoadLinks.empty())
+        {
+            printf("There is not any roadlink in junction[%d], skip poses generation\n", ID);
+            return;
         }
 
         // acquire poses
@@ -222,8 +214,14 @@ void Junction::GenerateRegionPoses() {
             //  (_vec[s].second|1) == (_vec[e].second|1)
             auto road_1 = mMapInstantPtr->GetRoadPtrById(_vec[e].second);
             auto road_2 = mMapInstantPtr->GetRoadPtrById(_vec[s].second);
-
-            if (mMapInstantPtr->GetRoadNeighbor(road_1)->ID == road_2->ID) {
+            auto road_1_neighbor = mMapInstantPtr->GetRoadNeighbor(road_1);
+            if(road_1_neighbor == nullptr) // 有一条路是单向的
+            {
+                Pose refer_road_1_start_pose = road_1->GetReferenceLinePoses().front();
+                Pose refer_road_2_end_pose = road_2->GetReferenceLinePoses().back();
+                mBoundaryCurves.emplace_back(refer_road_2_end_pose,refer_road_1_start_pose, dis / 2, dis / 2);
+            }
+            else if ( road_1_neighbor->ID == road_2->ID) {
                 Angle _angle(_bezier_end_p.GetPosition() - _bezier_sta_p.GetPosition());
                 _bezier_sta_p.GetAngle().SetAngle(_angle.Value());
                 _bezier_end_p.GetAngle().SetAngle(_angle.Value());
@@ -239,8 +237,9 @@ void Junction::GenerateRegionPoses() {
 
     // get all pose points from bezier curves.
     assert(!mBoundaryCurves.empty());
+
     for (auto &b: mBoundaryCurves) {
-        const auto &_tmp = b.GetPoses(1);
+        const auto &_tmp = b.GetPoses(IGeometry::CURVE_DS);
         mRegionPoses.insert(mRegionPoses.end(), _tmp.begin(), _tmp.end());
     }
 
@@ -255,21 +254,6 @@ void Junction::GenerateRegionPoses() {
 }
 
 
-bool Junction::IsCover(const Coor &v)
-{
-    if (mBoundaryCurves.empty()) {
-        GenerateRegionPoses();
-    }
-
-    return IGeometry::Cover(mRegionPoses, {v});
-}
-
-std::vector<Pose> Junction::GetRegionPoses() {
-    if (mRegionPoses.empty()) {
-        GenerateRegionPoses();
-    }
-    return mRegionPoses;
-}
 
 std::vector<hdmap::Bezier> Junction::GetBoundaryCurves() {
     if (mBoundaryCurves.empty()) {

@@ -17,13 +17,17 @@ class Sender
 {
 private:
     ros::Publisher pub;
-    const std::string frame_id = "/world";
+
 
 public:
     visualization_msgs::MarkerArray array;
+
     std::vector<Pose> Translate(std::vector<Pose> poses, double length, double theta);
 
     static unsigned int id;
+
+    const std::string frame_id = "map";
+
     explicit Sender(ros::Publisher pub_);
 
     visualization_msgs::Marker GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a, double z = 0, double width = 0.15);

@@ -7,8 +7,8 @@
 
 #include "LaneSection.h"
 #include "Signal.h"
-#include "common.h"
-#include "kdtree.hpp"
+#include "Common/pointer_typedef.h"
+#include "Common/kdtree.hpp"
 #include <algorithm>
 
 namespace hdmap
@@ -28,23 +28,20 @@ public:
 
 private:
 
-    kt::kdtree<double> mKdtree;
-
-    std::vector<std::vector<double>> mKdtreeData;
-
-    std::vector<Pose> mRegionPoses;
-
     void GenerateRegionPoses() override;
 
 public:
 
     std::vector<SecPtr> mSecPtrs;
+
     std::vector<SigPtr> mSigPtrs;
 
     int mPrevJid;
+
     int mNextJid;
 
     Pose mStartPose;
+
     Pose mEndPose;
 
     explicit Road(Pose _start_pose = Pose());
@@ -55,35 +52,15 @@ public:
 
     std::vector<SigPtr> GetSignals();
 
-    int GetPrevJid() { return mPrevJid; }
-
-    int GetNextJid() { return mNextJid; }
-
-    int AdjacentJid(int direction)
-    {
-        if(direction > 0) return mNextJid;
-        else return mPrevJid;
-    }
-
-    std::vector<Pose> Trajectory(int begin_lane_idx, int end_lane_idx);
-
     std::vector<Pose> GetReferenceLinePoses();
 
     std::vector<Pose> GetRightmostLinePoses();
 
-    double GetDistanceFromCoor(const Coor &v);
-
-    std::vector<Pose> GetRegionPoses() override;
-
-    void Send(Sender &sender) override;
+    void OnSend(Sender &sender) override;
 
     boost::property_tree::ptree ToXML() override;
 
     void FromXML(const pt::ptree &p) override;
-
-    bool IsCover(const Coor &v) override;
-
-
 };
 }
 

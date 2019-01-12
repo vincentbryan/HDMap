@@ -6,7 +6,7 @@ using namespace hdmap;
 namespace pt = boost::property_tree;
 
 Planner::Planner(MapPtr _map, std::shared_ptr<Sender> _sender) :
-    mMapPtr(std::move(_map)),
+    mMapPtr(_map),
     mSenderPtr(std::move(_sender))
 {}
 
@@ -60,12 +60,12 @@ void Planner::Send()
 
     for(int i = 0; i < mRouting.size(); i++)
     {
-        mRouting[i]->Send(*mSenderPtr);
+        mRouting[i]->OnSend(*mSenderPtr);
 
         if(i + 1 < mRouting.size())
         {
             int jid = mRouting[i]->mNextJid;
-            mMapPtr->GetJuncPtrById(jid)->GetRoadLink(mRouting[i]->ID, mRouting[i + 1]->ID).Send(*mSenderPtr);
+            mMapPtr->GetJuncPtrById(jid)->GetRoadLink(mRouting[i]->ID, mRouting[i + 1]->ID).OnSend(*mSenderPtr);
         }
     }
 }
@@ -76,35 +76,17 @@ void Planner::ToXML(std::string &str)
     {
         pt::ptree tree;
 
-        for(auto & x : mRouting)
-            tree.add_child("hdmap.roads.road", x->ToXML());
-
-        pt::ptree p_junc;
-        for(int i = 0; i + 1< mRouting.size(); i++)
+        for(auto &  mRoadPtr: mRouting)
         {
-            int jid = mRouting[i]->mNextJid;
-            assert(jid != -1);
-            auto junc = mMapPtr->JuncPtrs[jid];
-            p_junc.add("<xmlattr>.id", junc->ID);
-
-            pt::ptree p_vec;
-            pt::ptree p_v;
-
-            for (auto &bezier: junc->GetBoundaryCurves())
+            tree.add_child("hdmap.roads.road", mRoadPtr->ToXML());
+            auto _JunPtr = mMapPtr->GetJuncPtrById(mRoadPtr->mNextJid);
+            if (_JunPtr)
             {
-                for (auto &p : bezier.GetParam())
-                    p_v.add("param", p);
-                p_vec.add_child("bezier", p_v);
-                p_v.clear();
+                tree.add_child("hdmap.junctions.junction", _JunPtr->ToXML());
             }
-            p_junc.add_child("regionBoundary", p_vec);
-
-            auto road_link = mMapPtr->GetJuncPtrById(jid)->GetRoadLink(mRouting[i]->ID, mRouting[i + 1]->ID);
-            p_junc.add_child("roadLink", road_link.ToXML());
-            tree.add_child("hdmap.junctions.junction", p_junc);
-            p_junc.clear();
 
         }
+
         std::stringstream ss;
         pt::write_xml(ss, tree);
         str = ss.str();
@@ -139,14 +121,15 @@ bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Respon
     }
     else if (req.method == "p2p" )
     {
-        if (req.argv.size()%2 == 0)
+        if (req.argv.size()%3 == 0)
         {
-            std::vector<Coor> _tmp_cors;
-            for(int i = 0; i <= req.argv.size()/2; i+=2)
+            std::vector<Pose> _tmp_pose;
+            for(int i = 0; i < req.argv.size(); i+=3)
             {
-                _tmp_cors.emplace_back(req.argv[i],req.argv[i+1]);
+                _tmp_pose.emplace_back(req.argv[i], req.argv[i+1], req.argv[i+2]);
             }
-            PlanRouteByPoses(_tmp_cors);
+
+            PlanRouteByPoses(_tmp_pose);
         }
         else ROS_ERROR_STREAM("[OnRequest] PlanRouteByPoese receive even number of data.");
     }
@@ -167,14 +150,19 @@ bool Planner::OnRequest(HDMap::srv_route::Request &req, HDMap::srv_route::Respon
     return true;
 }
 
-bool Planner::PlanRouteByPoses(std::vector<Coor> cors) {
+bool Planner::PlanRouteByPoses(std::vector<Pose> poses) {
 
-    if( cors.size() == 2)
+    if( poses.size() == 2)
     {
+        Coor _begin_coor = poses.front().GetPosition();
+
         mRouting.clear();
 
+        // naive consideration.
+        auto _end_road_ptr = mMapPtr->GetRoadPtrByDistance(poses.back().GetPosition(), 0, true).front();
+
         /// consider lane in start point.
-        auto res = mMapPtr->GetLaneInfoByPosition(cors.front());
+        auto res = mMapPtr->GetLaneInfoByPose(poses.front());
 
         RoadPtr _cur_road_ptr    = std::get<0>(res);
         SecPtr  _sec_ptr         = std::get<1>(res);
@@ -182,56 +170,69 @@ bool Planner::PlanRouteByPoses(std::vector<Coor> cors) {
 
         if ( _start_lane_id == -1)
         {
-            ROS_INFO("PlanRouteByPoses: Cannot match location (%4.3f, %4.3f) to any road.",cors.front().x,cors.front().y);
-            return false;
-        }
+            ROS_INFO("PlanRouteByPoses: Cannot match location (%4.3f, %4.3f) to any road. Try to find junction",
+                      _begin_coor.x,_begin_coor.y);
 
-        JuncPtr _turn_junc_ptr = mMapPtr->GetJuncPtrById(_cur_road_ptr->GetNextJid());
+            // try to locate in junction and fit a road link.
+            auto _res = mMapPtr->GetRoadLinkByPose(poses.front());
 
-        auto _adjacent_roads = mMapPtr->AdjacentRoadInfo(_cur_road_ptr);
+            JuncPtr   _cur_junc_ptr  = std::get<0>(_res);
+            RoadLink& _cur_road_link = std::get<1>(_res);
+            int      _cur_link_index = std::get<2>(_res);
 
-        for (auto& rl: _turn_junc_ptr->RoadLinks)
-        {
-            if ( _cur_road_ptr->ID == rl.first.first )
+            if (_cur_link_index == -1)
             {
-                bool _mark_done = false;
-                for(auto & _lane_link: rl.second.mLaneLinks)
+                ROS_INFO("PlanRouteByPoses: Cannot match location (%4.3f, %4.3f) to any junction.",
+                         _begin_coor.x,_begin_coor.y);
+                return false;
+            }
+
+            // convert p2p problem to r2p
+            return PlanRouteByRoadIDs(
                 {
-                    if (_lane_link.mFromLaneIndex == _start_lane_id)
-                    {
-                        for (auto& rptr: _adjacent_roads)
-                        {
-                            if(rptr->ID != rl.second.mToRoadId)
-                            {
-                                is_visited[rptr->ID] = true;
-                            }
-                        }
-                        _mark_done = true;
-                        break;
-                    }
-                }
-                if(_mark_done) break;
-            }
+                    int(_cur_road_link.mFromRoadId),
+                    int(_cur_road_link.mToRoadId),
+                    int(_end_road_ptr->ID)
+                });
+
         }
 
-        auto _end_road_ptr = mMapPtr->GetRoadPtrByDistance(cors.back(),0,true).front();
+        assert(_cur_road_ptr!= nullptr);
+        assert(_start_lane_id != -1);
 
-        std::vector<RoadPtr> trace;
-        BFS(_cur_road_ptr, _end_road_ptr, trace);
-        if (trace.empty())
-            return false;
-        else
+        // select suit next road, just mark which is not to want to walk.
+        JuncPtr _turn_junc_ptr = mMapPtr->GetJuncPtrById(_cur_road_ptr->mNextJid);
+        if (_turn_junc_ptr)
         {
-            for(auto&x:trace)
+            auto _adjacent_roads = mMapPtr->AdjacentRoadInfo(_cur_road_ptr);
+            for (auto& rl: _turn_junc_ptr->RoadLinks)
             {
-                is_visited[x->ID] = true;
-                mRouting.emplace_back(x);
+                if ( _cur_road_ptr->ID == rl.first.first )
+                {
+                    bool _mark_done = false;
+                    for(auto & _lane_link: rl.second.mLaneLinks)
+                    {
+                        if (_lane_link.mFromLaneIndex == _start_lane_id)
+                        {
+                            for (auto& rptr: _adjacent_roads)
+                            {
+                                if(rptr->ID != rl.second.mToRoadId)
+                                {
+                                    is_visited[rptr->ID] = true;
+                                }
+                            }
+                            _mark_done = true;
+                            break;
+                        }
+                    }
+                    if(_mark_done) break;
+                }
             }
         }
 
-        return true;
+        return PlanRouteByRoadIDs({int(_cur_road_ptr->ID), int(_end_road_ptr->ID)});
     }
-    else if(cors.size() > 2)
+    else if(poses.size() > 2)
     {
         ROS_INFO("[OnRequest] PlanRouteByPoses: Not support for multiple target point yet.");
         return false;
@@ -260,12 +261,13 @@ bool Planner::PlanRouteByRoadIDs(std::vector<int> ids) {
             pEnd   = mMapPtr->GetRoadPtrById(ids[i+1]);
             BFS(pStart,pEnd,trace);
             if (trace.empty()) break;
-            else{
+            else
+            {
                 if (!mRouting.empty()){
                     mRouting.pop_back();
                 }
                 for(auto&x:trace){
-                    is_visited[x->ID] = true;
+                    // is_visited[x->ID] = true;
                     mRouting.emplace_back(x);
                 }
             }

@@ -29,8 +29,10 @@ public:
 
     std::vector<std::vector<Pose>> GetAllPose();
 
-    void Send(Sender &sender) override;
+    void OnSend(Sender &sender) override;
+
     boost::property_tree::ptree ToXML() override;
+
     void FromXML(const pt::ptree &p) override;
 };
 }

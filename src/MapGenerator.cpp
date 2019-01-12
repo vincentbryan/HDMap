@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 
     //region Road
     //Road[0/1]-------------------------------------------------------------
-    auto r0 = map.AddRoad({-229.17, -105.03, 25.719});
+    auto r0 = map.AddRoad({-153.22, -68.38, 25.719});
 
     auto r0_s0 = r0->AddSection({-39.96, -13.67, 25.719});
     r0_s0->AddLane( 1,  3.75,  3.75, {}, {});
@@ -42,24 +42,24 @@ int main(int argc, char** argv)
 
     auto r1 = map.AddRoad({-40.31, -13.43, 205.719});
 
-    auto r1_s0 = r1->AddSection({-229.35, -104.65, 205.719});
+    auto r1_s0 = r1->AddSection({-153.44, -68.04, 205.719});
     r1_s0->AddLane(1, 3.9, 3.9, {}, {});
     r1_s0->AddLane(2, 7.37, 7.37, {}, {});
 
     //Road[2/3]-----------------------------------------------------------
     auto r2 = map.AddRoad({-5.58, -27.31, -56.6636});
 
-    auto r2_s0 = r2->AddSection({12.20, -54.34, -56.6636});
+    auto r2_s0 = r2->AddSection({9.67, -50.47, -56.6636});
     r2_s0->AddLane( 1, 2.8, 2.8, {}, {1});
 
     auto r2_s1 = r2->AddSection({25.95, -72.92, -56.7125}, 15.0, 15.0);
     r2_s1->AddLane( 1, 2.8, 4.6, {1}, {1});
 
 
-    auto r2_s2 = r2->AddSection({50.65, -110.54, -56.7125});
+    auto r2_s2 = r2->AddSection({49.15, -108.16, -56.7125});
     r2_s2->AddLane( 1, 4.6, 4.6, {1}, {1, 2});
 
-    auto r2_s3 = r2->AddSection({62.44, -126.17, -56.7125}, 10.0, 10.0);
+    auto r2_s3 = r2->AddSection({63.2, -127.27, -56.7125}, 10.0, 10.0);
     r2_s3->AddLane(1, 4.6, 2.8, {1}, {1});
     r2_s3->AddLane(2, 4.6, 5.8, {1}, {2});
 
@@ -70,24 +70,24 @@ int main(int argc, char** argv)
 
     auto r3 = map.AddRoad({76.79, -148.08, 123.2875});
 
-    auto r3_s0 = r3->AddSection({62.44, -126.17, 123.2875});
+    auto r3_s0 = r3->AddSection({63.2, -127.27, 123.2875});
     r3_s0->AddLane(1, 2.8, 2.8, {}, {1});
 
 
-    auto r3_s1 = r3->AddSection({50.65, -110.54, 123.2875}, 10.0, 10.0);
-    r3_s1->AddLane(1, 2.8, 4.6, {1}, {1});
+    auto r3_s1 = r3->AddSection({49.15, -108.16, 123.2875}, 10.0, 10.0);
+    r3_s1->AddLane(1, 2.8, 4.4, {1}, {1});
 
 
     auto r3_s2 = r3->AddSection({25.95, -72.92, 123.2875});
-    r3_s2->AddLane(1, 4.6, 4.6, {1}, {1, 2});
+    r3_s2->AddLane(1, 4.4, 4.4, {1}, {1, 2});
 
-    auto r3_s3 = r3->AddSection({12.20, -54.34, 123.2875}, 15.0, 15.0);
-    r3_s3->AddLane(1, 4.6, 2.8, {1}, {1});
-    r3_s3->AddLane(2, 4.6, 5.8, {1}, {2});
+    auto r3_s3 = r3->AddSection({9.67, -50.47, 123.2875}, 15.0, 15.0);
+    r3_s3->AddLane(1, 4.4, 2.8, {1}, {1});
+    r3_s3->AddLane(2, 4.4, 5.6, {1}, {2});
 
     auto r3_s4 = r3->AddSection({-5.58, -27.31, 123.2875});
     r3_s4->AddLane(1, 2.8, 2.8, {1}, {});
-    r3_s4->AddLane(2, 5.8, 5.8, {2}, {});
+    r3_s4->AddLane(2, 5.6, 5.6, {2}, {});
 
     r3->AddSignal(-23.99, 5.17, 4.0, Angle(123.2875), "SIG", "1011");
 
@@ -163,8 +163,8 @@ int main(int argc, char** argv)
     r8_s0->AddLane(1, 3.8, 3.8, {}, {});
     r8_s0->AddLane(2, 7.2, 7.2, {}, {});
 
-    r8->AddSignal(209.943, 110.82, 5.8, Angle(25.7603), "SIG", "1000");
-    r8->AddSignal(210.923, 108.89, 5.8, Angle(25.7603), "SIG", "0111");
+    r8->AddSignal(210.349, 109.265, 6.5, Angle(25.7603), "SIG", "1000");
+    r8->AddSignal(211.261, 107.518, 6.5, Angle(25.7603), "SIG", "0111");
 
     auto r9 = map.AddRoad({144.98, 75.84, -154.28});
 
@@ -212,8 +212,8 @@ int main(int argc, char** argv)
     r11_s4->AddLane(1, 2.8, 2.8, {1}, {});
     r11_s4->AddLane(2, 5.8, 5.8, {2}, {});
 
-    r11->AddSignal(139.28, 77.52, 5.90, Angle(-152.291), "SIG", "1000");
-    r11->AddSignal(138.73, 79.22, 5.90, Angle(-152.291), "SIG", "0101");
+    r11->AddSignal(139.67, 76.19, 5.90, Angle(-152.291), "SIG", "1000");
+    r11->AddSignal(138.86, 78.07, 5.90, Angle(-152.291), "SIG", "0101");
 
     //Road[12/13]-------------------------------------------------------------
     auto r12 = map.AddRoad({300.35, -48.52, 28.804});
@@ -268,8 +268,8 @@ int main(int argc, char** argv)
     r14_s0->AddLane(2, 7.26, 7.26, {}, {});
     r14_s0->AddLane(3, 10.36, 10.36, {}, {});
 
-    r14->AddSignal(263.43, -30.72, 5.8, Angle(124.063), "SIG", "1101");
-    r14->AddSignal(265.23, -29.41, 5.8, Angle(124.063), "SIG", "0010");
+    r14->AddSignal(263.43, -30.72, 5, Angle(124.063), "SIG", "1101");
+    r14->AddSignal(265.23, -29.41, 5, Angle(124.063), "SIG", "0010");
 
     auto r15 = map.AddRoad({292.63, -80.90, -55.9177});
 
@@ -428,7 +428,7 @@ int main(int argc, char** argv)
     auto r24_s2 = r24->AddSection({159.60, -277.22, -56.9236});
     r24_s2->AddLane(1, 4.5, 4.5, {1}, {1, 2});
 
-    auto r24_s3 = r24->AddSection({173.65, -296.34, -56.9236}, 15.0, 15.0);
+    auto r24_s3 = r24->AddSection({175.11, -298.49, -56.9236}, 15.0, 15.0);
     r24_s3->AddLane(1, 4.5, 2.8, {1}, {1});
     r24_s3->AddLane(2, 4.5, 5.8, {1}, {2});
 
@@ -438,7 +438,7 @@ int main(int argc, char** argv)
 
     auto r25 = map.AddRoad({191.13, -323.29, 122.9764});
 
-    auto r25_s0 = r25->AddSection({173.65, -296.34, 122.9764});
+    auto r25_s0 = r25->AddSection({175.11, -298.49, 122.9764});
     r25_s0->AddLane(1, 2.8, 2.8, {}, {1});
 
     auto r25_s1 = r25->AddSection({159.60, -277.22, 122.9764}, 15.0, 15.0);
@@ -563,14 +563,17 @@ int main(int argc, char** argv)
     r32_s1->AddLane(2, 6.6, 6.6, {2}, {});
     r32_s1->AddLane(3, 10.0, 10.0, {3}, {});
 
-    auto r33 = map.AddRoad({-239.71, -146.33, -50.3793});
+    r32->AddSignal(-267.68, -87.72, 5.3, Angle(121.058), "SIG", "0101");
+    r32->AddSignal(-265.46, -86.38, 5.3, Angle(121.058), "SIG", "0111");
 
-    auto r33_s0 = r33->AddSection({-205.17, -191.95, -50.3793}, 10.0, 10.0);
+    auto r33 = map.AddRoad({-240.32, -146.06, -50.3793});
+
+    auto r33_s0 = r33->AddSection({-205.74, -190.76, -50.3793}, 10.0, 10.0);
     r33_s0->AddLane(1, 3.3, 3.3, {}, {1});
     r33_s0->AddLane(2, 6.6, 6.6, {}, {2});
     r33_s0->AddLane(3, 10.0, 10.0, {}, {3});
 
-    auto r33_s1 = r33->AddSection({-140.38, -270.21, -50.3793});
+    auto r33_s1 = r33->AddSection({-140.33, -269.96, -50.3793});
     r33_s1->AddLane(1, 3.3, 3.3, {1}, {});
     r33_s1->AddLane(2, 6.6, 6.6, {2}, {});
     r33_s1->AddLane(3, 10.0, 10.0, {3}, {});
@@ -604,12 +607,15 @@ int main(int argc, char** argv)
     r36_s1->AddLane(4, 10.0, 11.3, {3}, {4});
     r36_s1->AddLane(5, 10.0, 14.3, {3}, {5});
 
-    auto r36_s2 = r36->AddSection({154.3, -622.84, -51.3966});
+    auto r36_s2 = r36->AddSection({154.3, -622.84, -50.6778});
     r36_s2->AddLane(1, 2.7, 2.7, {1}, {});
     r36_s2->AddLane(2, 5.5, 5.5, {2}, {});
     r36_s2->AddLane(3, 8.5, 8.5, {3}, {});
     r36_s2->AddLane(4, 11.3, 11.3, {4}, {});
     r36_s2->AddLane(5, 14.3, 14.3, {5}, {});
+
+    r36->AddSignal(187.73, -670.95, 5.8, Angle(-50.6778), "SIG", "1101");
+    r36->AddSignal(184.85, -673.36, 5.8, Angle(-50.6778), "SIG", "0010");
 
 
     //Road[37/38]-------------------------------------------------------------
@@ -644,6 +650,9 @@ int main(int argc, char** argv)
     r38_s2->AddLane(2, 5.8, 5.8, {2}, {});
     r38_s2->AddLane(3, 9.25, 9.25, {3}, {});
     r38_s2->AddLane(4, 12.4, 12.4, {4}, {});
+
+    r38->AddSignal(134.60, -657.17, 5.4, Angle(-153.0375), "SIG", "0101");
+    r38->AddSignal(133.58, -655.21, 5.4, Angle(-153.0375), "SIG", "0111");
 
 
     //Road[39/40]-------------------------------------------------------------
@@ -719,6 +728,94 @@ int main(int argc, char** argv)
     auto r41_s13 = r41->AddSection({448.22, -227.68, 34.85+90.0});
     r41_s13->AddLane(1, 2.0, 2.0, {1}, {});
 
+    //Road[42/43]-------------------------------------------------------------
+    /// 回到停车位/出停车位
+    auto r42 = map.AddRoad({-172.65, -56.76, 116.18});
+
+    auto r42_s0 = r42->AddSection({-178.22, -45.50, 116.18});
+    r42_s0->AddLane(1,3.5,3.5,{},{1});
+
+    auto r42_s1 = r42->AddSection({-173.49, -31.83, 26.20}, 6, 6);
+    r42_s1->AddLane(1,3.5,3.5,{1},{1});
+
+    auto r42_s2 = r42->AddSection({-160.89, -25.83, 26.20});
+    r42_s2->AddLane(1,3.5,3.5,{1},{1});
+
+    auto r42_s3 = r42->AddSection({-156.43, -16.84, 116.12},5, 5);
+    r42_s3->AddLane(1,3.5,3.5,{1},{1});
+
+    auto r42_s4 = r42->AddSection({-167.36, 5.86, 116.12});
+    r42_s4->AddLane(1,3.5,3.5,{1},{1});
+
+    auto r42_s5 = r42->AddSection({-177.80, 9.23, 205.22}, 5, 5);
+    r42_s5->AddLane(1,3.5, 4 ,{1},{1});
+
+    auto r42_s6 = r42->AddSection({-182.98, 6.79, 205.22});
+    r42_s6->AddLane(1, 4, 4,{1},{1});
+
+    auto r42_s7 = r42->AddSection({-184.80, 1.03, -64.97}, 3, 3);
+    r42_s7->AddLane(1,4, 3.5,{1},{1});
+
+    auto r42_s8 = r42->AddSection({-176.18, -17.43, -64.97});
+    r42_s8->AddLane(1,3.5,3.5,{1},{1});
+
+    auto r42_s9 = r42->AddSection({-179.72, -28.03, 205.93},5, 5);
+    r42_s9->AddLane(1,3.5,5,{1},{1});
+
+    auto r42_s10 = r42->AddSection({-201.33, -38.54, 205.93});
+    r42_s10->AddLane(1,5,5,{1},{});
+
+    auto r43 = map.AddRoad({-203.57, -34.00, 25.94});
+
+    auto r43_s0 = r43->AddSection({-182.07, -23.54, 25.94});
+    r43_s0->AddLane(1, 5, 5, {},{1});
+
+    auto r43_s1 = r43->AddSection({-179.37, -18.85, 115.18}, 3, 3);
+    r43_s1->AddLane(1, 5, 3.5, {1},{1});
+
+    auto r43_s2 = r43->AddSection({-188.05, -0.387, 115.18});
+    r43_s2->AddLane(1, 3.5, 3.5, {1},{1});
+
+    auto r43_s3 = r43->AddSection({-184.51, 10.45, 25.71}, 5, 5);
+    r43_s3->AddLane(1, 3.5, 4, {1},{1});
+
+    auto r43_s4 = r43->AddSection({-179.67, 12.78, 25.71});
+    r43_s4->AddLane(1, 4, 4, {1},{1});
+
+    auto r43_s5 = r43->AddSection({-164.21, 7.53, -64.05}, 7, 7);
+    r43_s5->AddLane(1, 4, 3.5, {1},{1});
+
+    auto r43_s6 = r43->AddSection({-153.268, -15.271, -64.05});
+    r43_s6->AddLane(1, 3.5, 3.5, {1},{1});
+
+    auto r43_s7 = r43->AddSection({-159.387, -28.971, 205.91}, 7, 7);
+    r43_s7->AddLane(1, 3.5, 3.5, {1},{1});
+
+    auto r43_s8 = r43->AddSection({-171.903, -34.906, 205.91});
+    r43_s8->AddLane(1, 3.5, 3.5, {1},{1});
+
+    auto r43_s9 = r43->AddSection({-175.07, -43.960, -63.79}, 4 ,4);
+    r43_s9->AddLane(1, 3.5, 3.5, {1},{1});
+
+    auto r43_s10 = r43->AddSection({-169.58, -55.11, -63.79});
+    r43_s10->AddLane(1, 3.5, 3.5, {1},{});
+
+
+    //Road[44/45]-------------------------------------------------------------
+    auto r44 = map.AddRoad({-237.34, -109.26, 26.011});
+    auto r44_s0 = r44->AddSection({-171.99, -77.37, 26.011});
+    r44_s0->AddLane(1, 3.8, 3.8, {},{1});
+    r44_s0->AddLane(2, 7.4, 7.4, {},{1});
+    r44_s0->AddLane(3, 10.3,10.3, {},{1});
+
+    auto r45 = map.AddRoad({-172.31, -77.02, 206});
+    auto r45_s0 = r45->AddSection({-237.64, -108.88, 206});
+    r45_s0->AddLane(1, 3.8, 3.8, {},{1});
+    r45_s0->AddLane(2, 7.4, 7.4, {},{1});
+
+    r45->AddSignal(-268.55, -126.62, 4.0, Angle(206), "SIG", "1001");
+
+
     map.CommitRoadInfo();
     //endregion
 
@@ -728,9 +825,9 @@ int main(int argc, char** argv)
     auto junc0 = map.AddJunction();
 
     map.AddRoadLink(junc0, 0, 8, "forward", {make_tuple(1, 1, 10.0, 10.0), make_tuple(2, 2, 10.0, 10.0)});
-    map.AddRoadLink(junc0, 0, 2, "left", {make_tuple(3, 1, 20.0, 15.0)});
-    map.AddRoadLink(junc0, 3, 1, "left", {make_tuple(1, 1, 15.0, 15.0), make_tuple(1, 2, 15.0, 15.0)});
-    map.AddRoadLink(junc0, 3, 8, "right", {make_tuple(2, 1, 15.0, 15.0), make_tuple(2, 2, 15.0, 15.0)});
+    map.AddRoadLink(junc0, 0, 2, "right", {make_tuple(3, 1, 20.0, 10.0)});
+    map.AddRoadLink(junc0, 3, 1, "left", {make_tuple(1, 1, 15.0, 15.0)});
+    map.AddRoadLink(junc0, 3, 8, "right", {make_tuple(2, 2, 15.0, 15.0)});
     map.AddRoadLink(junc0, 9, 1, "forward", {make_tuple(1, 1, 15.0, 15.0), make_tuple(2, 2, 15.0, 15.0)});
     map.AddRoadLink(junc0, 9, 2, "left", {make_tuple(1, 1, 15.0, 15.0)});
 
@@ -830,11 +927,12 @@ int main(int argc, char** argv)
 
     map.AddRoadLink(junc7, 21, 28, "left", {make_tuple(1, 1, 10.0, 10.0)});
     map.AddRoadLink(junc7, 21, 23, "forward", {make_tuple(2, 1, 10.0, 10.0)});
-    map.AddRoadLink(junc7, 21, 25, "right", {make_tuple(2, 1, 15.0, 15.0)});
+    map.AddRoadLink(junc7, 21, 25, "right", {make_tuple(2, 1, 10.0, 10.0)});
 
     map.AddRoadLink(junc7, 29, 23, "left", {make_tuple(1, 1, 15.0, 15.0)});
     map.AddRoadLink(junc7, 29, 25, "forward", {make_tuple(2, 1, 10.0, 10.0)});
     map.AddRoadLink(junc7, 29, 20, "right", {make_tuple(2, 1, 15.0, 15.0)});
+
     //Junc[8]-------------------------------------------------------------
     auto junc8 = map.AddJunction();
     map.AddRoadLink(junc8, 23, 35, "right", {make_tuple(1, 2, 15.0, 15.0)});
@@ -845,6 +943,7 @@ int main(int argc, char** argv)
 
     //Junc[9]-------------------------------------------------------------
     auto junc9 = map.AddJunction();
+
     map.AddRoadLink(junc9, 35, 32, "forward", {make_tuple(1, 1, 10.0, 10.0), make_tuple(2, 2, 10.0, 10.0)});
 
     map.AddRoadLink(junc9, 33, 36, "forward", {make_tuple(1, 1, 10.0, 10.0)});
@@ -853,24 +952,23 @@ int main(int argc, char** argv)
 
     map.AddRoadLink(junc9, 35, 26, "right", {make_tuple(3, 1, 60.0, 20.0)});
 
-
     //Junc[10]-------------------------------------------------------------
     auto junc10 = map.AddJunction();
-    map.AddRoadLink(junc10, 32, 0, "right", {make_tuple(3, 2, 15.0, 15.0)});
+    map.AddRoadLink(junc10, 32, 44, "right", {make_tuple(3, 2, 15.0, 10.0)});
 
-    map.AddRoadLink(junc10, 1, 33, "left", {make_tuple(1, 2, 15.0, 15.0)});
-
+    map.AddRoadLink(junc10, 45, 33, "left", {make_tuple(1, 2, 25.0, 15.0)});
 
     //Junc[11]-------------------------------------------------------------
     auto junc11 = map.AddJunction();
+
 
     map.AddRoadLink(junc11, 38, 34, "right", {make_tuple(4, 2, 15.0, 15.0)});
 
     map.AddRoadLink(junc11, 36, 37, "left", {make_tuple(1, 2, 15.0, 15.0)});
 
-
     //Junc[12]-------------------------------------------------------------
     auto junc12 = map.AddJunction();
+
     map.AddRoadLink(junc12, 37, 39, "forward", {make_tuple(1, 1, 10.0, 10.0), make_tuple(2, 2, 10.0, 10.0)});
 
     map.AddRoadLink(junc12, 40, 38, "forward", {make_tuple(1, 1, 10.0, 10.0), make_tuple(2, 2, 10.0, 10.0)});
@@ -881,8 +979,21 @@ int main(int argc, char** argv)
 
     //Junc[13]-------------------------------------------------------------
     auto junc13 = map.AddJunction();
+
+
     map.AddRoadLink(junc13, 31, 40, "right", {make_tuple(1, 2, 15.0, 15.0)});
     map.AddRoadLink(junc13, 39, 30, "left", {make_tuple(1, 2, 15.0, 15.0)});
+
+
+    //Junc[14]-------------------------------------------------------------
+    auto junc14 = map.AddJunction();
+    map.AddRoadLink(junc14, 1, 42, "right", {make_tuple(2, 1, 8.0, 8.0)});
+    map.AddRoadLink(junc14, 43, 0, "left",  {make_tuple(1, 1, 15.0, 8.0)});
+    map.AddRoadLink(junc14, 44, 42, "left", {make_tuple(1, 1, 10.0, 8.0)});
+    map.AddRoadLink(junc14, 43, 45, "left",  {make_tuple(1, 2, 8.0, 8.0)});
+
+    map.AddRoadLink(junc14, 44, 0, "forward", {make_tuple(1, 1, 10, 10),make_tuple(2, 2, 10, 10),make_tuple(3, 3, 10, 10)});
+    map.AddRoadLink(junc14, 1, 45, "forward", {make_tuple(1, 1, 10, 10),make_tuple(2, 2, 10, 10)});
 
     //endregion
     map.Save(argv[1]);

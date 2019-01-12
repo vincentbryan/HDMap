@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-13.
-//
-
 #ifndef HDMAP_JUNCTION_H
 #define HDMAP_JUNCTION_H
 
@@ -15,7 +11,6 @@
 #include "RoadLink.h"
 #include "Interface/IView.h"
 #include "Interface/IGeometry.h"
-#include "kdtree.hpp"
 
 namespace hdmap
 {
@@ -33,12 +28,6 @@ private:
 
     MapPtr mMapInstantPtr;
 
-    std::vector<std::vector<double>> mKdtreeData;
-
-    kt::kdtree<double> mKdtree;
-
-    std::vector<Pose> mRegionPoses;
-
     std::vector<hdmap::Bezier> mBoundaryCurves;
 
     void GenerateRegionPoses() override;
@@ -51,22 +40,15 @@ public:
                        unsigned int _to_road_id, int _to_lane_idx, Pose _to_lane_pose,
                        double _ctrl_len1, double _ctrl_len2);
 
+    std::vector<hdmap::Bezier> GetBoundaryCurves();
 
-    void Send(Sender &sender) override;
+    void OnSend(Sender &sender) override;
 
     void FromXML(const pt::ptree &p) override;
-
-    bool IsCover(const Coor &v) override;
-
-    std::vector<Pose> GetRegionPoses() override;
-
-    std::vector<hdmap::Bezier> GetBoundaryCurves();
 
     boost::property_tree::ptree ToXML() override;
 
     RoadLink GetRoadLink(int rid1, int rid2 = -1);
-
-    double GetDistanceFromCoor(const Coor &v);
 
 };
 }

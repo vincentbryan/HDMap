@@ -1,6 +1,6 @@
 <launch>
 	<arg name="view_mode" default="ABSOLUTE" />
-	<node name="MapViewer" pkg="HDMap" args="$(find HDMap)/map/map.xml $(arg view_mode)" type="MapViewer" output="screen" cwd="node"/>
+	<node name="MapViewer" pkg="HDMap" args="$(find HDMap)/res/map.xml $(find HDMap)/res/mapwithgarage_net.pcd $(arg view_mode)" type="MapViewer" output="screen" cwd="node"/>
 	<node name="ViewDetectRegion" pkg="HDMap" type="ViewDetectRegion" output="screen" cwd="node" args="$(arg view_mode)"/>
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find HDMap)/launch/view_detect_region.rviz" required="true" output="screen" />
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find HDMap)/launch/view_world.rviz" required="true" output="screen" />
 </launch>

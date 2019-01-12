@@ -1,4 +1,4 @@
 <launch>
-  <node name="MapAgent" pkg="HDMap" type="MapAgent" output="screen" cwd="node">
+  <node name="MapAgent" pkg="HDMap" args="$(find HDMap)/res/mapwithgarage_net.pcd" type="MapAgent" output="screen" cwd="node">
   </node>
 </launch>

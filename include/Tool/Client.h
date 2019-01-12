@@ -5,10 +5,12 @@
 #ifndef HDMAP_ROUTING_H
 #define HDMAP_ROUTING_H
 
-#include <nox_location.h>
 #include "Type/Map.h"
 #include <HDMap/msg_map_cmd.h>
 #include <HDMap/srv_map_cmd.h>
+#include <pcl_ros/point_cloud.h>
+#include <pcl/kdtree/kdtree_flann.h>
+#include <nav_msgs/Odometry.h>
 
 namespace hdmap
 {
@@ -21,13 +23,18 @@ private:
     ros::Publisher mPubTrafficLight;
     ros::Publisher mPubPlanner;
     ros::Publisher mPubVIZ;
+    ros::Publisher mPubPointCloud;
+    ros::Publisher mPubRouteInfo;
     ros::Subscriber mSubGPS;
     ros::ServiceServer mServer;
     ros::ServiceClient mPlanClient;
     ros::ServiceClient mDataClient;
 
     std::mutex mLock;
-    Coor mCurrentPosition;
+    Pose mCurrentPose;
+
+    pcl::PointCloud<pcl::PointXYZI>::Ptr mLocalPointCloudPtr;
+    pcl::KdTreeFLANN <pcl::PointXYZI> mKdTree;
 
     class Record
     {
@@ -37,7 +44,9 @@ private:
         int curr_rid = -1;
         int curr_jid = -1;
         int next_idx = -1;
-
+        Pose start_pose = Pose(-1, -1, 0);
+        Pose target_pose = Pose(-1, -1, 0);
+        std::string plan_method = "undefined";
 
     public:
         void Reset()
@@ -47,13 +56,16 @@ private:
             curr_rid = -1;
             curr_jid = -1;
             next_idx = -1;
+            start_pose = Pose(-1, -1, 0);
+            target_pose = Pose(-1, -1, 0);
+            plan_method = "undefined";
         }
     }mRecord;
 
 public:
     Client(ros::NodeHandle &n);
 
-    void LocationCallBack(const nox_msgs::Location &msg);
+    void LocationCallBack(const nav_msgs::Odometry &msg);
 
     bool OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res);
 
@@ -65,16 +77,22 @@ public:
 
     void SendNearPolygonRegion(const Coor &v, double radius = 100);
 
+    void SendPointCloud(const Coor &v, const double& distance);
+
+    void SetInputPointCloud(const std::string& path);
+
     void Process();
+
 private:
 
-    bool RePlanRoute(const Coor& cur);
+    bool RePlanRoute(const Pose& cur_pose);
 
     bool PlanByCommand(const std::string& method, std::vector<double> argv);
 
     std::string GetNearRoadPtrs(std::vector<RoadPtr>& near_roads, const Coor& coor, double distance = 50);
 
     std::string GetNearJunctionPtrs(std::vector<JuncPtr>& near_juncs, const Coor& coor, double distance = 50);
+
 
 };
 }

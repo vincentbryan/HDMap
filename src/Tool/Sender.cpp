@@ -10,13 +10,13 @@ using namespace hdmap;
 
 unsigned int Sender::id = 0;
 
-Sender::Sender(ros::Publisher pub_) : frame_id("/world"), pub(pub_)
+Sender::Sender(ros::Publisher pub_) : frame_id("map"), pub(pub_)
 {};
 
 visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a, double z, double width)
 {
     visualization_msgs::Marker line_strip;
-    line_strip.header.frame_id = "/world";
+    line_strip.header.frame_id = frame_id;
     line_strip.header.stamp = ros::Time::now();
     line_strip.id = id++;
     line_strip.action = visualization_msgs::Marker::ADD;
@@ -53,7 +53,7 @@ visualization_msgs::Marker
 Sender::GetText(const std::string &content, Coor p, double r, double g, double b, double a, double z, double scale)
 {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "/world";
+    marker.header.frame_id = frame_id;
     marker.header.stamp = ros::Time::now();
     marker.action = visualization_msgs::Marker::ADD;
     marker.pose.orientation.w = 1.0;
@@ -80,7 +80,7 @@ Sender::GetText(const std::string &content, Coor p, double r, double g, double b
 visualization_msgs::Marker Sender::GetCone(const Coor &v, double r, double g, double b, double a, double scale) const
 {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "/world";
+    marker.header.frame_id = frame_id;
     marker.header.stamp = ros::Time::now();
     marker.action = visualization_msgs::Marker::ADD;
     marker.pose.orientation.w = 1.0;
@@ -116,7 +116,7 @@ visualization_msgs::Marker Sender::GetCone(const Coor &v, double r, double g, do
 visualization_msgs::Marker Sender::GetArrow(const Pose &p, double r, double g, double b, double a, double scale)
 {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "/world";
+    marker.header.frame_id = frame_id;
     marker.header.stamp = ros::Time::now();
     marker.action = visualization_msgs::Marker::ADD;
     marker.pose.orientation.w = 1.0;

@@ -3,9 +3,7 @@
 //
 #include <utility>
 #include <ros/ros.h>
-#include "nox_location.h"
 #include <visualization_msgs/Marker.h>
-#include "Type/Angle.h"
 #include <visualization_msgs/MarkerArray.h>
 #include <HDMap/msg_route_region.h>
 #include <mutex>
@@ -14,7 +12,10 @@
 #include <pcl/common/transforms.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <tf/transform_datatypes.h>
+#include <nav_msgs/Odometry.h>
+#include <Type/Pose.h>
 
+#include "Type/Angle.h"
 class ViewDetectRegion
 {
 
@@ -22,19 +23,19 @@ class ViewDetectRegion
     using PointCloud = pcl::PointCloud<PointT >;
     using Kdtree = pcl::KdTreeFLANN <PointT> ;
 
-    const char* CAR_RESOURCE_PATH= "package://HDMap/res/car2/car.dae";
-    const char* FRAME_ID = "/world";
+    const char* CAR_RESOURCE_PATH= "package://HDMap/res/car_texture/car.dae";
+
 
 public:
     enum DisPlayMode { ABSOLUTE, RELATIVE};
-
+    static char* FRAME_ID;
 
     explicit ViewDetectRegion(ros::NodeHandle& n)
     : mNode(n),mRegionPoints(new PointCloud),mode(RELATIVE) {
         mCurY=mCurX=mCurYaw = 0;
         mPubRegionPoint = n.advertise<sensor_msgs::PointCloud2>("/ViewDetectRegion/RegionPoint",1);
         mPubCarView = n.advertise<visualization_msgs::MarkerArray>("/ViewDetectRegion/CarInfo", 1);
-        mSubGPS = n.subscribe("Localization", 2,  &ViewDetectRegion::LocationCallBack, this);
+        mSubGPS = n.subscribe("odom", 2,  &ViewDetectRegion::LocationCallBack, this);
         mSubRegion = n.subscribe("map_pub_route_region", 2, &ViewDetectRegion::RoadRegionCallBack,this);
     }
 
@@ -42,44 +43,62 @@ public:
         visualization_msgs::MarkerArray array;
         visualization_msgs::Marker carmarker;
         visualization_msgs::Marker textmarker;
+        visualization_msgs::Marker triangle;
 
         if( mode == RELATIVE )
         {
             carmarker.pose.position.x = 0;
             carmarker.pose.position.y = 0;
-            carmarker.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(TFSIMD_HALF_PI,0,TFSIMD_PI);
         }
         else
         {
             carmarker.pose.position.x = mCurX;
             carmarker.pose.position.y = mCurY;
-            carmarker.pose.orientation =
-                    tf::createQuaternionMsgFromRollPitchYaw(TFSIMD_HALF_PI,0, TFSIMD_PI+mCurYaw*M_PI/180);
+            carmarker.pose.orientation = tf::createQuaternionMsgFromYaw(mCurYaw);
+
+            triangle.pose.position.x = mCurX;
+            triangle.pose.position.y = mCurY;
+            triangle.pose.orientation = tf::createQuaternionMsgFromYaw(mCurYaw+TFSIMD_HALF_PI);
+
         }
 
         carmarker.header.frame_id = FRAME_ID;
-        carmarker.header.stamp =ros::Time::now();
-        carmarker.id = 0;
+        carmarker.header.stamp = ros::Time::now();
+        carmarker.id = 1;
         carmarker.action = visualization_msgs::Marker::ADD;
-        carmarker.pose.position.z = 0.7;
+        carmarker.pose.position.z = 0;
         carmarker.scale.x =  1.8;
-        carmarker.scale.y =  1;
-        carmarker.scale.z =  4.0;
+        carmarker.scale.y =  4.0;
+        carmarker.scale.z =  1.0;
         carmarker.color.a = carmarker.color.g = carmarker.color.r = carmarker.color.b = 1;
-
-//        carmarker.type = visualization_msgs::Marker::MESH_RESOURCE;
-//        carmarker.mesh_resource = CAR_RESOURCE_PATH;
-
         carmarker.type = visualization_msgs::Marker::CUBE;
 
 
+        geometry_msgs::Point top;
+        geometry_msgs::Point bottom_left;
+        geometry_msgs::Point bottom_right;
+
+        triangle.header.frame_id = FRAME_ID;
+        triangle.header.stamp = ros::Time::now();
+        triangle.id = 2;
+        triangle.action = visualization_msgs::Marker::ADD;
+        triangle.pose.position.z = 1.0;
+        triangle.scale.x =  1.5;
+        triangle.scale.y =  0.5;
+        triangle.scale.z =  0.1;
+        triangle.color.a = triangle.color.g = triangle.color.r  = 1;
+        triangle.color.b = 0;
+        triangle.type = visualization_msgs::Marker::ARROW;
+
+
+
         char _buf[32];
-        sprintf(_buf,"(%3.2f, %3.2f, %3.1f)",mCurX,mCurY,mCurYaw);
+        sprintf(_buf,"(%3.2f, %3.2f, %3.1f)",mCurX,mCurY, mCurYaw*180.0/M_PI+90);
         textmarker.text= _buf;
 
         textmarker.header.frame_id = FRAME_ID;
         textmarker.header.stamp = ros::Time::now();
-        textmarker.id = 1;
+        textmarker.id = 0;
         textmarker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
         textmarker.action = visualization_msgs::Marker::ADD;
         textmarker.pose.position = carmarker.pose.position;
@@ -94,6 +113,7 @@ public:
 
         array.markers.emplace_back(carmarker);
         array.markers.emplace_back(textmarker);
+        array.markers.emplace_back(triangle);
         mPubCarView.publish(array);
     }
 
@@ -124,7 +144,7 @@ public:
             transform(0,3) = -mCurX;
             transform(1,3) = -mCurY;
             pcl::transformPointCloud (*transform_cloud, *transform_cloud, transform);
-            const double theta =  -mCurYaw*M_PI/180.0;
+            const double theta =  M_PI_2 -mCurYaw;
             transform(0,0) = cos (theta);
             transform(0,1) = -sin(theta);
             transform(1,0) = sin (theta);
@@ -142,17 +162,28 @@ public:
         mPubRegionPoint.publish(_tmp);
     }
 
-    void LocationCallBack(const nox_msgs::Location & msg)
+    void LocationCallBack(const nav_msgs::Odometry & msg)
     {
         std::lock_guard<std::mutex> lock(mLock);
+        /*
         // 位置调整
-        const double lx = 0.13;
+        const double lx = -0.13;
         const double ly = 1.34;
-        mCurYaw = msg.yaw -2.2;
+        mCurYaw = msg.yaw -1.5;
         const double theta = mCurYaw * M_PI / 180.0;
 
         mCurX = msg.x + lx * cos(theta) - ly * sin(theta);
         mCurY = msg.y + lx * sin(theta) + ly * cos(theta);
+        */
+
+        const auto& _position = msg.pose.pose.position;
+        mCurX = _position.x;
+        mCurY = _position.y;
+
+        geometry_msgs::Quaternion orientation = msg.pose.pose.orientation;
+        tf::Matrix3x3 mat(tf::Quaternion(orientation.x, orientation.y, orientation.z, orientation.w));
+        double _pitch, _roll;
+        mat.getEulerYPR(mCurYaw, _pitch, _roll);
 
         RenderCarInfo();
         RenderRegionPoint();
@@ -196,7 +227,7 @@ private:
     DisPlayMode mode;
 
 };
-
+char* ViewDetectRegion::FRAME_ID = "map";
 
 int main(int argc, char **argv)
 {
@@ -206,6 +237,7 @@ int main(int argc, char **argv)
 
     if (argc==1 || (argc == 2 && strcmp(argv[1],"RELATIVE" )==0))
     {
+        ViewDetectRegion::FRAME_ID = "ego";
         viewDetectRegion.SetMode(ViewDetectRegion::RELATIVE);
         ROS_INFO("ViewDetectRegion mode: RELATIVE");
     }

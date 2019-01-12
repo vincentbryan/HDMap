@@ -24,17 +24,17 @@ struct srv_map_cmdResponse_
   typedef srv_map_cmdResponse_<ContainerAllocator> Type;
 
   srv_map_cmdResponse_()
-    : route()  {
+    : suss(false)  {
     }
   srv_map_cmdResponse_(const ContainerAllocator& _alloc)
-    : route(_alloc)  {
+    : suss(false)  {
   (void)_alloc;
     }
 
 
 
-   typedef std::vector<int32_t, typename ContainerAllocator::template rebind<int32_t>::other >  _route_type;
-  _route_type route;
+   typedef uint8_t _suss_type;
+  _suss_type suss;
 
 
 
@@ -70,7 +70,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsFixedSize': False, 'IsMessage': True, 'HasHeader': False}
+// BOOLTRAITS {'IsFixedSize': True, 'IsMessage': True, 'HasHeader': False}
 // {'geometry_msgs': ['/opt/ros/melodic/share/geometry_msgs/cmake/../msg'], 'HDMap': ['/home/iceytan/CLionProjects/HDMap/msg'], 'std_msgs': ['/opt/ros/melodic/share/std_msgs/cmake/../msg']}
 
 // !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
@@ -80,12 +80,12 @@ namespace message_traits
 
 template <class ContainerAllocator>
 struct IsFixedSize< ::HDMap::srv_map_cmdResponse_<ContainerAllocator> >
-  : FalseType
+  : TrueType
   { };
 
 template <class ContainerAllocator>
 struct IsFixedSize< ::HDMap::srv_map_cmdResponse_<ContainerAllocator> const>
-  : FalseType
+  : TrueType
   { };
 
 template <class ContainerAllocator>
@@ -114,12 +114,12 @@ struct MD5Sum< ::HDMap::srv_map_cmdResponse_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "ba095d58d975bd3c99ae6d685178a1bb";
+    return "34610198ef7faf8dc35bc1abef48900b";
   }
 
   static const char* value(const ::HDMap::srv_map_cmdResponse_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xba095d58d975bd3cULL;
-  static const uint64_t static_value2 = 0x99ae6d685178a1bbULL;
+  static const uint64_t static_value1 = 0x34610198ef7faf8dULL;
+  static const uint64_t static_value2 = 0xc35bc1abef48900bULL;
 };
 
 template<class ContainerAllocator>
@@ -138,7 +138,7 @@ struct Definition< ::HDMap::srv_map_cmdResponse_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "int32[] route\n\
+    return "bool suss\n\
 ";
   }
 
@@ -157,7 +157,7 @@ namespace serialization
   {
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
-      stream.next(m.route);
+      stream.next(m.suss);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER
@@ -176,12 +176,8 @@ struct Printer< ::HDMap::srv_map_cmdResponse_<ContainerAllocator> >
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::HDMap::srv_map_cmdResponse_<ContainerAllocator>& v)
   {
-    s << indent << "route[]" << std::endl;
-    for (size_t i = 0; i < v.route.size(); ++i)
-    {
-      s << indent << "  route[" << i << "]: ";
-      Printer<int32_t>::stream(s, indent + "  ", v.route[i]);
-    }
+    s << indent << "suss: ";
+    Printer<uint8_t>::stream(s, indent + "  ", v.suss);
   }
 };
 

@@ -20,7 +20,7 @@ public:
 public:
     explicit Signal(){};
     Signal(double _x, double _y, double _z, Angle dir, std::string _type, std::string _info);
-    void Send(Sender &sender) override;
+    void OnSend(Sender &sender) override;
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
 };

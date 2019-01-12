@@ -1,20 +1,16 @@
-//
-// Created by vincent on 18-10-8.
-//
-
 #include <random>
+#include <Type/LaneSection.h>
+
 #include "Type/LaneSection.h"
 
 using namespace hdmap;
 
-LaneSection::LaneSection(unsigned int _section_id, double _s,
-                         Bezier _refer_line,
-                         CubicFunction _lane_offset)
+LaneSection:: LaneSection(unsigned int _section_id, double _s,
+                         Bezier _refer_line)
 {
-    mSectionId = _section_id;
+    ID = _section_id;
     mStartS = _s;
     mReferLine = _refer_line;
-    mLaneOffset = _lane_offset;
 }
 
 void LaneSection::AddLane(int _lane_idx, double _start_width, double _end_width, std::vector<int> _pred, std::vector<int> _succ)
@@ -22,7 +18,7 @@ void LaneSection::AddLane(int _lane_idx, double _start_width, double _end_width,
     if(_lane_idx > 0) mRightBoundary = std::max(mRightBoundary, _lane_idx);
     if(_lane_idx < 0) mLeftBoundary = std::min(mLeftBoundary, _lane_idx);
 
-    int lane_id = mSectionId * 100 + _lane_idx;
+    int lane_id = ID * 100 + _lane_idx;
     CubicFunction width(_start_width, mReferLine.Length(), _end_width);
     Lane lane(lane_id, width);
     lane.mPredecessors = std::move(_pred);
@@ -31,40 +27,20 @@ void LaneSection::AddLane(int _lane_idx, double _start_width, double _end_width,
     mLanes.insert(std::pair<int, Lane>(_lane_idx, lane));
 }
 
-std::vector<Pose> LaneSection::GetReferPose()
+std::vector<Pose> LaneSection::GetReferenceLinePose()
 {
-    if(mAllLanePose.empty())
-        GenerateAllPose(1.0);
+
+    GetRegionPoses();
+
     return mAllLanePose[0];
-}
-
-void LaneSection::GenerateAllPose(double ds)
-{
-    for(auto x : mLanes)
-        mAllLanePose[x.first] = std::vector<Pose>();
-
-    double _s = 0;
-    double len = mReferLine.Length();
-
-    while (true)
-    {
-        AppendPose(_s);
-        _s += ds;
-        if(_s >= len)
-        {
-            AppendPose(len);
-            break;
-        }
-    }
 }
 
 void LaneSection::AppendPose(double s_)
 {
     Pose refer_pose = mReferLine.GetPose(s_);
     mAllLanePose[0].emplace_back(refer_pose);
-    double width = 0;
-    int idx = 0;
-    for(idx = 1; idx <= mRightBoundary; idx++)
+
+    for(int idx = 1; idx <= mRightBoundary; idx++)
     {
 
         Angle angle = refer_pose.GetAngle();
@@ -76,23 +52,16 @@ void LaneSection::AppendPose(double s_)
     }
 }
 
-std::map<int, std::vector<Pose>> LaneSection::GetAllPose()
+void LaneSection::OnSend(Sender &sender)
 {
-    if(mAllLanePose.empty())
-        GenerateAllPose(1.0);
-    return mAllLanePose;
-}
-
-void LaneSection::Send(Sender &sender)
-{
-    if(mAllLanePose.empty()) GenerateAllPose(1.0);
+    if(mAllLanePose.empty()) GenerateRegionPoses();
 
     for(auto & x : mAllLanePose)
     {
         if(x.first == 0)
         {
             auto refer_line = sender.GetLineStrip(x.second, 199.0/255, 166.0/255, 33.0/255, 1.0);
-            sender.array.markers.push_back(refer_line);
+            sender.array.markers.emplace_back(refer_line);
         }
         else
         {
@@ -100,18 +69,19 @@ void LaneSection::Send(Sender &sender)
             double c = (rg()%255)/255.0;
 
             auto solid_line = sender.GetLineStrip(x.second, c, 0.7, 0.7, 1.0);
-            sender.array.markers.push_back(solid_line);
+            sender.array.markers.emplace_back(solid_line);
         }
         auto lane_idx = sender.GetText(std::to_string(x.first), x.second[x.second.size()/2].GetPosition());
-        sender.array.markers.push_back(lane_idx);
+        sender.array.markers.emplace_back(lane_idx);
     }
-    sender.Send();
+
+    // sender.Send();
 }
 
 boost::property_tree::ptree LaneSection::ToXML()
 {
     pt::ptree p_sec;
-    p_sec.add("<xmlattr>.id", mSectionId);
+    p_sec.add("<xmlattr>.id", ID);
     p_sec.add("<xmlattr>.s", mStartS);
     p_sec.add("<xmlattr>.left_idx", mLeftBoundary);
     p_sec.add("<xmlattr>.right_idx", mRightBoundary);
@@ -128,11 +98,17 @@ boost::property_tree::ptree LaneSection::ToXML()
 std::vector<Pose> LaneSection::GetLanePoseByIndex(int _index)
 {
     if(mAllLanePose.empty())
-        GetAllPose();
+        GenerateRegionPoses();
+
+    if ( _index > mRightBoundary || _index < -mRightBoundary)
+    {
+        throw std::out_of_range("out of range");
+    }
+
+    // support selecting by negative index.
     if (_index < 0) {
         _index = mRightBoundary + 1 + _index;
     }
-    assert(_index >= 0 && _index <= mRightBoundary);
 
     return mAllLanePose[_index];
 }
@@ -144,7 +120,7 @@ void LaneSection::FromXML(const pt::ptree &p)
     {
         if(sec_child.first == "<xmlattr>")
         {
-            mSectionId = sec_child.second.get<int>("id");
+            ID = sec_child.second.get<int>("id");
             mStartS = sec_child.second.get<double>("s");
             mLeftBoundary = sec_child.second.get<int>("left_idx");
             mRightBoundary = sec_child.second.get<int>("right_idx");
@@ -171,27 +147,46 @@ void LaneSection::FromXML(const pt::ptree &p)
     }
 }
 
-
-bool LaneSection::IsCover(const Coor &v)
+void LaneSection::GenerateRegionPoses()
 {
-    if(mAllLanePose.empty()) GenerateAllPose(1.0);
+    /// In lane section, all pose, include every lanes, will be generate
+    /// But only reference line and the right most lane's pose will
 
-    std::vector<Pose> vec;
+    const double ds = 1.0;
+    for(auto x : mLanes)
+        mAllLanePose[x.first] = std::vector<Pose>();
 
-    for(auto & x : mReferLine.GetPoses(1.0))
+    double _s = 0;
+    double len = mReferLine.Length();
+
+    while (true)
     {
-        vec.push_back(x);
+        AppendPose(_s);
+        _s += ds;
+        if(_s >= len)
+        {
+            AppendPose(len);
+            break;
+        }
     }
 
-    if(mRightBoundary > 0)
+    // generate region pose for cover checking and distance searching.
+    if (mRightBoundary <= 0)
     {
-        auto ps = mAllLanePose[mRightBoundary];
-        std::reverse(ps.begin(), ps.end());
-        for(auto & x : ps) vec.push_back(x);
+        throw std::runtime_error("There is not any lanes added to this lane section yet.");
     }
 
-    return IGeometry::Cover(vec, {v});
+    mRegionPoses.clear();
+    for (auto & _pose : mReferLine.GetPoses(1.0))
+    {
+        mRegionPoses.emplace_back(_pose);
+    }
+
+    for (auto it = mAllLanePose[mRightBoundary].rbegin();
+         it != mAllLanePose[mRightBoundary].rend(); ++it)
+    {
+        mRegionPoses.emplace_back(*it);
+    }
 
 }
-
 

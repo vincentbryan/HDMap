@@ -8,16 +8,16 @@ find_package(catkin REQUIRED COMPONENTS
 		std_msgs
 		geometry_msgs
 		message_generation
-
 		tf
 		tf_conversions
+        nav_msgs
 )
 
 find_package( PCL REQUIRED)
 
 add_message_files(
 FILES
-msg_signal.msg msg_signal_list.msg msg_map_cmd.msg msg_route_region.msg
+msg_signal.msg msg_signal_list.msg msg_map_cmd.msg msg_route_region.msg msg_route_info.msg
 )
 add_service_files(
 FILES srv_route.srv srv_map_cmd.srv srv_map_data.srv
@@ -73,12 +73,6 @@ add_executable(MapCommand
 		src/Tool/Sender.cpp
 )
 
-add_executable(ViewGPS
-		${TYPES}
-		${MATH}
-		src/Tool/ViewGPS.cpp
-		src/Tool/Sender.cpp
-		)
 
 add_executable(MapViewer
 		${TYPES}
@@ -103,37 +97,14 @@ add_executable(ViewDetectRegion
 
 add_executable(RepubPoint src/Tool/Republish.cpp)
 
-target_link_libraries(MapService
-${catkin_LIBRARIES}
-)
+add_executable(FakeMapCommand src/FakeMapCmd.cpp)
 
-target_link_libraries(ViewGPS
-${catkin_LIBRARIES}
-)
-
-target_link_libraries(MapGenerator
-${catkin_LIBRARIES}
-)
-
-target_link_libraries(MapAgent
-${catkin_LIBRARIES}
-)
-
-target_link_libraries(MapCommand
-${catkin_LIBRARIES}
-)
-
-target_link_libraries(MapViewer
-${catkin_LIBRARIES}
-)
-
-target_link_libraries(MapTest
-${catkin_LIBRARIES}
-)
-
-target_link_libraries(ViewDetectRegion
-${catkin_LIBRARIES}
-${PCL_LIBRARIES}
-)
-
+target_link_libraries(MapService ${catkin_LIBRARIES})
+target_link_libraries(MapGenerator ${catkin_LIBRARIES})
+target_link_libraries(MapAgent ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(MapCommand ${catkin_LIBRARIES})
+target_link_libraries(MapViewer ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(MapTest ${catkin_LIBRARIES})
+target_link_libraries(ViewDetectRegion ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(RepubPoint ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(FakeMapCommand ${catkin_LIBRARIES})

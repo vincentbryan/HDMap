@@ -13,7 +13,7 @@
 #include "Road.h"
 #include "Junction.h"
 #include "Tool/Sender.h"
-#include "common.h"
+#include "Common/pointer_typedef.h"
 
 namespace hdmap
 {
@@ -23,11 +23,16 @@ class Map : public IXML
 {
 
     std::unordered_map<unsigned int, RoadPtr> mRoadIdToPtr;
+
     std::unordered_map<unsigned int, JuncPtr> mJuncIdToPtr;
+
+
 
 public:
     std::vector<RoadPtr> RoadPtrs;
+
     std::vector<JuncPtr> JuncPtrs;
+
     std::shared_ptr<Sender> pSender;
 
     Map();
@@ -82,7 +87,9 @@ public:
     
     std::vector<JuncPtr> GetJuncPtrByDistance(const Coor& coor, double distance, bool keep_one = false);
 
-    std::tuple<RoadPtr, SecPtr, int> GetLaneInfoByPosition(const Coor& coor);
+    std::tuple<RoadPtr, SecPtr, int> GetLaneInfoByPose(const Pose &pose);
+
+    std::tuple<JuncPtr, RoadLink, int> GetRoadLinkByPose(const Pose& pose);
 
 };
 }

@@ -17,67 +17,12 @@ Road::Road(Pose _start_pose)
     mStartPose = _start_pose;
 }
 
-std::vector<Pose> Road::Trajectory(int begin_lane_idx, int end_lane_idx)
+void Road::OnSend(Sender &sender)
 {
-    if(mSecPtrs.size() == 1)
-    {
-        return mSecPtrs.back()->GetLanePoseByIndex(end_lane_idx);
-    }
-
-    std::vector<std::vector<int>> scheme;
-
-    auto search = std::function<void(unsigned int, int, std::vector<int>)>();
-
-    search = [&](unsigned int curr_sec_id, int curr_lane_idx, std::vector<int> v)
-    {
-        if(curr_sec_id + 1 == mSecPtrs.size()-1)
-        {
-            for(auto & m : mSecPtrs[curr_sec_id]->mLanes[curr_lane_idx].mSuccessors)
-            {
-                if(m == end_lane_idx)
-                {
-                    v.emplace_back(curr_lane_idx);
-                    v.emplace_back(end_lane_idx);
-                    scheme.emplace_back(v);
-                }
-            }
-        }
-        else
-        {
-            for(auto & x : mSecPtrs[curr_sec_id]->mLanes[curr_lane_idx].mSuccessors)
-            {
-                v.emplace_back(curr_lane_idx);
-                search(curr_sec_id+1, x, v);
-                v.pop_back();
-            }
-        }
-    };
-
-    std::vector<int> v;
-    search(0, begin_lane_idx, v);
-
-    for(auto & x : scheme)
-    {
-        for(auto & y : x)
-            std::cout << y << " ";
-        std::cout << std::endl;
-    }
-
-    //TODO
-    auto r = scheme.front();
-
-    std::vector<Pose> res;
-    for(int i = 0; i < mSecPtrs.size(); i++)
-    {
-        auto p = mSecPtrs[i]->GetLanePoseByIndex(r[i]);
-        res.insert(res.end(), p.begin(), p.end());
-    }
-    return res;
-}
-
-void Road::Send(Sender &sender)
-{
-    std::string text = "Road[" + std::to_string(ID) + "]: " + std::to_string(Lenght);
+    char _buf[128];
+    sprintf(_buf,"Road[%d]: %4.2fm, %4.2fdeg",
+            ID, Lenght, GetReferenceLinePoses().front().GetAngle().Value());
+    std::string text = _buf;
 
     auto p1 = GetReferenceLinePoses().front();
     p1.Rotate(-90);
@@ -90,22 +35,13 @@ void Road::Send(Sender &sender)
     auto m1 = sender.GetText(text, p1.GetPosition());
     auto m2 = sender.GetText(text, p2.GetPosition());
 
-    /* 
-    GenerateRegionPoses();
-    std::vector<Pose> roadRegionPs;
-    for(auto & x : mRegionVertices) roadRegionPs.emplace_back(x, Angle(0));
-    roadRegionPs.emplace_back(mRegionVertices.front(), Angle(0));
-
-    auto m3 = sender.GetLineStrip(roadRegionPs, 76.0/255.0, 180.0/255.0, 231.0/255.0, 1.0, 0, 0.15);
-    */
-    
     sender.array.markers.emplace_back(m1);
     sender.array.markers.emplace_back(m2);
-    // sender.array.markers.emplace_back(m3);
-    sender.Send();
 
-    for(auto & s : mSecPtrs) s->Send(sender);
-    for(auto & s : mSigPtrs) s->Send(sender);
+    //sender.Send();
+
+    for(auto & s : mSecPtrs) s->OnSend(sender);
+    for(auto & s : mSigPtrs) s->OnSend(sender);
 }
 
 boost::property_tree::ptree Road::ToXML()
@@ -178,23 +114,14 @@ void Road::FromXML(const pt::ptree &p)
     }
 }
 
-bool Road::IsCover(const Coor &v)
-{
-    for(auto & x : mSecPtrs)
-    {
-        if(x->IsCover(v))
-            return true;
-    }
-    return false;
-}
-
 std::vector<SigPtr> Road::GetSignals()
 {
     return mSigPtrs;
 }
 
 void Road::GenerateRegionPoses() {
-    if (mRegionPoses.empty()) {
+    if (mRegionPoses.empty())
+    {
         auto left_poses= GetReferenceLinePoses();
         auto right_poses = GetRightmostLinePoses();
         mRegionPoses.insert(mRegionPoses.end(), left_poses.rbegin(), left_poses.rend());
@@ -210,41 +137,25 @@ void Road::GenerateRegionPoses() {
     };
 }
 
-std::vector<Pose> Road::GetReferenceLinePoses() {
+std::vector<Pose> Road::GetReferenceLinePoses()
+{
     std::vector<Pose> poses;
     for(const auto& sp: mSecPtrs){
-        auto sec_poses = sp->GetReferPose();
+        const auto& sec_poses = sp->GetReferenceLinePose();
         poses.insert(poses.end(),sec_poses.begin(),sec_poses.end());
     }
     return poses;
 }
 
-std::vector<Pose> Road::GetRightmostLinePoses() {
+std::vector<Pose> Road::GetRightmostLinePoses()
+{
     std::vector<Pose> poses;
     for(const auto &sp: mSecPtrs){
-        auto sp_pose = sp->GetLanePoseByIndex(sp->mRightBoundary);
+        const auto& sp_pose = sp->GetLanePoseByIndex(sp->mRightBoundary);
         poses.insert(poses.end(),sp_pose.begin(),sp_pose.end());
     }
     return poses;
 }
 
-double Road::GetDistanceFromCoor(const Coor &v) {
-    if (mRegionPoses.empty()) {
-        GenerateRegionPoses();
-    }
 
-    if (IsCover(v)) return 0;
-    
-    std::vector<int> indices;
-    std::vector<double> distances;
-    mKdtree.NearestSearch({v.x, v.y}, indices, distances, 1);
-    return distances[0];
-}
-
-std::vector<Pose> Road::GetRegionPoses() {
-    if (mRegionPoses.empty()) {
-        GenerateRegionPoses();
-    }
-    return mRegionPoses;
-}
 

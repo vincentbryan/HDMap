@@ -23,7 +23,7 @@ public:
     
     boost::property_tree::ptree ToXML() override;
     void FromXML(const pt::ptree &p) override;
-    void Send(Sender &sender) override;
+    void OnSend(Sender &sender) override;
 };
 }
 

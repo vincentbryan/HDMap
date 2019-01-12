@@ -1,14 +1,14 @@
-//
-// Created by vincent on 18-11-3.
-//
-
 #ifndef HDMAP_IGEOMETRY_H
 #define HDMAP_IGEOMETRY_H
 
-#include "Type/Pose.h"
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <iostream>
+#include <exception>
+
+#include "Common/kdtree.hpp"
+#include "Type/Pose.h"
 
 namespace hdmap
 {
@@ -16,9 +16,31 @@ class IGeometry
 {
 public:
 
-    virtual bool IsCover(const Coor &v) = 0;
+    const std::vector<Pose>& GetRegionPoses()
+    {
+        if (mRegionPoses.empty()) GenerateRegionPoses();
 
-    virtual std::vector<Pose> GetRegionPoses() = 0;
+        if (mRegionPoses.empty())
+        {
+            throw std::runtime_error("Cannot not Generate Pose.");
+        }
+
+        return mRegionPoses;
+    }
+
+    bool IsCover(const Coor& v)
+    {
+        return Cover(GetRegionPoses(), {v});
+    }
+
+    double GetDistanceFromCoor(const Coor& v)
+    {
+        if (IsCover(v)) return 0;
+        std::vector<int> indices;
+        std::vector<double> distances;
+        mKdtree.NearestSearch({v.x, v.y}, indices, distances, 1);
+        return distances[0];
+    }
 
     static bool Cover(std::vector<Pose> _vertices, const std::vector<Coor> &vp)
     {
@@ -54,9 +76,19 @@ public:
 
 protected:
 
+    static constexpr double CURVE_DS = 1.0;
+
     virtual void GenerateRegionPoses() = 0;
 
+    kt::kdtree<double> mKdtree;
+
+    std::vector<std::vector<double>> mKdtreeData;
+
+    std::vector<Pose> mRegionPoses;
+
 };
+
+//const double IGeometry::CURVE_DS = 1.0;
 
 }
 
