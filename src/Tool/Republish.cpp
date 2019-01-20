@@ -97,6 +97,7 @@ int main(int argc, char **argv){
     ros::NodeHandle nh_("~");
     nh_.param("velo2imu_XYZ", velo2imu_XYZ);
     nh_.param("velo2imu_RPY", velo2imu_RPY);
+
     if(velo2imu_XYZ.size() != 3) velo2imu_XYZ = {0.0593174, -1.45416, -1.35861};
     if(velo2imu_RPY.size() != 3) velo2imu_RPY = {1.19488, 2.25248, 94.6435};
 

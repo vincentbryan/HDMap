@@ -6,6 +6,8 @@
 #define HDMAP_ROUTING_H
 
 #include "Type/Map.h"
+#include "nox_msg/nox_location.h"
+
 #include <HDMap/msg_map_cmd.h>
 #include <HDMap/srv_map_cmd.h>
 #include <pcl_ros/point_cloud.h>
@@ -65,7 +67,9 @@ private:
 public:
     Client(ros::NodeHandle &n);
 
-    void LocationCallBack(const nav_msgs::Odometry &msg);
+    void OdometryCallBack(const nav_msgs::Odometry &msg);
+
+    void LocationCallBack(const nox_msgs::Location &msg);
 
     bool OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res);
 

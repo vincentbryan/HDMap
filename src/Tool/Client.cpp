@@ -12,6 +12,8 @@
 #include <tf/tf.h>
 
 #include "Tool/Client.h"
+
+
 using namespace hdmap;
 
 Client::Client(ros::NodeHandle & n)
@@ -36,7 +38,7 @@ Client::Client(ros::NodeHandle & n)
     mCurrentPose = Pose();
 }
 
-void Client::LocationCallBack(const nav_msgs::Odometry &msg)
+void Client::OdometryCallBack(const nav_msgs::Odometry &msg)
 {
     std::lock_guard<std::mutex> lock(mLock);
     const auto& _position = msg.pose.pose.position;
@@ -46,6 +48,14 @@ void Client::LocationCallBack(const nav_msgs::Odometry &msg)
     mat.getEulerYPR(_yaw, _pitch, _roll);
     mCurrentPose = {_position.x, _position.y, 90.0 + _yaw*180.0/TFSIMD_PI};
 }
+
+
+void Client::LocationCallBack(const nox_msgs::Location &msg)
+{
+    std::lock_guard<std::mutex> lock(mLock);
+    mCurrentPose = {msg.x, msg.y, 90.0 + msg.yaw};
+}
+
 
 bool Client::OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res)
 {
