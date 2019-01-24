@@ -340,7 +340,7 @@ std::vector<RoadPtr> Map::GetRoadPtrByDistance(const Coor &coor, double distance
 
         if (r_ptr != nullptr) {
             double _dis = r_ptr->GetDistanceFromCoor(coor);
-            if (_dis > _nearest_dis) continue;
+            if (_dis > distance) continue;
             _road_dis_vec.emplace_back(_dis, r_ptr);
             if (_nearest_dis > _dis)
             {

@@ -1,6 +1,12 @@
 <launch>
-	<group>
-		<include file="$(find HDMap)/launch/map_service.launch"/>
-		<include file="$(find HDMap)/launch/map_agent.launch"/>
-	</group>
+	<arg name="route_net_path" default="$(find HDMap)/res/map.xml"/>
+	<arg name="point_cloud_path" default="$(find HDMap)/res/mapwithgarage.pcd"/>
+
+	<include file="$(find HDMap)/launch/map_service.launch">
+		<arg name="route_net_path" value="$(arg route_net_path)"/>
+	</include>
+
+	<include file="$(find HDMap)/launch/map_agent.launch">
+		<arg name="point_cloud_path" value="$(arg point_cloud_path)"/>
+	</include>
 </launch>

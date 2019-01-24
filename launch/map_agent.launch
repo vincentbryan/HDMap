@@ -1,4 +1,5 @@
 <launch>
-  <node name="MapAgent" pkg="HDMap" args="$(find HDMap)/res/mapwithgarage_net.pcd" type="MapAgent" output="screen" cwd="node">
+  <arg name="point_cloud_path" default="$(find HDMap)/res/mapwithgarage.pcd"/>
+  <node name="MapAgent" pkg="HDMap" args="$(arg point_cloud_path)" type="MapAgent" output="screen" cwd="node">
   </node>
 </launch>

@@ -80,9 +80,9 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "map_command");
     ros::NodeHandle n;
-    ros::ServiceClient client = n.serviceClient<HDMap::srv_map_cmd>("map_command");
-    
-    ros::Subscriber  subscriber = n.subscribe("map_pub_route_info",1,OnRouteInfoUpdate);
+
+    ros::ServiceClient client = n.serviceClient<HDMap::srv_map_cmd>("/map_command");
+    ros::Subscriber  subscriber = n.subscribe("/map_pub_route_info",1,OnRouteInfoUpdate);
 
     auto command = [&]()
     {

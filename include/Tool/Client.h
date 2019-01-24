@@ -27,7 +27,8 @@ private:
     ros::Publisher mPubVIZ;
     ros::Publisher mPubPointCloud;
     ros::Publisher mPubRouteInfo;
-    ros::Subscriber mSubGPS;
+    ros::Subscriber mOdomSubscribe;
+    ros::Subscriber mLocaSubscribe;
     ros::ServiceServer mServer;
     ros::ServiceClient mPlanClient;
     ros::ServiceClient mDataClient;

@@ -18,22 +18,23 @@ using namespace hdmap;
 
 Client::Client(ros::NodeHandle & n)
 {
-    ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 1000);
+    ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("/HDMap", 10);
     std::shared_ptr<Sender> p_sender(new Sender(pub));
     mCurPlanMap.SetSender(p_sender);
 
-    mPlanClient = n.serviceClient<HDMap::srv_route>("map_plan_service");
-    mDataClient = n.serviceClient<HDMap::srv_map_data>("map_data_service");
+    mPlanClient = n.serviceClient<HDMap::srv_route>("/map_plan_service");
+    mDataClient = n.serviceClient<HDMap::srv_map_data>("/map_data_service");
 
-    mPubRouteRegion = n.advertise<HDMap::msg_route_region>("map_pub_route_region",1);
-    mPubTrafficLight = n.advertise<HDMap::msg_signal_list>("map_to_traffic_light", 1);
-    mPubVIZ = n.advertise<visualization_msgs::Marker>("map_to_rviz", 100);
-    mPubPlanner = n.advertise<std_msgs::String>("map_to_planner", 1);
-    mPubPointCloud = n.advertise<sensor_msgs::PointCloud2>("map_pub_pointcloud", 5, true);
-    mPubRouteInfo = n.advertise<HDMap::msg_route_info>("map_pub_route_info", 5, true);
+    mPubRouteRegion = n.advertise<HDMap::msg_route_region>("/map_pub_route_region",1);
+    mPubTrafficLight = n.advertise<HDMap::msg_signal_list>("/map_to_traffic_light", 1);
+    mPubVIZ = n.advertise<visualization_msgs::Marker>("/map_to_rviz", 10);
+    mPubPlanner = n.advertise<std_msgs::String>("/map_to_planner", 1);
+    mPubPointCloud = n.advertise<sensor_msgs::PointCloud2>("/map_pub_pointcloud", 5, true);
+    mPubRouteInfo = n.advertise<HDMap::msg_route_info>("/map_pub_route_info", 5, true);
 
-    mSubGPS = n.subscribe("odom", 1, &Client::LocationCallBack, this);
-    mServer = n.advertiseService("map_command", &Client::OnCommandRequest, this);
+    mOdomSubscribe = n.subscribe("/odom", 1, &Client::OdometryCallBack, this);
+    mLocaSubscribe = n.subscribe("/Location", 1, &Client::LocationCallBack, this);
+    mServer = n.advertiseService("/map_command", &Client::OnCommandRequest, this);
 
     mCurrentPose = Pose();
 }

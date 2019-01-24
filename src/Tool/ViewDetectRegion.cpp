@@ -35,8 +35,8 @@ public:
         mCurY=mCurX=mCurYaw = 0;
         mPubRegionPoint = n.advertise<sensor_msgs::PointCloud2>("/ViewDetectRegion/RegionPoint",1);
         mPubCarView = n.advertise<visualization_msgs::MarkerArray>("/ViewDetectRegion/CarInfo", 1);
-        mSubGPS = n.subscribe("odom", 2,  &ViewDetectRegion::LocationCallBack, this);
-        mSubRegion = n.subscribe("map_pub_route_region", 2, &ViewDetectRegion::RoadRegionCallBack,this);
+        mSubGPS = n.subscribe("/odom", 2,  &ViewDetectRegion::LocationCallBack, this);
+        mSubRegion = n.subscribe("/map_pub_route_region", 2, &ViewDetectRegion::RoadRegionCallBack,this);
     }
 
     void  RenderCarInfo(){
@@ -227,31 +227,34 @@ private:
     DisPlayMode mode;
 
 };
-char* ViewDetectRegion::FRAME_ID = "map";
+char* ViewDetectRegion::FRAME_ID = "/map";
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "ViewDetectRegion");
-    ros::NodeHandle n;
+    ros::NodeHandle n("~");
     ViewDetectRegion viewDetectRegion(n);
 
-    if (argc==1 || (argc == 2 && strcmp(argv[1],"RELATIVE" )==0))
+    std::string view_mode;
+
+    n.param<std::string>("view_mode", view_mode, "ABSOLUTE");
+    if (view_mode != "ABSOLUTE" && view_mode != "RELATIVE")
     {
-        ViewDetectRegion::FRAME_ID = "ego";
-        viewDetectRegion.SetMode(ViewDetectRegion::RELATIVE);
-        ROS_INFO("ViewDetectRegion mode: RELATIVE");
+        ROS_WARN("[ viewDetectRegion ] view_mode should be set to ABSOLUTE or RELATIVE, %s is illegal, ABSOLUTE will be used.", view_mode.c_str());
+        view_mode = "ABSOLUTE";
     }
-    else if (argc == 2 && strcmp(argv[1],"ABSOLUTE" )==0)
+    ROS_INFO("[viewDetectRegion ] view mode: %s", view_mode.c_str());
+
+    if (view_mode == "RELATIVE")
     {
-        viewDetectRegion.SetMode(ViewDetectRegion::ABSOLUTE);
-        ROS_INFO("ViewDetectRegion mode: ABSOLUTE");
+        ViewDetectRegion::FRAME_ID = "/velodyne";
+        viewDetectRegion.SetMode(ViewDetectRegion::RELATIVE);
     }
     else
     {
-        ROS_ERROR("Invalid input: %s",argv[1]);
+        viewDetectRegion.SetMode(ViewDetectRegion::ABSOLUTE);
     }
 
     ros::spin();
-
     return 0;
 }

@@ -1,4 +1,6 @@
 <launch>
-  <node name="MapService" pkg="HDMap" args="$(find HDMap)/res/map.xml" type="MapService" output="screen" cwd="node">
+  <arg name="route_net_path" default="$(find HDMap)/res/map.xml"/>
+  <node name="MapService" pkg="HDMap" type="MapService" output="screen" cwd="node">
+    <param name="route_net_path" value="$(arg route_net_path)"/>
   </node>
 </launch>

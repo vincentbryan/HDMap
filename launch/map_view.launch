@@ -1,0 +1,17 @@
+<launch>
+    <arg name="route_net_path" default="$(find HDMap)/res/map.xml"/>
+    <arg name="point_cloud_path" default="$(find HDMap)/res/mapwithgarage.pcd"/>
+    <arg name="view_mode" default="ABSOLUTE"/>
+
+    <node name="MapViewer" pkg="HDMap" type="MapViewer" output="screen" cwd="node">
+        <param name="route_net_path" value="$(arg route_net_path)"/>
+        <param name="point_cloud_path" value="$(arg point_cloud_path)"/>
+        <param name="view_mode" value="$(arg view_mode)"/>
+    </node>
+
+    <node name="ViewDetectRegion" pkg="HDMap" type="ViewDetectRegion" output="screen" cwd="node">
+        <param name="view_mode" value="$(arg view_mode)"/>
+    </node>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find HDMap)/launch/view_world.rviz" required="true" output="screen" />
+
+</launch>

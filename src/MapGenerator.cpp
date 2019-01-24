@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 
     double offset = 0.0;
     ros::NodeHandle n;
-    ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 5000);
+    ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("/HDMap", 5000);
     shared_ptr<Sender> p_sender(new Sender(pub));
 
     Map map;

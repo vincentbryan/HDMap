@@ -11,14 +11,14 @@ using namespace std;
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "map_agent");
+    ros::NodeHandle n("~");
 
-    if(argc != 2)
-    {
-        std::cout << "Too few arguments, Usage: ./MapAgent point_cloud_path" << std::endl;
-        return 1;
-    }
+    std::string route_net_path;
+    std::string point_cloud_path;
 
-    ros::NodeHandle n;
+    n.param<std::string>("point_cloud_path", point_cloud_path, "");
+    ROS_INFO("[ Map Agent ] point_cloud_path: %s", point_cloud_path.empty()? "not set":point_cloud_path.c_str());
+
 
     ROS_INFO_STREAM("Map agent is ready...");
 

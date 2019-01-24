@@ -9,6 +9,8 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <nav_msgs/Odometry.h>
 
+#include "nox_msg/nox_location.h"
+
 using namespace std;
 
 
@@ -113,12 +115,13 @@ void renderPolygon(const HDMap::msg_route_region& msg)
 int main(int argc, char** argv){
     ros::init(argc, argv, "map_test");
     ros::NodeHandle n;
-    ros::Publisher GPSPublisher = n.advertise<nav_msgs::Odometry>("odom", 1);
+
+    ros::Publisher GPSPublisher = n.advertise<nav_msgs::Odometry>("/odom", 1);
     ros::Publisher MarkerPublisher = n.advertise<visualization_msgs::MarkerArray>("/CurCar", 0);
 
-    ros::ServiceClient map_data_client = n.serviceClient<HDMap::srv_map_data>("map_data_service");
-    ros::ServiceClient map_plan_client = n.serviceClient<HDMap::srv_route>("map_plan_service");
-    ros::Subscriber map_sub_route_region = n.subscribe("map_pub_route_region",10,renderPolygon);
+    ros::ServiceClient map_data_client = n.serviceClient<HDMap::srv_map_data>("/map_data_service");
+    ros::ServiceClient map_plan_client = n.serviceClient<HDMap::srv_route>("/map_plan_service");
+    ros::Subscriber map_sub_route_region = n.subscribe("/map_pub_route_region",10,renderPolygon);
 
     // mode values
     bool is_cut_commond_IO = false;

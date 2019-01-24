@@ -14,23 +14,28 @@ using namespace std;
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "map_service");
-    if(argc != 2)
+    ros::NodeHandle n("~");
+
+    std::string route_net_path;
+    n.param<std::string>("route_net_path", route_net_path, "");
+    if(route_net_path.empty())
     {
-        std::cout << "Too few arguments, Usage: ./MapService input_map" << std::endl;
-        return 1;
+        ROS_ERROR("[ Map Service ] route_net_path is empty.");
+        return -1;
+    } else{
+        ROS_INFO("[ Map Service ] route_net_path: %s", route_net_path.c_str());
     }
 
-    ros::NodeHandle n;
-    ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("HDMap", 100);
+    ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("/HDMap", 100);
     shared_ptr<Sender> p_sender(new Sender(pub));
 
-    Resource resource(argv[1]);
+    Resource resource(route_net_path);
     resource.SetSender(p_sender);
 
     Planner planner(resource.GetMap(), p_sender);
 
-    ros::ServiceServer plan_server = n.advertiseService("map_plan_service", &Planner::OnRequest, &planner);
-    ros::ServiceServer data_server = n.advertiseService("map_data_service", &Resource::OnRequest, &resource);
+    ros::ServiceServer plan_server = n.advertiseService("/map_plan_service", &Planner::OnRequest, &planner);
+    ros::ServiceServer data_server = n.advertiseService("/map_data_service", &Resource::OnRequest, &resource);
     ROS_INFO("MapService is ready...");
 
     ros::spin();

@@ -10,7 +10,7 @@ using namespace hdmap;
 
 unsigned int Sender::id = 0;
 
-Sender::Sender(ros::Publisher pub_) : frame_id("map"), pub(pub_)
+Sender::Sender(ros::Publisher pub_) : frame_id("/map"), pub(pub_)
 {};
 
 visualization_msgs::Marker Sender::GetLineStrip(std::vector<Pose> poses, double r, double g, double b, double a, double z, double width)
