@@ -1,0 +1,13 @@
+<!-- 
+map_fake_cmd.launch 
+在启动之后，每隔一定周期向服务器发送固定的规划请求，例如强制不断请求规划  0 4 18 11 42 的路线，可以为
+  
+  $: roslaunch HDMap map_fake_cmd.launch route:="0 4 18 11 42"
+     
+-->
+
+<launch>
+  <arg name="route" default="0 4 18 11 42" />
+  <node name="FakeMapCommand" pkg="HDMap" type="FakeMapCommand" args="$(arg route)" output="screen" cwd="node">
+  </node>
+</launch>

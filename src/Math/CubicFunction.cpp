@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-15.
-//
-
 #include "Math/CubicFunction.h"
 
 using namespace hdmap;

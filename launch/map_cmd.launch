@@ -1,4 +1,8 @@
+<!--  
+map_cmd.launch
+开启地图规划控制台
+-->
 <launch>
-  <node name="MapCommand" pkg="HDMap" type="MapCommand" output="screen" cwd="node">
-  </node>
+    <node name="MapCommand" pkg="HDMap" type="MapCommand" output="screen" cwd="node">
+    </node>
 </launch>

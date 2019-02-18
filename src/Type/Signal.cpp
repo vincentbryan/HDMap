@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-26.
-//
-
 #include "Type/Signal.h"
 using namespace hdmap;
 

@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-12.
-//
-
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <Tool/Sender.h>

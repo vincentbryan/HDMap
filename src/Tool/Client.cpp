@@ -1,6 +1,3 @@
-//
-// Created by vincent on 18-10-31.
-//
 #include <HDMap/msg_signal_list.h>
 #include <HDMap/msg_route_region.h>
 #include <HDMap/msg_route_info.h>

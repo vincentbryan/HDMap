@@ -1,6 +1,3 @@
-//
-// Created by iceytan on 18-11-26.
-//
 #include <utility>
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>

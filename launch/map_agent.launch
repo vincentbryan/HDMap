@@ -1,3 +1,7 @@
+<!--  
+map_agent.launch
+开启地图客户端服务，主要参数为接收地图点云文件的路径
+-->
 <launch>
   <arg name="point_cloud_path" default="$(find HDMap)/res/mapwithgarage.pcd"/>
   <node name="MapAgent" pkg="HDMap" args="$(arg point_cloud_path)" type="MapAgent" output="screen" cwd="node">

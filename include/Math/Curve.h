@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-9.
-//
-
 #ifndef HDMAP_CURVE_H
 #define HDMAP_CURVE_H
 

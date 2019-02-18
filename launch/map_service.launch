@@ -1,3 +1,7 @@
+<!--  
+map_server.launch
+开启地图服务，主要参数为地图文件路径
+-->
 <launch>
   <arg name="route_net_path" default="$(find HDMap)/res/map.xml"/>
   <node name="MapService" pkg="HDMap" type="MapService" output="screen" cwd="node">

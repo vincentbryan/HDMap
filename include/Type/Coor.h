@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-14.
-//
-
 #ifndef HDMAP_VECTOR2D_H
 #define HDMAP_VECTOR2D_H
 

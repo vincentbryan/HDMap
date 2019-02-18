@@ -1,6 +1,4 @@
-//
-// Created by vincent on 18-10-23.
-//
+// 用于演示用(2019.1.27), 去除了停车场路线
 
 #include <ros/ros.h>
 #include <thread>
@@ -20,7 +18,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    double offset = 0.0;
     ros::NodeHandle n;
     ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("/HDMap", 5000);
     shared_ptr<Sender> p_sender(new Sender(pub));
@@ -54,6 +51,7 @@ int main(int argc, char** argv)
 
     auto r2_s1 = r2->AddSection({25.95, -72.92, -56.7125}, 15.0, 15.0);
     r2_s1->AddLane( 1, 2.8, 4.6, {1}, {1});
+
 
     auto r2_s2 = r2->AddSection({49.15, -108.16, -56.7125});
     r2_s2->AddLane( 1, 4.6, 4.6, {1}, {1, 2});
@@ -731,73 +729,14 @@ int main(int argc, char** argv)
     /// 回到停车位/出停车位
     auto r42 = map.AddRoad({-172.65, -56.76, 116.18});
 
-    auto r42_s0 = r42->AddSection({-178.22, -45.50, 116.18});
+    auto r42_s0 = r42->AddSection({-184.510, -32.984, 116.18});
     r42_s0->AddLane(1,3.5,3.5,{},{1});
 
-    auto r42_s1 = r42->AddSection({-173.49, -31.83, 26.20}, 6, 6);
-    r42_s1->AddLane(1,3.5,3.5,{1},{1});
 
-    auto r42_s2 = r42->AddSection({-160.89, -25.83, 26.20});
-    r42_s2->AddLane(1,3.5,3.5,{1},{1});
-
-    auto r42_s3 = r42->AddSection({-156.43, -16.84, 116.12},5, 5);
-    r42_s3->AddLane(1,3.5,3.5,{1},{1});
-
-    auto r42_s4 = r42->AddSection({-167.36, 5.86, 116.12});
-    r42_s4->AddLane(1,3.5,3.5,{1},{1});
-
-    auto r42_s5 = r42->AddSection({-177.80, 9.23, 205.22}, 5, 5);
-    r42_s5->AddLane(1,3.5, 4 ,{1},{1});
-
-    auto r42_s6 = r42->AddSection({-182.98, 6.79, 205.22});
-    r42_s6->AddLane(1, 4, 4,{1},{1});
-
-    auto r42_s7 = r42->AddSection({-184.80, 1.03, -64.97}, 3, 3);
-    r42_s7->AddLane(1,4, 3.5,{1},{1});
-
-    auto r42_s8 = r42->AddSection({-176.18, -17.43, -64.97});
-    r42_s8->AddLane(1,3.5,3.5,{1},{1});
-
-    auto r42_s9 = r42->AddSection({-179.72, -28.03, 205.93},5, 5);
-    r42_s9->AddLane(1,3.5,5,{1},{1});
-
-    auto r42_s10 = r42->AddSection({-201.33, -38.54, 205.93});
-    r42_s10->AddLane(1,5,5,{1},{});
-
-    auto r43 = map.AddRoad({-203.57, -34.00, 25.94});
-
-    auto r43_s0 = r43->AddSection({-182.07, -23.54, 25.94});
-    r43_s0->AddLane(1, 5, 5, {},{1});
-
-    auto r43_s1 = r43->AddSection({-179.37, -18.85, 115.18}, 3, 3);
-    r43_s1->AddLane(1, 5, 3.5, {1},{1});
-
-    auto r43_s2 = r43->AddSection({-188.05, -0.387, 115.18});
-    r43_s2->AddLane(1, 3.5, 3.5, {1},{1});
-
-    auto r43_s3 = r43->AddSection({-184.51, 10.45, 25.71}, 5, 5);
-    r43_s3->AddLane(1, 3.5, 4, {1},{1});
-
-    auto r43_s4 = r43->AddSection({-179.67, 12.78, 25.71});
-    r43_s4->AddLane(1, 4, 4, {1},{1});
-
-    auto r43_s5 = r43->AddSection({-164.21, 7.53, -64.05}, 7, 7);
-    r43_s5->AddLane(1, 4, 3.5, {1},{1});
-
-    auto r43_s6 = r43->AddSection({-153.268, -15.271, -64.05});
-    r43_s6->AddLane(1, 3.5, 3.5, {1},{1});
-
-    auto r43_s7 = r43->AddSection({-159.387, -28.971, 205.91}, 7, 7);
-    r43_s7->AddLane(1, 3.5, 3.5, {1},{1});
-
-    auto r43_s8 = r43->AddSection({-171.903, -34.906, 205.91});
-    r43_s8->AddLane(1, 3.5, 3.5, {1},{1});
-
-    auto r43_s9 = r43->AddSection({-175.07, -43.960, -63.79}, 4 ,4);
-    r43_s9->AddLane(1, 3.5, 3.5, {1},{1});
+    auto r43 = map.AddRoad({-181.365, -31.448, -63.79});
 
     auto r43_s10 = r43->AddSection({-169.58, -55.11, -63.79});
-    r43_s10->AddLane(1, 3.5, 3.5, {1},{});
+    r43_s10->AddLane(1, 3.5, 3.5, {},{1});
 
 
     //Road[44/45]-------------------------------------------------------------

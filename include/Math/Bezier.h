@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-14.
-//
-
 #ifndef HDMAP_BEZIER_H
 #define HDMAP_BEZIER_H
 

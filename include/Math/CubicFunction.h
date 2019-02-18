@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-15.
-//
-
 #ifndef HDMAP_CUBICFUNCTION_H
 #define HDMAP_CUBICFUNCTION_H
 

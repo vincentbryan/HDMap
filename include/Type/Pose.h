@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-9.
-//
-
 #ifndef HDMAP_POSE_H
 #define HDMAP_POSE_H
 

@@ -1,3 +1,7 @@
+<!-- 
+map_view.launch
+开启rviz浏览地图，接收的参数有地图文件路径、点云文件路径和浏览模式
+-->
 <launch>
     <arg name="route_net_path" default="$(find HDMap)/res/map.xml"/>
     <arg name="point_cloud_path" default="$(find HDMap)/res/mapwithgarage.pcd"/>

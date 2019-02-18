@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-16.
-//
-
 #ifndef HDMAP_LANELINK_H
 #define HDMAP_LANELINK_H
 

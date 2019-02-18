@@ -68,12 +68,6 @@ private:
 public:
     Client(ros::NodeHandle &n);
 
-    void OdometryCallBack(const nav_msgs::Odometry &msg);
-
-    void LocationCallBack(const nox_msgs::Location &msg);
-
-    bool OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res);
-
     void SendMap();
 
     void SendGPS(const Coor &v);
@@ -89,6 +83,12 @@ public:
     void Process();
 
 private:
+
+    void OdometryCallBack(const nav_msgs::Odometry &msg);
+
+    void LocationCallBack(const nox_msgs::Location &msg);
+
+    bool OnCommandRequest(HDMap::srv_map_cmd::Request &req, HDMap::srv_map_cmd::Response &res);
 
     bool RePlanRoute(const Pose& cur_pose);
 

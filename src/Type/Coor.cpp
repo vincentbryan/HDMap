@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-14.
-//
-
 #include <Type/Coor.h>
 
 double hdmap::Coor::SegmentDistance(const hdmap::Coor &start,

@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-8.
-//
-
 #include "Type/Lane.h"
 
 using namespace hdmap;

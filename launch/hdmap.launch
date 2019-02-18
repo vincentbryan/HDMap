@@ -1,3 +1,7 @@
+<!--  
+hdmap.launch
+同时开启地图服务接口（包括规划请求接口和资源请求接口）和地图客户端服务（包括红绿灯位置广播、局部规划线路广播）
+-->
 <launch>
 	<arg name="route_net_path" default="$(find HDMap)/res/map.xml"/>
 	<arg name="point_cloud_path" default="$(find HDMap)/res/mapwithgarage.pcd"/>

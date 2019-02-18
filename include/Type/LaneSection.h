@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-8.
-//
-
 #ifndef HDMAP_LANESECTION_H
 #define HDMAP_LANESECTION_H
 

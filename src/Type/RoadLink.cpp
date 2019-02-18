@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-16.
-//
-
 #include "Type/RoadLink.h"
 using namespace hdmap;
 

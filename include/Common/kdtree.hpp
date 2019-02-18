@@ -1,7 +1,3 @@
-//
-// Created by iceytan on 18-12-3.
-//
-
 #ifndef KDTREE_KDTREE_H
 #define KDTREE_KDTREE_H
 

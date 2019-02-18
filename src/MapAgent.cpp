@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-31.
-//
-
 #include <ros/ros.h>
 #include "Tool/Client.h"
 

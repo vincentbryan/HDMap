@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-8.
-//
-
 #include <Type/Road.h>
 
 using namespace hdmap;
@@ -12,6 +8,8 @@ Road::Road(Pose _start_pose)
 {
     ID = ROAD_ID++;
     Lenght = 0;
+    Max_Speed = 30;
+    Min_Speed = 0;
     mPrevJid = mNextJid = -1;
     Direction = 0;
     mStartPose = _start_pose;
@@ -51,6 +49,8 @@ boost::property_tree::ptree Road::ToXML()
     p_road.add("<xmlattr>.id", ID);
     p_road.add("<xmlattr>.direction", Direction);
     p_road.add("<xmlattr>.length", Lenght);
+    p_road.add("<xmlattr>.max_speed", Max_Speed);
+    p_road.add("<xmlattr>.min_speed", Min_Speed);
     p_road.add("<xmlattr>.prev_jid", mPrevJid);
     p_road.add("<xmlattr>.next_jid", mNextJid);
 
@@ -95,6 +95,8 @@ void Road::FromXML(const pt::ptree &p)
     Lenght = p.get<double>("<xmlattr>.length");
     mPrevJid = p.get<int>("<xmlattr>.prev_jid");
     mNextJid = p.get<int>("<xmlattr>.next_jid");
+    Max_Speed= p.get<double>("<xmlattr>.max_speed");
+    Min_Speed= p.get<double>("<xmlattr>.min_speed");
 
     for(auto s : p.get_child(""))
     {
@@ -155,6 +157,29 @@ std::vector<Pose> Road::GetRightmostLinePoses()
         poses.insert(poses.end(),sp_pose.begin(),sp_pose.end());
     }
     return poses;
+}
+
+void Road::AddSpeedInfo(const double& min_speed, const double& max_speed)
+{
+    const double  _min_speed = 0.0, _max_speed = 120.0;
+
+    if (max_speed >= _max_speed)
+    {
+        Max_Speed = _max_speed;
+    }
+    else
+    {
+        Max_Speed = max_speed;
+    }
+
+    if (min_speed <= _min_speed)
+    {
+        Min_Speed = _min_speed;
+    }
+    else
+    {
+        Min_Speed = min_speed;
+    }
 }
 
 

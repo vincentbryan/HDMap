@@ -1,7 +1,3 @@
-//
-// Created by yul on 18-12-19.
-//
-
 #include <ros/ros.h>
 #include <algorithm>
 #include <math.h>

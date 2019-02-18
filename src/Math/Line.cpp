@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-9.
-//
-
 #include "Math/Line.h"
 
 using namespace hdmap;

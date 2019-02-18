@@ -1,3 +1,6 @@
+// MapTest 提供了模拟位置发送、请求信息发送等示例，可以通过命令行进行简单操作
+// 更多的细节参阅 doc/HDMap接口文档
+
 #include <ros/ros.h>
 #include <Tool/Sender.h>
 #include <termios.h>
@@ -9,11 +12,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <nav_msgs/Odometry.h>
 
-#include "nox_msg/nox_location.h"
-
 using namespace std;
-
-
 
 vector<string> split(const string & str, const string & pattern)
 {
@@ -32,10 +31,10 @@ vector<string> split(const string & str, const string & pattern)
     return resultVec;
 }
 
-void CommandPrint(){
+void CommandPrint()
+{
     printf("\e[1;33m$: ");
 }
-
 
 int getch()
 {
@@ -49,8 +48,8 @@ int getch()
     return c;
 }
 
-
-void renderCar(ros::Publisher& MarkerPublisher, double x, double y, double angle){
+void renderCar(ros::Publisher& MarkerPublisher, double x, double y, double angle)
+{
 
     visualization_msgs::Marker carmarker;
     carmarker.header.frame_id = "map";
@@ -111,8 +110,8 @@ void renderPolygon(const HDMap::msg_route_region& msg)
     std::cout << "----------------------------------\n";
 }
 
-
-int main(int argc, char** argv){
+int main(int argc, char** argv)
+{
     ros::init(argc, argv, "map_test");
     ros::NodeHandle n;
 

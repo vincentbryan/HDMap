@@ -1,7 +1,3 @@
-//
-// Created by vincent on 18-10-26.
-//
-
 #pragma once
 #include <string>
 #include "Interface/IView.h"
