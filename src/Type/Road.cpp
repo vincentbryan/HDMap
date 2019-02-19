@@ -18,20 +18,20 @@ Road::Road(Pose _start_pose)
 void Road::OnSend(Sender &sender)
 {
     char _buf[128];
-    sprintf(_buf,"Road[%d]: %4.2fm, %4.2fdeg",
-            ID, Lenght, GetReferenceLinePoses().front().GetAngle().Value());
+    sprintf(_buf,"Road[%d]\n\tLength:%4.2fm\n\tDirection:%4.2fdeg\n\tSpeed Range:[%3.1f,%3.1f]",
+            ID, Lenght, GetReferenceLinePoses().front().GetAngle().Value(),Min_Speed,Max_Speed);
     std::string text = _buf;
 
     auto p1 = GetReferenceLinePoses().front();
     p1.Rotate(-90);
-    p1.Translate(4.0, p1.GetAngle());
+    p1.Translate(4.5, p1.GetAngle());
 
     auto p2 = GetReferenceLinePoses().back();
     p2.Rotate(-90);
-    p2.Translate(4.0, p2.GetAngle());
+    p2.Translate(4.5, p2.GetAngle());
 
-    auto m1 = sender.GetText(text, p1.GetPosition());
-    auto m2 = sender.GetText(text, p2.GetPosition());
+    auto m1 = sender.GetText(text, p1.GetPosition(),1.0,1.0,1.0,1.0,2.0);
+    auto m2 = sender.GetText(text, p2.GetPosition(),1.0,1.0,1.0,1.0,2.0);
 
     sender.array.markers.emplace_back(m1);
     sender.array.markers.emplace_back(m2);

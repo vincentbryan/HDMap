@@ -731,6 +731,8 @@ int main(int argc, char** argv)
     /// 回到停车位/出停车位
     auto r42 = map.AddRoad({-172.65, -56.76, 116.18});
 
+    r42->AddSpeedInfo(1,12);
+
     auto r42_s0 = r42->AddSection({-178.22, -45.50, 116.18});
     r42_s0->AddLane(1,3.5,3.5,{},{1});
 
@@ -765,6 +767,8 @@ int main(int argc, char** argv)
     r42_s10->AddLane(1,5,5,{1},{});
 
     auto r43 = map.AddRoad({-203.57, -34.00, 25.94});
+
+    r43->AddSpeedInfo(1,12);
 
     auto r43_s0 = r43->AddSection({-182.07, -23.54, 25.94});
     r43_s0->AddLane(1, 5, 5, {},{1});

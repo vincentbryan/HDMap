@@ -62,10 +62,16 @@ add_executable(MapService
         src/Tool/Resource.cpp
         )
 
+#add_executable(MapGenerator
+#        src/Tool/Sender.cpp
+#        src/MapGenerator.cpp
+#        )
+
 add_executable(MapGenerator
         src/Tool/Sender.cpp
         src/MapGenerator_for_show.cpp
         )
+
 
 add_executable(MapCommand
         src/MapCommand.cpp

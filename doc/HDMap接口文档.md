@@ -20,7 +20,7 @@ catkin_ws
 
 在业务的CMakeLists.txt中添加`HDMap`，以使用提供的服务接口
 
-```
+```cmake
 find_package(catkin REQUIRED COMPONENTS
   ...
   HDMap
